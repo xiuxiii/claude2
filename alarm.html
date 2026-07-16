@@ -36,15 +36,36 @@ body{
   min-height:100vh;
   user-select:none;
   -webkit-user-select:none;
+  overflow:hidden;
 }
 
-/* subtle grid backdrop like an arcade CRT */
+/* ---------- animated diagonal checkerboard backdrop ----------
+   Two layered diagonal stripes that scroll slowly in opposite
+   directions. Kept very low opacity so it doesn't fight the UI. */
 body::before{
+  content:"";
+  position:fixed;inset:-40px;
+  background:
+    repeating-linear-gradient( 45deg,
+      rgba(255,79,163,.04) 0 20px,
+      transparent 20px 40px),
+    repeating-linear-gradient(-45deg,
+      rgba(0,217,255,.04) 0 20px,
+      transparent 20px 40px);
+  animation:gridScroll 40s linear infinite;
+  pointer-events:none;
+  z-index:0;
+}
+@keyframes gridScroll{
+  0%  {background-position: 0 0, 0 0}
+  100%{background-position: 80px 80px, -80px 80px}
+}
+/* faint CRT scanlines on top of the grid */
+body::after{
   content:"";
   position:fixed;inset:0;
   background:
-    linear-gradient(transparent 95%, rgba(255,255,255,.03) 95%) 0 0/100% 8px,
-    linear-gradient(90deg, transparent 95%, rgba(255,255,255,.03) 95%) 0 0/8px 100%;
+    linear-gradient(transparent 95%, rgba(255,255,255,.025) 95%) 0 0/100% 6px;
   pointer-events:none;
   z-index:0;
 }
@@ -96,27 +117,209 @@ body::before{
   text-align:center;
 }
 
-/* the spinning/pulsing ring around the field */
+/* Decorative rings around the play field.
+   .deco-cw / .deco-ccw rotate opposite directions. Notch dots are
+   drawn as tiny radial-gradient blips spaced every 30deg. */
+.deco{
+  position:absolute;inset:-26px;
+  border-radius:50%;
+  pointer-events:none;
+}
+.deco-cw{
+  border:1px solid rgba(0,217,255,.35);
+  background:
+    conic-gradient(from 0deg,
+      rgba(0,217,255,.6) 0 2deg, transparent 2deg 30deg,
+      rgba(0,217,255,.6) 30deg 32deg, transparent 32deg 60deg,
+      rgba(0,217,255,.6) 60deg 62deg, transparent 62deg 90deg,
+      rgba(0,217,255,.6) 90deg 92deg, transparent 92deg 120deg,
+      rgba(0,217,255,.6) 120deg 122deg, transparent 122deg 150deg,
+      rgba(0,217,255,.6) 150deg 152deg, transparent 152deg 180deg,
+      rgba(0,217,255,.6) 180deg 182deg, transparent 182deg 210deg,
+      rgba(0,217,255,.6) 210deg 212deg, transparent 212deg 240deg,
+      rgba(0,217,255,.6) 240deg 242deg, transparent 242deg 270deg,
+      rgba(0,217,255,.6) 270deg 272deg, transparent 272deg 300deg,
+      rgba(0,217,255,.6) 300deg 302deg, transparent 302deg 330deg,
+      rgba(0,217,255,.6) 330deg 332deg, transparent 332deg 360deg);
+  -webkit-mask:radial-gradient(circle,transparent calc(50% - 3px),black calc(50% - 3px) 50%,transparent 50%);
+          mask:radial-gradient(circle,transparent calc(50% - 3px),black calc(50% - 3px) 50%,transparent 50%);
+  animation:spinCW 24s linear infinite;
+}
+.deco-ccw{
+  inset:-42px;
+  border:1px dashed rgba(255,79,163,.35);
+  animation:spinCCW 40s linear infinite;
+}
+@keyframes spinCW{to{transform:rotate(360deg)}}
+@keyframes spinCCW{to{transform:rotate(-360deg)}}
+
+/* the pulsing rings we already had, kept for glow */
 .ring{
   position:absolute;inset:-14px;
   border-radius:50%;
-  border:2px dashed rgba(0,217,255,.55);
-  animation:spin 20s linear infinite;
+  border:2px dashed rgba(0,217,255,.35);
+  animation:spinCW 20s linear infinite;
   pointer-events:none;
 }
 .ring.inner{
   inset:-2px;
   border:2px solid rgba(255,79,163,.55);
   border-style:solid;
-  animation:pulse 2.4s ease-in-out infinite;
+  animation:pulseRing 2.4s ease-in-out infinite;
 }
-@keyframes spin{to{transform:rotate(360deg)}}
-@keyframes pulse{
+@keyframes pulseRing{
   0%,100%{box-shadow:0 0 20px rgba(255,79,163,.4)}
   50%    {box-shadow:0 0 55px rgba(255,79,163,.9)}
 }
 
-/* generic type */
+/* -------- 8 button-position markers around the field --------
+   Rendered as .btn-marker children of .field. Position with CSS
+   custom prop --angle. Distance is set so they sit just outside
+   the field's edge. */
+.btn-marker{
+  position:absolute;
+  width:18px;height:18px;border-radius:50%;
+  left:50%;top:50%;
+  transform:translate(-50%,-50%)
+            rotate(var(--angle)) translateY(calc(-50% - 46px))
+            rotate(calc(-1 * var(--angle)));
+  /* the awkward double-rotate keeps the dot upright */
+  background:radial-gradient(circle,rgba(255,255,255,.7) 0%,rgba(0,217,255,.35) 60%,transparent 100%);
+  border:1px solid rgba(255,255,255,.35);
+  box-shadow:0 0 8px rgba(0,217,255,.35);
+  opacity:.4;
+  transition:opacity .3s, box-shadow .3s, background .3s;
+}
+/* light up all markers during alarm mode */
+#alarmScreen .btn-marker{
+  opacity:.85;
+  background:radial-gradient(circle,var(--white) 0%,var(--pink) 60%,transparent 100%);
+  box-shadow:0 0 14px var(--pink), 0 0 24px rgba(255,79,163,.6);
+  animation:markerBlink 1.4s ease-in-out infinite;
+}
+@keyframes markerBlink{
+  0%,100%{opacity:.55}
+  50%    {opacity:1}
+}
+
+/* =========================================================
+   Mascot
+   ========================================================= */
+.mascot{
+  display:block;
+  image-rendering:auto;
+  filter:drop-shadow(0 6px 16px rgba(0,217,255,.35));
+  pointer-events:none;
+  will-change:transform;
+}
+.mascot.setup{
+  width:120px;height:auto;margin-bottom:6px;
+  animation:mascotBob 3s ease-in-out infinite;
+}
+.mascot.armed{
+  width:80px;height:auto;margin-bottom:8px;
+  animation:mascotSleep 3.5s ease-in-out infinite;
+}
+.mascot.alarm{
+  position:absolute;
+  top:calc(50% - min(45vmin,260px) - 40px);
+  left:50%;
+  width:130px;height:auto;
+  transform:translateX(-50%);
+  z-index:4;
+  transition:width .3s;
+}
+.mascot.success{
+  width:140px;height:auto;margin-bottom:4px;
+  animation:mascotHappy 1s ease-in-out infinite;
+}
+.mascot.failed{
+  width:130px;height:auto;margin-bottom:6px;
+  filter:grayscale(1) brightness(.55) drop-shadow(0 6px 12px rgba(255,40,40,.3));
+  transform:rotate(-14deg);
+}
+@keyframes mascotBob{
+  0%,100%{transform:translateY(0)}
+  50%    {transform:translateY(-10px)}
+}
+@keyframes mascotSleep{
+  0%,100%{transform:rotate(-4deg) translateY(0)}
+  50%    {transform:rotate(-4deg) translateY(-4px)}
+}
+@keyframes mascotHappy{
+  0%,100%{transform:translateY(0) scale(1)}
+  50%    {transform:translateY(-14px) scale(1.05)}
+}
+/* alarm-mode escalation of the mascot */
+body[data-level="1"] .mascot.alarm{
+  width:130px;
+  animation:mascotShake .5s ease-in-out infinite;
+}
+body[data-level="2"] .mascot.alarm{
+  width:150px;
+  animation:mascotShake .3s ease-in-out infinite;
+  filter:drop-shadow(0 0 14px rgba(255,79,163,.7));
+}
+body[data-level="3"] .mascot.alarm{
+  width:170px;
+  animation:mascotShake .18s linear infinite;
+  filter:drop-shadow(0 0 20px rgba(255,60,60,.85));
+}
+body[data-level="4"] .mascot.alarm{
+  width:190px;
+  animation:mascotShake .1s linear infinite;
+  filter:drop-shadow(0 0 30px rgba(255,20,20,1));
+}
+/* aura behind mascot during high alarm levels */
+.mascot-aura{
+  position:absolute;
+  top:calc(50% - min(45vmin,260px) - 40px);
+  left:50%;
+  width:220px;height:220px;
+  transform:translate(-50%,0);
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(255,60,60,.55) 0%,transparent 70%);
+  z-index:3;
+  opacity:0;
+  transition:opacity .4s;
+  pointer-events:none;
+  animation:auraPulse .5s ease-in-out infinite;
+}
+body[data-level="3"] .mascot-aura{opacity:.6}
+body[data-level="4"] .mascot-aura{opacity:1;animation-duration:.25s;width:260px;height:260px}
+@keyframes auraPulse{
+  0%,100%{transform:translate(-50%,0) scale(1);opacity:var(--aura-o,.6)}
+  50%    {transform:translate(-50%,0) scale(1.18);opacity:.9}
+}
+@keyframes mascotShake{
+  0%,100%{transform:translateX(-50%) rotate(0)}
+  25%    {transform:translateX(-52%) rotate(-3deg)}
+  75%    {transform:translateX(-48%) rotate(3deg)}
+}
+
+/* the "zzz" bubbles on the armed screen */
+.zzz{
+  display:inline-block;
+  color:var(--cyan);
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:16px;letter-spacing:.1em;
+  margin-left:6px;
+  animation:zzzFloat 2.4s ease-in-out infinite;
+  text-shadow:0 0 8px var(--cyan);
+}
+.mascot-row{
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:6px;
+}
+@keyframes zzzFloat{
+  0%   {transform:translate(0,4px);opacity:0}
+  30%  {opacity:1}
+  100% {transform:translate(10px,-24px);opacity:0}
+}
+
+/* =========================================================
+   Type
+   ========================================================= */
 h1.title{
   font-family:'Orbitron',sans-serif;
   font-weight:900;
@@ -128,6 +331,16 @@ h1.title{
     0 0 30px var(--pink-2),
     0 0 60px rgba(255,79,163,.4);
   margin-bottom:6px;
+  animation:titleFlicker 5s ease-in-out infinite;
+}
+@keyframes titleFlicker{
+  0%,100% {text-shadow:0 0 12px var(--pink),0 0 30px var(--pink-2),0 0 60px rgba(255,79,163,.4)}
+  47%     {text-shadow:0 0 10px var(--cyan),0 0 28px var(--cyan),0 0 60px rgba(0,217,255,.4);
+           transform:translateX(-1px)}
+  48%     {text-shadow:0 0 14px var(--pink),0 0 32px var(--pink-2),0 0 60px rgba(255,79,163,.4);
+           transform:translateX(1px)}
+  49%     {text-shadow:0 0 10px var(--cyan),0 0 28px var(--cyan),0 0 60px rgba(0,217,255,.4)}
+  50%     {text-shadow:0 0 12px var(--pink),0 0 30px var(--pink-2),0 0 60px rgba(255,79,163,.4)}
 }
 .subtitle{
   font-size:clamp(12px,1.6vmin,16px);
@@ -262,33 +475,95 @@ h1.title{
   font-size:clamp(14px,2vmin,20px);color:var(--white);
   letter-spacing:.15em;
 }
-
-/* the giant tap note "I'M AWAKE" */
-.tap-note{
-  width:clamp(180px,32vmin,260px);
-  height:clamp(180px,32vmin,260px);
-  border-radius:50%;
-  background:radial-gradient(circle at 50% 40%,#ffb4d6 0%,var(--pink) 50%,var(--pink-2) 100%);
-  border:6px solid var(--white);
-  color:var(--white);
+.tap-progress{
   font-family:'Orbitron',sans-serif;font-weight:900;
-  font-size:clamp(20px,3.4vmin,30px);
+  font-size:clamp(28px,5vmin,48px);
+  color:var(--yellow);
+  text-shadow:0 0 16px var(--yellow),0 0 30px rgba(255,225,74,.6);
   letter-spacing:.12em;
-  display:flex;align-items:center;justify-content:center;
+  margin:6px 0 8px;
+}
+.tap-hint{
+  font-size:11px;letter-spacing:.3em;color:var(--cyan);
+  text-transform:uppercase;text-shadow:0 0 8px var(--cyan);
+  margin-bottom:4px;
+}
+
+/* -------- the tap-note itself --------
+   Sits at an absolute position around the field. Positioned in JS.
+   Consists of the note body + an animated approach ring. */
+.tap-note{
+  position:absolute;
+  width:clamp(80px,14vmin,110px);
+  height:clamp(80px,14vmin,110px);
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 40%,#ffb4d6 0%,var(--pink) 55%,var(--pink-2) 100%);
+  border:5px solid var(--white);
   cursor:pointer;
   box-shadow:
-    0 0 60px rgba(255,79,163,.9),
-    0 0 120px rgba(255,79,163,.6),
-    inset 0 -10px 20px rgba(0,0,0,.25),
-    inset 0 10px 20px rgba(255,255,255,.4);
-  animation:tapPulse .8s ease-in-out infinite;
-  margin:8px auto;
-  padding:12px;text-align:center;
+    0 0 30px rgba(255,79,163,.9),
+    0 0 60px rgba(255,79,163,.6),
+    inset 0 -6px 12px rgba(0,0,0,.25),
+    inset 0 6px 12px rgba(255,255,255,.4);
+  animation:notePulse .9s ease-in-out infinite;
+  transform:translate(-50%,-50%);
+  z-index:8;
+  touch-action:manipulation;
+  -webkit-tap-highlight-color:transparent;
 }
-.tap-note:active{transform:scale(.94)}
-@keyframes tapPulse{
-  0%,100%{transform:scale(1)}
-  50%    {transform:scale(1.07)}
+@keyframes notePulse{
+  0%,100%{box-shadow:0 0 30px rgba(255,79,163,.9),0 0 60px rgba(255,79,163,.5),inset 0 -6px 12px rgba(0,0,0,.25),inset 0 6px 12px rgba(255,255,255,.4)}
+  50%    {box-shadow:0 0 42px rgba(255,79,163,1),0 0 90px rgba(255,79,163,.75),inset 0 -6px 12px rgba(0,0,0,.25),inset 0 6px 12px rgba(255,255,255,.4)}
+}
+/* the shrinking approach ring — a pseudo element around the note */
+.tap-note::after{
+  content:"";
+  position:absolute;inset:-40px;
+  border-radius:50%;
+  border:3px solid rgba(255,255,255,.85);
+  box-shadow:0 0 20px var(--white);
+  animation:approach 1.4s linear infinite;
+  pointer-events:none;
+}
+@keyframes approach{
+  0%   {transform:scale(1.9);opacity:0}
+  20%  {opacity:.9}
+  100% {transform:scale(1);opacity:0}
+}
+
+/* burst effect when a note is hit */
+.burst{
+  position:absolute;
+  width:120px;height:120px;
+  border-radius:50%;
+  transform:translate(-50%,-50%);
+  border:6px solid var(--white);
+  box-shadow:0 0 40px var(--white),0 0 80px var(--pink);
+  animation:burstOut .5s ease-out forwards;
+  pointer-events:none;
+  z-index:9;
+}
+@keyframes burstOut{
+  0%   {transform:translate(-50%,-50%) scale(.3);opacity:1;border-width:6px}
+  100% {transform:translate(-50%,-50%) scale(2.4);opacity:0;border-width:1px}
+}
+.perfect-popup{
+  position:absolute;
+  transform:translate(-50%,-50%);
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(22px,3.4vmin,32px);
+  letter-spacing:.15em;
+  color:var(--yellow);
+  text-shadow:0 0 14px var(--yellow),0 0 30px var(--pink);
+  animation:perfectRise .8s ease-out forwards;
+  pointer-events:none;
+  z-index:10;
+  white-space:nowrap;
+}
+@keyframes perfectRise{
+  0%   {opacity:0;transform:translate(-50%,-30%) scale(.8)}
+  20%  {opacity:1;transform:translate(-50%,-70%) scale(1.15)}
+  100% {opacity:0;transform:translate(-50%,-130%) scale(1)}
 }
 
 /* flashing bg overlay for alarm mode */
@@ -306,17 +581,7 @@ body[data-level="2"] .flash{animation-duration:.7s;background:radial-gradient(ci
 body[data-level="3"] .flash{animation-duration:.45s;background:radial-gradient(circle,rgba(255,60,60,.55) 0%,transparent 70%)}
 body[data-level="4"] .flash{animation-duration:.25s;background:radial-gradient(circle,rgba(255,20,20,.75) 0%,transparent 70%)}
 
-body[data-level="2"] .tap-note{animation-duration:.55s}
-body[data-level="3"] .tap-note{
-  animation-duration:.35s;
-  background:radial-gradient(circle at 50% 40%,#ffd6d6 0%,#ff5555 50%,#c40000 100%);
-  box-shadow:0 0 80px rgba(255,40,40,.9),0 0 160px rgba(255,20,20,.6),inset 0 -10px 20px rgba(0,0,0,.3),inset 0 10px 20px rgba(255,255,255,.4);
-}
-body[data-level="4"] .tap-note{
-  animation-duration:.22s;
-  background:radial-gradient(circle at 50% 40%,#ffffff 0%,#ff3838 40%,#8b0000 100%);
-}
-body[data-level="4"]{animation:shake .12s linear infinite}
+body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 @keyframes shake{
   0%{transform:translate(0,0)}
   25%{transform:translate(-3px,2px)}
@@ -328,9 +593,7 @@ body[data-level="4"]{animation:shake .12s linear infinite}
 /* =========================================================
    Success / Failed screens
    ========================================================= */
-.results{
-  text-align:center;
-}
+.results{text-align:center}
 .grade{
   font-family:'Orbitron',sans-serif;font-weight:900;
   font-size:clamp(80px,18vmin,180px);
@@ -372,7 +635,7 @@ body[data-level="4"]{animation:shake .12s linear infinite}
 </head>
 <body>
 
-<!-- HUD: top bar shows current time, bottom shows brand -->
+<!-- HUD -->
 <div class="hud-top">
   <div class="brand">◆ maimai ALARM</div>
   <div class="now">NOW: <span id="hudClock">--:--:--</span></div>
@@ -385,8 +648,8 @@ body[data-level="4"]{animation:shake .12s linear infinite}
 <!-- ================= SETUP SCREEN ================= -->
 <section id="setupScreen" class="screen active">
   <div class="field">
-    <div class="ring"></div>
-    <div class="ring inner"></div>
+    <!-- deco rings + button markers are added by JS to every .field -->
+    <img class="mascot setup" src="mascot.png" alt="" onerror="this.style.display='none'">
     <h1 class="title">WAKE UP</h1>
     <div class="subtitle">Escalating Alarm</div>
 
@@ -426,9 +689,13 @@ body[data-level="4"]{animation:shake .12s linear infinite}
 <!-- ================= ARMED SCREEN ================= -->
 <section id="armedScreen" class="screen">
   <div class="field">
-    <div class="ring"></div>
-    <div class="ring inner"></div>
     <div class="subtitle">Alarm Armed</div>
+    <div class="mascot-row">
+      <img class="mascot armed" src="mascot.png" alt="" onerror="this.style.display='none'">
+      <span class="zzz">z</span>
+      <span class="zzz" style="animation-delay:.6s;font-size:20px">z</span>
+      <span class="zzz" style="animation-delay:1.2s;font-size:24px">z</span>
+    </div>
     <div class="clock" id="bigClock">--:--:--</div>
     <div class="next-label">Next alarm</div>
     <div class="next-time" id="nextTime">--:--</div>
@@ -443,21 +710,22 @@ body[data-level="4"]{animation:shake .12s linear infinite}
 <!-- ================= ALARM SCREEN ================= -->
 <section id="alarmScreen" class="screen">
   <div class="flash"></div>
-  <div class="field">
-    <div class="ring"></div>
-    <div class="ring inner"></div>
+  <img class="mascot alarm" id="alarmMascot" src="mascot.png" alt="" onerror="this.style.display='none'">
+  <div class="mascot-aura"></div>
+  <div class="field" id="alarmField">
     <div class="alarm-label" id="alarmLabel">WAKE UP!</div>
     <div class="alarm-count" id="alarmCount">ALARM 1 / 4</div>
-    <button class="tap-note" id="awakeBtn">I'M<br/>AWAKE</button>
+    <div class="tap-hint">Tap all notes to dismiss</div>
+    <div class="tap-progress" id="tapProgress">0 / 4</div>
     <div class="escalate-in" id="escalateIn">escalates in --:--</div>
+    <!-- tap notes are appended here at absolute positions -->
   </div>
 </section>
 
 <!-- ================= SUCCESS SCREEN ================= -->
 <section id="successScreen" class="screen">
   <div class="field results">
-    <div class="ring"></div>
-    <div class="ring inner"></div>
+    <img class="mascot success" src="mascot.png" alt="" onerror="this.style.display='none'">
     <div class="subtitle">CLEAR!</div>
     <div class="grade" id="successGrade">SSS</div>
     <div class="combo">FULL COMBO</div>
@@ -473,8 +741,7 @@ body[data-level="4"]{animation:shake .12s linear infinite}
 <!-- ================= FAILED SCREEN ================= -->
 <section id="failedScreen" class="screen gameover">
   <div class="field results">
-    <div class="ring"></div>
-    <div class="ring inner"></div>
+    <img class="mascot failed" src="mascot.png" alt="" onerror="this.style.display='none'">
     <div class="subtitle" style="color:#ff6666;text-shadow:0 0 10px #ff2a2a">FAILED</div>
     <div class="grade">GAME OVER</div>
     <div class="combo" style="color:#ff9090;text-shadow:0 0 20px #ff2a2a">MISSED ALL ALARMS</div>
@@ -495,31 +762,33 @@ body[data-level="4"]{animation:shake .12s linear infinite}
      2. Persistence (localStorage)
      3. Clock loop (single source of truth for time)
      4. Alarm scheduling & escalation
-     5. Screens / UI updates
-     6. Web Audio synthesis (swap-in point for mp3s)
-     7. Wake Lock API
-     8. Event wiring
+     5. Tap-note dismissal (4 random of 8 positions)
+     6. Screens / UI updates
+     7. Web Audio synthesis (swap-in point for mp3s)
+     8. Wake Lock API
+     9. Event wiring + field decoration
    ========================================================= */
 
 // ---------- 1. STATE ----------
 const STORAGE_KEY = 'maimai-alarm-v1';
+const REQUIRED_TAPS = 4;
 
 const state = {
-  screen: 'setup',           // 'setup' | 'armed' | 'alarm' | 'success' | 'failed'
-  firstTime: '08:00',        // "HH:MM"
+  screen: 'setup',
+  firstTime: '08:00',
   intervalMin: 30,
   maxAlarms: 4,
   testMode: false,
 
-  armedAt: null,             // Date when armed
-  scheduleMs: [],            // absolute epoch ms for each alarm
-  currentAlarmIndex: -1,     // which alarm is currently ringing (-1 if none)
-  alarmRingingSince: null,   // epoch ms when current alarm started
+  scheduleMs: [],
+  currentAlarmIndex: -1,
+  alarmRingingSince: null,
+
+  // Tap-note session state
+  tapPositions: [],   // array of angle-degrees for this alarm's 4 notes
+  tapIndex: 0,        // how many have been tapped so far
 };
 
-// Test mode shortens windows so you can see the whole flow fast.
-// Live mode: 5-minute wake window, escalate interval from settings.
-// Test mode: 15-second wake window, 30-second escalate spacing.
 function wakeWindowMs()  { return state.testMode ? 15 * 1000 : 5 * 60 * 1000; }
 function escalateStepMs(){ return state.testMode ? 30 * 1000 : state.intervalMin * 60 * 1000; }
 
@@ -527,12 +796,10 @@ function escalateStepMs(){ return state.testMode ? 30 * 1000 : state.intervalMin
 function saveSettings(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      firstTime: state.firstTime,
-      intervalMin: state.intervalMin,
-      maxAlarms: state.maxAlarms,
-      testMode: state.testMode,
+      firstTime: state.firstTime, intervalMin: state.intervalMin,
+      maxAlarms: state.maxAlarms, testMode: state.testMode,
     }));
-  }catch(e){/* ignore quota / private mode */}
+  }catch(e){}
 }
 function loadSettings(){
   try{
@@ -547,13 +814,9 @@ function loadSettings(){
 }
 
 // ---------- 3. CLOCK LOOP ----------
-// One setInterval polls real Date.now() every 250ms.
-// This survives tab throttling better than a single big setTimeout,
-// because when the tab wakes up we immediately compare against real time.
 function pad(n){ return String(n).padStart(2,'0'); }
 function fmtHMS(d){ return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
 function fmtHM(d){  return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
-
 function fmtDurationMs(ms){
   if(ms < 0) ms = 0;
   const s = Math.floor(ms/1000);
@@ -571,15 +834,11 @@ function tick(){
   if(state.screen === 'armed'){
     document.getElementById('bigClock').textContent = fmtHMS(now);
     const nextIdx = state.scheduleMs.findIndex(t => t > now.getTime());
-    if(nextIdx === -1){
-      // all scheduled alarms are in the past somehow — fail-safe
-      return;
+    if(nextIdx !== -1){
+      const nextT = state.scheduleMs[nextIdx];
+      document.getElementById('nextTime').textContent = fmtHM(new Date(nextT));
+      document.getElementById('armedCountdown').textContent = 'in ' + fmtDurationMs(nextT - now.getTime());
     }
-    const nextT = state.scheduleMs[nextIdx];
-    document.getElementById('nextTime').textContent = fmtHM(new Date(nextT));
-    document.getElementById('armedCountdown').textContent = 'in ' + fmtDurationMs(nextT - now.getTime());
-
-    // fire alarm if any scheduled time is due
     for(let i = 0; i < state.scheduleMs.length; i++){
       if(now.getTime() >= state.scheduleMs[i] && i > state.currentAlarmIndex){
         startAlarm(i);
@@ -589,26 +848,17 @@ function tick(){
   }
 
   if(state.screen === 'alarm'){
-    const level = state.currentAlarmIndex + 1;
     const startedAt = state.alarmRingingSince;
     const escalateAt = startedAt + wakeWindowMs();
     const remain = escalateAt - now.getTime();
     document.getElementById('escalateIn').textContent =
-      remain > 0
-        ? `escalates in ${fmtDurationMs(remain)}`
-        : `escalating...`;
-    if(remain <= 0){
-      // wake window expired — either escalate or fail
-      escalate();
-    }
+      remain > 0 ? `escalates in ${fmtDurationMs(remain)}` : `escalating...`;
+    if(remain <= 0){ escalate(); }
   }
 }
 setInterval(tick, 250);
 
 // ---------- 4. SCHEDULING ----------
-// Build absolute timestamps for each alarm from the first-alarm time
-// and the escalation interval. If the chosen first time is earlier than
-// "now" today, we roll it to tomorrow — same behavior a phone alarm has.
 function buildSchedule(){
   const now = new Date();
   const [hh, mm] = state.firstTime.split(':').map(Number);
@@ -616,11 +866,9 @@ function buildSchedule(){
   first.setHours(hh, mm, 0, 0);
 
   if(state.testMode){
-    // In test mode, first alarm starts 5 seconds from now so you can
-    // actually see the armed → alarm transition without waiting.
     first.setTime(now.getTime() + 5 * 1000);
   } else if(first.getTime() <= now.getTime()){
-    first.setDate(first.getDate() + 1); // roll to tomorrow
+    first.setDate(first.getDate() + 1);
   }
 
   const step = escalateStepMs();
@@ -640,13 +888,16 @@ function startAlarm(idx){
     `ALARM ${level} / ${state.maxAlarms}`;
   document.getElementById('alarmLabel').textContent =
     level >= 4 ? 'GET UP NOW!!!' : level >= 3 ? 'WAKE UP!!' : 'WAKE UP!';
+  resetTapSession();
   showScreen('alarm');
+  spawnNextTapNote();
   playAlarm(level);
 }
 
 function stopCurrentAlarm(){
   stopAlarm();
   state.alarmRingingSince = null;
+  clearTapNotes();
   document.body.removeAttribute('data-level');
 }
 
@@ -654,24 +905,19 @@ function escalate(){
   const nextIdx = state.currentAlarmIndex + 1;
   stopCurrentAlarm();
   if(nextIdx >= state.maxAlarms){
-    // All alarms exhausted → FAIL screen
     document.getElementById('failedMax').textContent = state.maxAlarms;
     const lastT = state.scheduleMs[state.scheduleMs.length - 1];
     document.getElementById('failedLast').textContent = fmtHM(new Date(lastT));
     showScreen('failed');
     return;
   }
-  // Go back to armed screen; tick() will fire the next alarm when its
-  // scheduled timestamp arrives.
   showScreen('armed');
 }
 
-function iAmAwake(){
+function finishAlarm(){
   const now = new Date();
   const level = state.currentAlarmIndex + 1;
   stopCurrentAlarm();
-
-  // grade: alarm 1 = SSS, 2 = S, 3 = A, 4+ = B
   const grades = ['SSS','S','A','B','B','B'];
   document.getElementById('successGrade').textContent = grades[level - 1] || 'B';
   document.getElementById('wokeAt').textContent = fmtHMS(now);
@@ -680,7 +926,111 @@ function iAmAwake(){
   showScreen('success');
 }
 
-// ---------- 5. SCREENS ----------
+// ---------- 5. TAP-NOTE DISMISSAL ----------
+// The 8 maimai button positions in degrees, starting at top and going CW.
+const BUTTON_ANGLES = [0, 45, 90, 135, 180, 225, 270, 315];
+
+function pickRandomFour(){
+  // Fisher-Yates pick 4 distinct angles
+  const pool = BUTTON_ANGLES.slice();
+  const out = [];
+  for(let i = 0; i < 4; i++){
+    const j = Math.floor(Math.random() * pool.length);
+    out.push(pool.splice(j, 1)[0]);
+  }
+  return out;
+}
+
+function resetTapSession(){
+  clearTapNotes();
+  state.tapPositions = pickRandomFour();
+  state.tapIndex = 0;
+  document.getElementById('tapProgress').textContent = `0 / ${REQUIRED_TAPS}`;
+}
+
+function clearTapNotes(){
+  const field = document.getElementById('alarmField');
+  for(const el of field.querySelectorAll('.tap-note,.burst,.perfect-popup')){
+    el.remove();
+  }
+}
+
+// Convert an angle (degrees, 0 = top, CW) into left/top percentages
+// on the field. Notes sit just inside the field edge.
+function angleToXY(deg){
+  const r = 42; // percent radius from center (edge of field is ~50)
+  const rad = (deg - 90) * Math.PI / 180; // -90 so 0deg is up
+  const x = 50 + r * Math.cos(rad);
+  const y = 50 + r * Math.sin(rad);
+  return {x, y};
+}
+
+function spawnNextTapNote(){
+  if(state.tapIndex >= REQUIRED_TAPS){ return; }
+  const field = document.getElementById('alarmField');
+  const angle = state.tapPositions[state.tapIndex];
+  const {x, y} = angleToXY(angle);
+
+  const note = document.createElement('button');
+  note.className = 'tap-note';
+  note.style.left = x + '%';
+  note.style.top  = y + '%';
+  note.setAttribute('aria-label', `Tap note ${state.tapIndex + 1}`);
+  note.dataset.x = x;
+  note.dataset.y = y;
+
+  // handle both click and touch cleanly (touchstart, then swallow click)
+  let handled = false;
+  const hit = (ev) => {
+    if(handled) return;
+    handled = true;
+    ev.preventDefault();
+    onTapNoteHit(note);
+  };
+  note.addEventListener('touchstart', hit, {passive:false});
+  note.addEventListener('mousedown', hit);
+  note.addEventListener('click', (e)=>{ if(!handled) hit(e); });
+
+  field.appendChild(note);
+}
+
+function onTapNoteHit(note){
+  const field = document.getElementById('alarmField');
+  const x = parseFloat(note.dataset.x);
+  const y = parseFloat(note.dataset.y);
+
+  // burst + PERFECT popup
+  const burst = document.createElement('div');
+  burst.className = 'burst';
+  burst.style.left = x + '%';
+  burst.style.top  = y + '%';
+  field.appendChild(burst);
+  setTimeout(() => burst.remove(), 500);
+
+  const pop = document.createElement('div');
+  pop.className = 'perfect-popup';
+  pop.textContent = 'PERFECT!';
+  pop.style.left = x + '%';
+  pop.style.top  = y + '%';
+  field.appendChild(pop);
+  setTimeout(() => pop.remove(), 800);
+
+  playHitSound();
+  note.remove();
+
+  state.tapIndex++;
+  document.getElementById('tapProgress').textContent = `${state.tapIndex} / ${REQUIRED_TAPS}`;
+
+  if(state.tapIndex >= REQUIRED_TAPS){
+    // brief pause so the last burst is visible
+    setTimeout(finishAlarm, 350);
+  } else {
+    // slight delay before next note appears
+    setTimeout(spawnNextTapNote, 150);
+  }
+}
+
+// ---------- 6. SCREENS ----------
 function showScreen(name){
   state.screen = name;
   for(const s of document.querySelectorAll('.screen')){
@@ -695,20 +1045,17 @@ function showScreen(name){
 }
 
 function armAlarm(){
-  // Read form values
   state.firstTime   = document.getElementById('firstTime').value || '08:00';
   state.intervalMin = parseInt(document.getElementById('interval').value, 10);
   state.maxAlarms   = parseInt(document.getElementById('maxAlarms').value, 10);
   state.testMode    = document.getElementById('testMode').checked;
   saveSettings();
 
-  // Unlock audio on user gesture (satisfies browser autoplay policy)
   ensureAudio();
   requestWakeLock();
 
   state.scheduleMs = buildSchedule();
   state.currentAlarmIndex = -1;
-  state.armedAt = Date.now();
   showScreen('armed');
 }
 
@@ -720,23 +1067,23 @@ function disarm(){
   showScreen('setup');
 }
 
-// ---------- 6. WEB AUDIO SYNTHESIS ----------
+// ---------- 7. WEB AUDIO SYNTHESIS ----------
 // ----- SWAP-IN POINT FOR MP3 CLIPS -----
 // To replace synth tones with audio files:
-//   1. Create <audio> elements or load with new Audio('file.mp3') per level.
+//   1. Load audio elements per level, e.g.:
+//        const audios = {1:new Audio('a1.mp3'),2:new Audio('a2.mp3'),...};
 //   2. In playAlarm(level), instead of scheduling oscillators, do:
-//        currentAudioEl = audioForLevel[level];
-//        currentAudioEl.loop = true;
-//        currentAudioEl.volume = [0.4,0.6,0.8,1.0][level-1];
-//        currentAudioEl.play();
-//   3. In stopAlarm(), currentAudioEl.pause(); currentAudioEl.currentTime = 0;
-//   4. You can keep ensureAudio() as-is — playing an <audio> after a user
-//      gesture (the ARM button) is allowed by autoplay policy.
+//        const el = audios[level]; el.loop = true;
+//        el.volume = [0.4,0.6,0.8,1.0][level-1]; el.play();
+//   3. In stopAlarm(): for each el, el.pause(); el.currentTime = 0;
+//   4. Keep ensureAudio() as-is — playing an <audio> after the ARM
+//      button click satisfies browser autoplay policy.
+//   5. For tap hit sounds you can preload a single short mp3 similarly.
 // ---------------------------------------
 let audioCtx = null;
 let masterGain = null;
-let alarmTimers = [];       // pending setTimeout ids for scheduled notes
-let alarmOscillators = [];  // currently playing OscillatorNodes
+let alarmTimers = [];
+let alarmOscillators = [];
 
 function ensureAudio(){
   if(audioCtx) return;
@@ -745,17 +1092,14 @@ function ensureAudio(){
   masterGain = audioCtx.createGain();
   masterGain.gain.value = 0.001;
   masterGain.connect(audioCtx.destination);
-  // some browsers start suspended until a gesture — resume just in case
   if(audioCtx.state === 'suspended') audioCtx.resume();
 }
 
-// Play a single note. Returns the oscillator so we can stop it early.
 function note(freq, when, dur, type, vol){
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   osc.type = type || 'sine';
   osc.frequency.setValueAtTime(freq, when);
-  // simple envelope: quick attack, decay to 0
   gain.gain.setValueAtTime(0.0001, when);
   gain.gain.exponentialRampToValueAtTime(vol, when + 0.01);
   gain.gain.exponentialRampToValueAtTime(0.0001, when + dur);
@@ -766,58 +1110,33 @@ function note(freq, when, dur, type, vol){
   return osc;
 }
 
-// Schedule the next loop iteration of the current alarm pattern.
 function playAlarm(level){
   ensureAudio();
-  stopAlarm(); // clear any previous
-  // Master volume ramps up per level
+  stopAlarm();
   const masterVol = [0.35, 0.55, 0.8, 1.0][level - 1] || 1.0;
   masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
   masterGain.gain.setValueAtTime(masterVol, audioCtx.currentTime);
 
   const patterns = {
-    // Alarm 1: gentle rising chime — C E G C (pleasant)
-    1: {
-      seq: [
+    1: {seq:[
         {f:523.25, d:0.35, t:'sine', v:0.4},
         {f:659.25, d:0.35, t:'sine', v:0.4},
         {f:783.99, d:0.35, t:'sine', v:0.4},
         {f:1046.5, d:0.6,  t:'sine', v:0.5},
-        {rest:0.6},
-      ],
-      loopEvery: 2.5,
-    },
-    // Alarm 2: faster arpeggio, brighter tone
-    2: {
-      seq: [
+        {rest:0.6}], loopEvery:2.5},
+    2: {seq:[
         {f:659.25, d:0.15, t:'triangle', v:0.55},
         {f:880.00, d:0.15, t:'triangle', v:0.55},
         {f:1046.5, d:0.15, t:'triangle', v:0.55},
         {f:1318.5, d:0.25, t:'triangle', v:0.6},
-        {rest:0.15},
-      ],
-      loopEvery: 1.0,
-    },
-    // Alarm 3: harsh two-tone siren
-    3: {
-      seq: [
+        {rest:0.15}], loopEvery:1.0},
+    3: {seq:[
         {f:880,  d:0.25, t:'sawtooth', v:0.8},
-        {f:1200, d:0.25, t:'sawtooth', v:0.8},
-      ],
-      loopEvery: 0.55,
-    },
-    // Alarm 4: rapid dissonant beeping — genuinely unpleasant
-    4: {
-      seq: [
-        {f:1600, d:0.08, t:'square', v:1.0},
-        {rest:0.05},
-        {f:2100, d:0.08, t:'square', v:1.0},
-        {rest:0.05},
-        {f:1800, d:0.08, t:'square', v:1.0},
-        {rest:0.05},
-      ],
-      loopEvery: 0.6,
-    },
+        {f:1200, d:0.25, t:'sawtooth', v:0.8}], loopEvery:0.55},
+    4: {seq:[
+        {f:1600, d:0.08, t:'square', v:1.0}, {rest:0.05},
+        {f:2100, d:0.08, t:'square', v:1.0}, {rest:0.05},
+        {f:1800, d:0.08, t:'square', v:1.0}, {rest:0.05}], loopEvery:0.6},
   };
   const p = patterns[level] || patterns[4];
 
@@ -830,8 +1149,6 @@ function playAlarm(level){
     }
     return t;
   }
-
-  // Schedule ~2 loops ahead and re-schedule via setTimeout to keep it going.
   let cursor = audioCtx.currentTime + 0.05;
   const scheduleAhead = () => {
     const end = scheduleOneLoop(cursor);
@@ -846,9 +1163,7 @@ function playAlarm(level){
 function stopAlarm(){
   for(const id of alarmTimers) clearTimeout(id);
   alarmTimers = [];
-  for(const o of alarmOscillators){
-    try{ o.stop(); }catch(e){}
-  }
+  for(const o of alarmOscillators){ try{ o.stop(); }catch(e){} }
   alarmOscillators = [];
   if(masterGain){
     masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
@@ -856,35 +1171,81 @@ function stopAlarm(){
   }
 }
 
-// ---------- 7. WAKE LOCK ----------
+// short punchy hit sound for tap notes: two-osc chirp + noise blip
+function playHitSound(){
+  if(!audioCtx) return;
+  const t = audioCtx.currentTime;
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, t);
+  g.gain.exponentialRampToValueAtTime(0.5, t + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+  g.connect(masterGain || audioCtx.destination);
+
+  const o1 = audioCtx.createOscillator();
+  o1.type = 'triangle';
+  o1.frequency.setValueAtTime(1200, t);
+  o1.frequency.exponentialRampToValueAtTime(2400, t + 0.12);
+  o1.connect(g);
+  o1.start(t); o1.stop(t + 0.2);
+
+  const o2 = audioCtx.createOscillator();
+  o2.type = 'sine';
+  o2.frequency.setValueAtTime(600, t);
+  o2.frequency.exponentialRampToValueAtTime(1200, t + 0.08);
+  o2.connect(g);
+  o2.start(t); o2.stop(t + 0.15);
+}
+
+// ---------- 8. WAKE LOCK ----------
 let wakeLock = null;
 async function requestWakeLock(){
   if(!('wakeLock' in navigator)) return;
   try{
     wakeLock = await navigator.wakeLock.request('screen');
     wakeLock.addEventListener('release', () => { wakeLock = null; });
-  }catch(e){ /* user denied or not supported */ }
+  }catch(e){}
 }
 function releaseWakeLock(){
   if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock = null; }
 }
-// Re-request when the tab becomes visible again
 document.addEventListener('visibilitychange', () => {
   if(document.visibilityState === 'visible' && state.screen !== 'setup' && !wakeLock){
     requestWakeLock();
   }
 });
 
-// ---------- 8. EVENT WIRING ----------
+// ---------- 9. EVENT WIRING + FIELD DECORATION ----------
+
+// Inject the deco rings + 8 button markers into every .field on the page.
+// Kept in JS so the HTML markup stays clean and we don't repeat 8 divs
+// per screen. Runs once at boot.
+function decorateFields(){
+  for(const field of document.querySelectorAll('.field')){
+    // deco rings (rendered behind field content)
+    const cw  = document.createElement('div'); cw.className  = 'deco deco-cw';
+    const ccw = document.createElement('div'); ccw.className = 'deco deco-ccw';
+    field.prepend(ccw); field.prepend(cw);
+    // pulsing/spinning ring accents (keep the older look too)
+    const r1 = document.createElement('div'); r1.className = 'ring';
+    const r2 = document.createElement('div'); r2.className = 'ring inner';
+    field.prepend(r2); field.prepend(r1);
+    // 8 button markers at 45° intervals
+    for(const angle of BUTTON_ANGLES){
+      const m = document.createElement('div');
+      m.className = 'btn-marker';
+      m.style.setProperty('--angle', angle + 'deg');
+      field.appendChild(m);
+    }
+  }
+}
+
 document.getElementById('armBtn').addEventListener('click', armAlarm);
 document.getElementById('disarmBtn').addEventListener('click', () => {
   if(confirm('Disarm the alarm?')) disarm();
 });
-document.getElementById('awakeBtn').addEventListener('click', iAmAwake);
 document.getElementById('successReset').addEventListener('click', () => showScreen('setup'));
 document.getElementById('failedReset').addEventListener('click', () => showScreen('setup'));
 
-// live-save settings as user changes them on the setup screen
 for(const id of ['firstTime','interval','maxAlarms','testMode']){
   document.getElementById(id).addEventListener('change', () => {
     state.firstTime   = document.getElementById('firstTime').value;
@@ -902,7 +1263,8 @@ document.getElementById('firstTime').value  = state.firstTime;
 document.getElementById('interval').value   = state.intervalMin;
 document.getElementById('maxAlarms').value  = state.maxAlarms;
 document.getElementById('testMode').checked = state.testMode;
-tick(); // paint immediately so the clock isn't blank
+decorateFields();
+tick();
 </script>
 </body>
 </html>
