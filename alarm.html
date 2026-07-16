@@ -1,0 +1,908 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>maimai Alarm</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+/* =========================================================
+   maimai Alarm — styles
+   Palette: neon magenta / cyan / yellow on dark navy
+   Layout: one big central circle (the maimai "play field")
+   ========================================================= */
+:root{
+  --bg-0:#0a0620;
+  --bg-1:#140a34;
+  --pink:#ff4fa3;
+  --pink-2:#ff1f7a;
+  --cyan:#00d9ff;
+  --yellow:#ffe14a;
+  --white:#ffffff;
+  --danger:#ff2a2a;
+  --ok:#7dffb0;
+  --ring:520px;
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;width:100%;overflow:hidden}
+body{
+  font-family:'Fredoka',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color:var(--white);
+  background:
+    radial-gradient(1200px 800px at 50% 40%, #1a0e4a 0%, var(--bg-0) 60%, #05030f 100%);
+  min-height:100vh;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+/* subtle grid backdrop like an arcade CRT */
+body::before{
+  content:"";
+  position:fixed;inset:0;
+  background:
+    linear-gradient(transparent 95%, rgba(255,255,255,.03) 95%) 0 0/100% 8px,
+    linear-gradient(90deg, transparent 95%, rgba(255,255,255,.03) 95%) 0 0/8px 100%;
+  pointer-events:none;
+  z-index:0;
+}
+
+/* screen containers */
+.screen{
+  position:fixed;inset:0;
+  display:none;
+  align-items:center;justify-content:center;
+  z-index:1;
+}
+.screen.active{display:flex}
+
+/* header + footer HUD */
+.hud-top,.hud-bottom{
+  position:fixed;left:0;right:0;
+  padding:14px 24px;
+  display:flex;justify-content:space-between;align-items:center;
+  z-index:5;font-family:'Orbitron',sans-serif;font-weight:700;
+  letter-spacing:.08em;font-size:14px;
+  text-shadow:0 0 8px rgba(0,217,255,.6);
+}
+.hud-top{top:0}
+.hud-bottom{bottom:0;opacity:.75;font-size:12px}
+.brand{color:var(--pink);text-shadow:0 0 12px var(--pink)}
+.now{color:var(--cyan)}
+
+/* =========================================================
+   The central circle — the maimai play field
+   ========================================================= */
+.field{
+  position:relative;
+  width:min(90vmin,var(--ring));
+  height:min(90vmin,var(--ring));
+  border-radius:50%;
+  background:
+    radial-gradient(circle at 50% 50%,
+      rgba(255,79,163,.15) 0%,
+      rgba(0,217,255,.08) 40%,
+      rgba(10,6,32,.6) 70%,
+      transparent 100%);
+  border:3px solid rgba(255,255,255,.15);
+  box-shadow:
+    0 0 60px rgba(255,79,163,.35),
+    inset 0 0 60px rgba(0,217,255,.15);
+  display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  padding:6%;
+  text-align:center;
+}
+
+/* the spinning/pulsing ring around the field */
+.ring{
+  position:absolute;inset:-14px;
+  border-radius:50%;
+  border:2px dashed rgba(0,217,255,.55);
+  animation:spin 20s linear infinite;
+  pointer-events:none;
+}
+.ring.inner{
+  inset:-2px;
+  border:2px solid rgba(255,79,163,.55);
+  border-style:solid;
+  animation:pulse 2.4s ease-in-out infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulse{
+  0%,100%{box-shadow:0 0 20px rgba(255,79,163,.4)}
+  50%    {box-shadow:0 0 55px rgba(255,79,163,.9)}
+}
+
+/* generic type */
+h1.title{
+  font-family:'Orbitron',sans-serif;
+  font-weight:900;
+  font-size:clamp(28px,5vmin,54px);
+  letter-spacing:.14em;
+  color:var(--white);
+  text-shadow:
+    0 0 12px var(--pink),
+    0 0 30px var(--pink-2),
+    0 0 60px rgba(255,79,163,.4);
+  margin-bottom:6px;
+}
+.subtitle{
+  font-size:clamp(12px,1.6vmin,16px);
+  letter-spacing:.3em;
+  color:var(--cyan);
+  text-transform:uppercase;
+  text-shadow:0 0 10px var(--cyan);
+  margin-bottom:14px;
+}
+
+/* setup form */
+.form{
+  display:grid;gap:14px;width:100%;max-width:340px;
+}
+.row{
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(0,217,255,.35);
+  border-radius:14px;
+  padding:10px 14px;
+  box-shadow:inset 0 0 12px rgba(0,217,255,.1);
+}
+.row label{
+  font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);
+}
+.row input,.row select{
+  background:transparent;color:var(--white);
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:18px;
+  border:none;outline:none;text-align:right;
+  min-width:110px;
+}
+.row input[type="time"]::-webkit-calendar-picker-indicator{
+  filter:invert(1) drop-shadow(0 0 4px var(--cyan));
+  cursor:pointer;
+}
+.row select{appearance:none;padding-right:4px;cursor:pointer}
+.row select option{background:var(--bg-1);color:var(--white)}
+
+.toggle{
+  display:flex;align-items:center;gap:10px;justify-content:center;
+  margin-top:6px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--yellow);
+}
+.toggle input{width:18px;height:18px;accent-color:var(--yellow)}
+
+/* arcade buttons */
+.btn{
+  cursor:pointer;
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  letter-spacing:.18em;text-transform:uppercase;
+  border:none;outline:none;color:var(--white);
+  padding:16px 30px;border-radius:999px;
+  background:linear-gradient(180deg,var(--pink) 0%,var(--pink-2) 100%);
+  box-shadow:
+    0 0 30px rgba(255,79,163,.7),
+    inset 0 -4px 0 rgba(0,0,0,.25),
+    inset 0 2px 0 rgba(255,255,255,.35);
+  transition:transform .08s ease, box-shadow .2s ease;
+}
+.btn:active{transform:translateY(2px) scale(.98)}
+.btn.cyan{
+  background:linear-gradient(180deg,var(--cyan) 0%,#0090c0 100%);
+  color:#001a24;
+  box-shadow:0 0 30px rgba(0,217,255,.7),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.35);
+}
+.btn.ghost{
+  background:transparent;color:var(--white);
+  border:2px solid rgba(255,255,255,.35);
+  box-shadow:none;padding:10px 18px;font-size:12px;
+}
+.btn.small{padding:10px 18px;font-size:13px}
+.btn.big{
+  font-size:clamp(18px,3vmin,26px);
+  padding:22px 40px;
+  margin-top:10px;
+}
+
+/* armed screen big clock */
+.clock{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(48px,10vmin,110px);
+  letter-spacing:.06em;
+  color:var(--white);
+  text-shadow:0 0 20px var(--cyan),0 0 50px rgba(0,217,255,.5);
+  line-height:1;
+}
+.next-label{
+  margin-top:16px;font-size:13px;letter-spacing:.3em;
+  color:var(--pink);text-transform:uppercase;text-shadow:0 0 10px var(--pink);
+}
+.next-time{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(22px,3.5vmin,32px);
+  color:var(--yellow);text-shadow:0 0 10px var(--yellow);
+  letter-spacing:.1em;margin-top:4px;
+}
+.countdown{
+  margin-top:10px;font-family:'Orbitron',sans-serif;font-weight:700;
+  font-size:clamp(16px,2.4vmin,22px);color:var(--cyan);
+}
+.warning{
+  margin-top:16px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;
+  color:rgba(255,225,74,.85);max-width:280px;line-height:1.4;
+}
+
+/* corner disarm */
+.corner{
+  position:fixed;top:50px;right:20px;z-index:6;
+}
+
+/* =========================================================
+   ALARM MODE
+   ========================================================= */
+#alarmScreen{background:transparent}
+#alarmScreen .field{
+  border-color:rgba(255,79,163,.9);
+  box-shadow:
+    0 0 100px rgba(255,79,163,.9),
+    inset 0 0 80px rgba(255,79,163,.4);
+}
+.alarm-label{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(20px,3vmin,32px);
+  letter-spacing:.2em;color:var(--yellow);
+  text-shadow:0 0 20px var(--yellow);
+  margin-bottom:8px;
+}
+.alarm-count{
+  font-size:14px;letter-spacing:.3em;color:var(--white);
+  text-transform:uppercase;margin-bottom:14px;opacity:.85;
+}
+.escalate-in{
+  margin-top:14px;font-family:'Orbitron',sans-serif;font-weight:700;
+  font-size:clamp(14px,2vmin,20px);color:var(--white);
+  letter-spacing:.15em;
+}
+
+/* the giant tap note "I'M AWAKE" */
+.tap-note{
+  width:clamp(180px,32vmin,260px);
+  height:clamp(180px,32vmin,260px);
+  border-radius:50%;
+  background:radial-gradient(circle at 50% 40%,#ffb4d6 0%,var(--pink) 50%,var(--pink-2) 100%);
+  border:6px solid var(--white);
+  color:var(--white);
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(20px,3.4vmin,30px);
+  letter-spacing:.12em;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  box-shadow:
+    0 0 60px rgba(255,79,163,.9),
+    0 0 120px rgba(255,79,163,.6),
+    inset 0 -10px 20px rgba(0,0,0,.25),
+    inset 0 10px 20px rgba(255,255,255,.4);
+  animation:tapPulse .8s ease-in-out infinite;
+  margin:8px auto;
+  padding:12px;text-align:center;
+}
+.tap-note:active{transform:scale(.94)}
+@keyframes tapPulse{
+  0%,100%{transform:scale(1)}
+  50%    {transform:scale(1.07)}
+}
+
+/* flashing bg overlay for alarm mode */
+.flash{
+  position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(circle,rgba(255,79,163,.35) 0%,transparent 70%);
+  animation:flashPulse 1s ease-in-out infinite;
+}
+@keyframes flashPulse{
+  0%,100%{opacity:.15}
+  50%    {opacity:.75}
+}
+/* escalation levels — override animation speed / color */
+body[data-level="2"] .flash{animation-duration:.7s;background:radial-gradient(circle,rgba(255,79,163,.5) 0%,transparent 70%)}
+body[data-level="3"] .flash{animation-duration:.45s;background:radial-gradient(circle,rgba(255,60,60,.55) 0%,transparent 70%)}
+body[data-level="4"] .flash{animation-duration:.25s;background:radial-gradient(circle,rgba(255,20,20,.75) 0%,transparent 70%)}
+
+body[data-level="2"] .tap-note{animation-duration:.55s}
+body[data-level="3"] .tap-note{
+  animation-duration:.35s;
+  background:radial-gradient(circle at 50% 40%,#ffd6d6 0%,#ff5555 50%,#c40000 100%);
+  box-shadow:0 0 80px rgba(255,40,40,.9),0 0 160px rgba(255,20,20,.6),inset 0 -10px 20px rgba(0,0,0,.3),inset 0 10px 20px rgba(255,255,255,.4);
+}
+body[data-level="4"] .tap-note{
+  animation-duration:.22s;
+  background:radial-gradient(circle at 50% 40%,#ffffff 0%,#ff3838 40%,#8b0000 100%);
+}
+body[data-level="4"]{animation:shake .12s linear infinite}
+@keyframes shake{
+  0%{transform:translate(0,0)}
+  25%{transform:translate(-3px,2px)}
+  50%{transform:translate(2px,-3px)}
+  75%{transform:translate(-2px,-1px)}
+  100%{transform:translate(0,0)}
+}
+
+/* =========================================================
+   Success / Failed screens
+   ========================================================= */
+.results{
+  text-align:center;
+}
+.grade{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(80px,18vmin,180px);
+  line-height:1;letter-spacing:.02em;
+  background:linear-gradient(180deg,#fff,var(--yellow) 50%,#ff9c00 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 40px rgba(255,225,74,.5);
+  margin-bottom:10px;
+}
+.combo{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(24px,4vmin,42px);
+  color:var(--white);letter-spacing:.2em;
+  text-shadow:0 0 20px var(--cyan);
+  margin-bottom:20px;
+}
+.stats{
+  display:grid;gap:8px;font-size:15px;letter-spacing:.1em;
+  color:rgba(255,255,255,.9);
+}
+.stats span{color:var(--cyan)}
+
+.gameover .grade{
+  background:linear-gradient(180deg,#666,#333);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  text-shadow:0 0 20px rgba(255,40,40,.5);
+  font-size:clamp(60px,12vmin,120px);
+}
+.gameover .field{
+  border-color:rgba(120,120,120,.4);
+  box-shadow:0 0 30px rgba(255,40,40,.3),inset 0 0 40px rgba(0,0,0,.5);
+  background:radial-gradient(circle at 50% 50%,rgba(80,20,20,.4) 0%,rgba(10,6,32,.6) 60%,transparent 100%);
+}
+
+/* small helpers */
+.gap{height:10px}
+.hidden{display:none !important}
+</style>
+</head>
+<body>
+
+<!-- HUD: top bar shows current time, bottom shows brand -->
+<div class="hud-top">
+  <div class="brand">◆ maimai ALARM</div>
+  <div class="now">NOW: <span id="hudClock">--:--:--</span></div>
+</div>
+<div class="hud-bottom">
+  <div>STATUS: <span id="hudStatus">SETUP</span></div>
+  <div id="hudMode"></div>
+</div>
+
+<!-- ================= SETUP SCREEN ================= -->
+<section id="setupScreen" class="screen active">
+  <div class="field">
+    <div class="ring"></div>
+    <div class="ring inner"></div>
+    <h1 class="title">WAKE UP</h1>
+    <div class="subtitle">Escalating Alarm</div>
+
+    <div class="form">
+      <div class="row">
+        <label for="firstTime">First alarm</label>
+        <input type="time" id="firstTime" value="08:00" />
+      </div>
+      <div class="row">
+        <label for="interval">Escalate every</label>
+        <select id="interval">
+          <option value="15">15 min</option>
+          <option value="30" selected>30 min</option>
+          <option value="45">45 min</option>
+          <option value="60">60 min</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="maxAlarms">Max alarms</label>
+        <select id="maxAlarms">
+          <option value="2">2</option>
+          <option value="3">3</option>
+          <option value="4" selected>4</option>
+          <option value="5">5</option>
+          <option value="6">6</option>
+        </select>
+      </div>
+      <div class="toggle">
+        <input type="checkbox" id="testMode" />
+        <label for="testMode">TEST MODE (15s wake / 30s escalate)</label>
+      </div>
+      <button class="btn big" id="armBtn">ARM ALARM</button>
+    </div>
+  </div>
+</section>
+
+<!-- ================= ARMED SCREEN ================= -->
+<section id="armedScreen" class="screen">
+  <div class="field">
+    <div class="ring"></div>
+    <div class="ring inner"></div>
+    <div class="subtitle">Alarm Armed</div>
+    <div class="clock" id="bigClock">--:--:--</div>
+    <div class="next-label">Next alarm</div>
+    <div class="next-time" id="nextTime">--:--</div>
+    <div class="countdown" id="armedCountdown">in --:--:--</div>
+    <div class="warning">Keep this tab open. Your computer must stay on. Screen wake-lock will try to keep the display awake.</div>
+  </div>
+  <div class="corner">
+    <button class="btn ghost small" id="disarmBtn">DISARM</button>
+  </div>
+</section>
+
+<!-- ================= ALARM SCREEN ================= -->
+<section id="alarmScreen" class="screen">
+  <div class="flash"></div>
+  <div class="field">
+    <div class="ring"></div>
+    <div class="ring inner"></div>
+    <div class="alarm-label" id="alarmLabel">WAKE UP!</div>
+    <div class="alarm-count" id="alarmCount">ALARM 1 / 4</div>
+    <button class="tap-note" id="awakeBtn">I'M<br/>AWAKE</button>
+    <div class="escalate-in" id="escalateIn">escalates in --:--</div>
+  </div>
+</section>
+
+<!-- ================= SUCCESS SCREEN ================= -->
+<section id="successScreen" class="screen">
+  <div class="field results">
+    <div class="ring"></div>
+    <div class="ring inner"></div>
+    <div class="subtitle">CLEAR!</div>
+    <div class="grade" id="successGrade">SSS</div>
+    <div class="combo">FULL COMBO</div>
+    <div class="stats">
+      <div>WOKE AT <span id="wokeAt">--:--:--</span></div>
+      <div>ALARM <span id="wokeOn">1</span> / <span id="wokeMax">4</span></div>
+    </div>
+    <div class="gap"></div>
+    <button class="btn cyan small" id="successReset">SET ANOTHER</button>
+  </div>
+</section>
+
+<!-- ================= FAILED SCREEN ================= -->
+<section id="failedScreen" class="screen gameover">
+  <div class="field results">
+    <div class="ring"></div>
+    <div class="ring inner"></div>
+    <div class="subtitle" style="color:#ff6666;text-shadow:0 0 10px #ff2a2a">FAILED</div>
+    <div class="grade">GAME OVER</div>
+    <div class="combo" style="color:#ff9090;text-shadow:0 0 20px #ff2a2a">MISSED ALL ALARMS</div>
+    <div class="stats">
+      <div>ALL <span id="failedMax">4</span> ALARMS IGNORED</div>
+      <div>LAST ALARM AT <span id="failedLast">--:--</span></div>
+    </div>
+    <div class="gap"></div>
+    <button class="btn ghost small" id="failedReset">RESET</button>
+  </div>
+</section>
+
+<script>
+/* =========================================================
+   maimai Alarm — application logic
+   Sections:
+     1. State & constants
+     2. Persistence (localStorage)
+     3. Clock loop (single source of truth for time)
+     4. Alarm scheduling & escalation
+     5. Screens / UI updates
+     6. Web Audio synthesis (swap-in point for mp3s)
+     7. Wake Lock API
+     8. Event wiring
+   ========================================================= */
+
+// ---------- 1. STATE ----------
+const STORAGE_KEY = 'maimai-alarm-v1';
+
+const state = {
+  screen: 'setup',           // 'setup' | 'armed' | 'alarm' | 'success' | 'failed'
+  firstTime: '08:00',        // "HH:MM"
+  intervalMin: 30,
+  maxAlarms: 4,
+  testMode: false,
+
+  armedAt: null,             // Date when armed
+  scheduleMs: [],            // absolute epoch ms for each alarm
+  currentAlarmIndex: -1,     // which alarm is currently ringing (-1 if none)
+  alarmRingingSince: null,   // epoch ms when current alarm started
+};
+
+// Test mode shortens windows so you can see the whole flow fast.
+// Live mode: 5-minute wake window, escalate interval from settings.
+// Test mode: 15-second wake window, 30-second escalate spacing.
+function wakeWindowMs()  { return state.testMode ? 15 * 1000 : 5 * 60 * 1000; }
+function escalateStepMs(){ return state.testMode ? 30 * 1000 : state.intervalMin * 60 * 1000; }
+
+// ---------- 2. PERSISTENCE ----------
+function saveSettings(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      firstTime: state.firstTime,
+      intervalMin: state.intervalMin,
+      maxAlarms: state.maxAlarms,
+      testMode: state.testMode,
+    }));
+  }catch(e){/* ignore quota / private mode */}
+}
+function loadSettings(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return;
+    const s = JSON.parse(raw);
+    if(s.firstTime)   state.firstTime   = s.firstTime;
+    if(s.intervalMin) state.intervalMin = s.intervalMin;
+    if(s.maxAlarms)   state.maxAlarms   = s.maxAlarms;
+    if(typeof s.testMode === 'boolean') state.testMode = s.testMode;
+  }catch(e){}
+}
+
+// ---------- 3. CLOCK LOOP ----------
+// One setInterval polls real Date.now() every 250ms.
+// This survives tab throttling better than a single big setTimeout,
+// because when the tab wakes up we immediately compare against real time.
+function pad(n){ return String(n).padStart(2,'0'); }
+function fmtHMS(d){ return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
+function fmtHM(d){  return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
+
+function fmtDurationMs(ms){
+  if(ms < 0) ms = 0;
+  const s = Math.floor(ms/1000);
+  const h = Math.floor(s/3600);
+  const m = Math.floor((s%3600)/60);
+  const sec = s%60;
+  if(h > 0) return `${pad(h)}:${pad(m)}:${pad(sec)}`;
+  return `${pad(m)}:${pad(sec)}`;
+}
+
+function tick(){
+  const now = new Date();
+  document.getElementById('hudClock').textContent = fmtHMS(now);
+
+  if(state.screen === 'armed'){
+    document.getElementById('bigClock').textContent = fmtHMS(now);
+    const nextIdx = state.scheduleMs.findIndex(t => t > now.getTime());
+    if(nextIdx === -1){
+      // all scheduled alarms are in the past somehow — fail-safe
+      return;
+    }
+    const nextT = state.scheduleMs[nextIdx];
+    document.getElementById('nextTime').textContent = fmtHM(new Date(nextT));
+    document.getElementById('armedCountdown').textContent = 'in ' + fmtDurationMs(nextT - now.getTime());
+
+    // fire alarm if any scheduled time is due
+    for(let i = 0; i < state.scheduleMs.length; i++){
+      if(now.getTime() >= state.scheduleMs[i] && i > state.currentAlarmIndex){
+        startAlarm(i);
+        break;
+      }
+    }
+  }
+
+  if(state.screen === 'alarm'){
+    const level = state.currentAlarmIndex + 1;
+    const startedAt = state.alarmRingingSince;
+    const escalateAt = startedAt + wakeWindowMs();
+    const remain = escalateAt - now.getTime();
+    document.getElementById('escalateIn').textContent =
+      remain > 0
+        ? `escalates in ${fmtDurationMs(remain)}`
+        : `escalating...`;
+    if(remain <= 0){
+      // wake window expired — either escalate or fail
+      escalate();
+    }
+  }
+}
+setInterval(tick, 250);
+
+// ---------- 4. SCHEDULING ----------
+// Build absolute timestamps for each alarm from the first-alarm time
+// and the escalation interval. If the chosen first time is earlier than
+// "now" today, we roll it to tomorrow — same behavior a phone alarm has.
+function buildSchedule(){
+  const now = new Date();
+  const [hh, mm] = state.firstTime.split(':').map(Number);
+  const first = new Date(now);
+  first.setHours(hh, mm, 0, 0);
+
+  if(state.testMode){
+    // In test mode, first alarm starts 5 seconds from now so you can
+    // actually see the armed → alarm transition without waiting.
+    first.setTime(now.getTime() + 5 * 1000);
+  } else if(first.getTime() <= now.getTime()){
+    first.setDate(first.getDate() + 1); // roll to tomorrow
+  }
+
+  const step = escalateStepMs();
+  const schedule = [];
+  for(let i = 0; i < state.maxAlarms; i++){
+    schedule.push(first.getTime() + i * step);
+  }
+  return schedule;
+}
+
+function startAlarm(idx){
+  state.currentAlarmIndex = idx;
+  state.alarmRingingSince = Date.now();
+  const level = idx + 1;
+  document.body.setAttribute('data-level', String(level));
+  document.getElementById('alarmCount').textContent =
+    `ALARM ${level} / ${state.maxAlarms}`;
+  document.getElementById('alarmLabel').textContent =
+    level >= 4 ? 'GET UP NOW!!!' : level >= 3 ? 'WAKE UP!!' : 'WAKE UP!';
+  showScreen('alarm');
+  playAlarm(level);
+}
+
+function stopCurrentAlarm(){
+  stopAlarm();
+  state.alarmRingingSince = null;
+  document.body.removeAttribute('data-level');
+}
+
+function escalate(){
+  const nextIdx = state.currentAlarmIndex + 1;
+  stopCurrentAlarm();
+  if(nextIdx >= state.maxAlarms){
+    // All alarms exhausted → FAIL screen
+    document.getElementById('failedMax').textContent = state.maxAlarms;
+    const lastT = state.scheduleMs[state.scheduleMs.length - 1];
+    document.getElementById('failedLast').textContent = fmtHM(new Date(lastT));
+    showScreen('failed');
+    return;
+  }
+  // Go back to armed screen; tick() will fire the next alarm when its
+  // scheduled timestamp arrives.
+  showScreen('armed');
+}
+
+function iAmAwake(){
+  const now = new Date();
+  const level = state.currentAlarmIndex + 1;
+  stopCurrentAlarm();
+
+  // grade: alarm 1 = SSS, 2 = S, 3 = A, 4+ = B
+  const grades = ['SSS','S','A','B','B','B'];
+  document.getElementById('successGrade').textContent = grades[level - 1] || 'B';
+  document.getElementById('wokeAt').textContent = fmtHMS(now);
+  document.getElementById('wokeOn').textContent = level;
+  document.getElementById('wokeMax').textContent = state.maxAlarms;
+  showScreen('success');
+}
+
+// ---------- 5. SCREENS ----------
+function showScreen(name){
+  state.screen = name;
+  for(const s of document.querySelectorAll('.screen')){
+    s.classList.toggle('active', s.id === name + 'Screen');
+  }
+  const statusMap = {
+    setup:'SETUP', armed:'ARMED',
+    alarm:'!! ALARM !!', success:'CLEARED', failed:'FAILED'
+  };
+  document.getElementById('hudStatus').textContent = statusMap[name] || name;
+  document.getElementById('hudMode').textContent = state.testMode ? 'TEST MODE' : '';
+}
+
+function armAlarm(){
+  // Read form values
+  state.firstTime   = document.getElementById('firstTime').value || '08:00';
+  state.intervalMin = parseInt(document.getElementById('interval').value, 10);
+  state.maxAlarms   = parseInt(document.getElementById('maxAlarms').value, 10);
+  state.testMode    = document.getElementById('testMode').checked;
+  saveSettings();
+
+  // Unlock audio on user gesture (satisfies browser autoplay policy)
+  ensureAudio();
+  requestWakeLock();
+
+  state.scheduleMs = buildSchedule();
+  state.currentAlarmIndex = -1;
+  state.armedAt = Date.now();
+  showScreen('armed');
+}
+
+function disarm(){
+  stopCurrentAlarm();
+  state.scheduleMs = [];
+  state.currentAlarmIndex = -1;
+  releaseWakeLock();
+  showScreen('setup');
+}
+
+// ---------- 6. WEB AUDIO SYNTHESIS ----------
+// ----- SWAP-IN POINT FOR MP3 CLIPS -----
+// To replace synth tones with audio files:
+//   1. Create <audio> elements or load with new Audio('file.mp3') per level.
+//   2. In playAlarm(level), instead of scheduling oscillators, do:
+//        currentAudioEl = audioForLevel[level];
+//        currentAudioEl.loop = true;
+//        currentAudioEl.volume = [0.4,0.6,0.8,1.0][level-1];
+//        currentAudioEl.play();
+//   3. In stopAlarm(), currentAudioEl.pause(); currentAudioEl.currentTime = 0;
+//   4. You can keep ensureAudio() as-is — playing an <audio> after a user
+//      gesture (the ARM button) is allowed by autoplay policy.
+// ---------------------------------------
+let audioCtx = null;
+let masterGain = null;
+let alarmTimers = [];       // pending setTimeout ids for scheduled notes
+let alarmOscillators = [];  // currently playing OscillatorNodes
+
+function ensureAudio(){
+  if(audioCtx) return;
+  const AC = window.AudioContext || window.webkitAudioContext;
+  audioCtx = new AC();
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.001;
+  masterGain.connect(audioCtx.destination);
+  // some browsers start suspended until a gesture — resume just in case
+  if(audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// Play a single note. Returns the oscillator so we can stop it early.
+function note(freq, when, dur, type, vol){
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type || 'sine';
+  osc.frequency.setValueAtTime(freq, when);
+  // simple envelope: quick attack, decay to 0
+  gain.gain.setValueAtTime(0.0001, when);
+  gain.gain.exponentialRampToValueAtTime(vol, when + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  osc.connect(gain).connect(masterGain);
+  osc.start(when);
+  osc.stop(when + dur + 0.05);
+  alarmOscillators.push(osc);
+  return osc;
+}
+
+// Schedule the next loop iteration of the current alarm pattern.
+function playAlarm(level){
+  ensureAudio();
+  stopAlarm(); // clear any previous
+  // Master volume ramps up per level
+  const masterVol = [0.35, 0.55, 0.8, 1.0][level - 1] || 1.0;
+  masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+  masterGain.gain.setValueAtTime(masterVol, audioCtx.currentTime);
+
+  const patterns = {
+    // Alarm 1: gentle rising chime — C E G C (pleasant)
+    1: {
+      seq: [
+        {f:523.25, d:0.35, t:'sine', v:0.4},
+        {f:659.25, d:0.35, t:'sine', v:0.4},
+        {f:783.99, d:0.35, t:'sine', v:0.4},
+        {f:1046.5, d:0.6,  t:'sine', v:0.5},
+        {rest:0.6},
+      ],
+      loopEvery: 2.5,
+    },
+    // Alarm 2: faster arpeggio, brighter tone
+    2: {
+      seq: [
+        {f:659.25, d:0.15, t:'triangle', v:0.55},
+        {f:880.00, d:0.15, t:'triangle', v:0.55},
+        {f:1046.5, d:0.15, t:'triangle', v:0.55},
+        {f:1318.5, d:0.25, t:'triangle', v:0.6},
+        {rest:0.15},
+      ],
+      loopEvery: 1.0,
+    },
+    // Alarm 3: harsh two-tone siren
+    3: {
+      seq: [
+        {f:880,  d:0.25, t:'sawtooth', v:0.8},
+        {f:1200, d:0.25, t:'sawtooth', v:0.8},
+      ],
+      loopEvery: 0.55,
+    },
+    // Alarm 4: rapid dissonant beeping — genuinely unpleasant
+    4: {
+      seq: [
+        {f:1600, d:0.08, t:'square', v:1.0},
+        {rest:0.05},
+        {f:2100, d:0.08, t:'square', v:1.0},
+        {rest:0.05},
+        {f:1800, d:0.08, t:'square', v:1.0},
+        {rest:0.05},
+      ],
+      loopEvery: 0.6,
+    },
+  };
+  const p = patterns[level] || patterns[4];
+
+  function scheduleOneLoop(startTime){
+    let t = startTime;
+    for(const step of p.seq){
+      if(step.rest){ t += step.rest; continue; }
+      note(step.f, t, step.d, step.t, step.v);
+      t += step.d;
+    }
+    return t;
+  }
+
+  // Schedule ~2 loops ahead and re-schedule via setTimeout to keep it going.
+  let cursor = audioCtx.currentTime + 0.05;
+  const scheduleAhead = () => {
+    const end = scheduleOneLoop(cursor);
+    cursor = Math.max(end, cursor + p.loopEvery);
+    const nextInMs = Math.max(50, (cursor - audioCtx.currentTime - 0.2) * 1000);
+    const id = setTimeout(scheduleAhead, nextInMs);
+    alarmTimers.push(id);
+  };
+  scheduleAhead();
+}
+
+function stopAlarm(){
+  for(const id of alarmTimers) clearTimeout(id);
+  alarmTimers = [];
+  for(const o of alarmOscillators){
+    try{ o.stop(); }catch(e){}
+  }
+  alarmOscillators = [];
+  if(masterGain){
+    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    masterGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  }
+}
+
+// ---------- 7. WAKE LOCK ----------
+let wakeLock = null;
+async function requestWakeLock(){
+  if(!('wakeLock' in navigator)) return;
+  try{
+    wakeLock = await navigator.wakeLock.request('screen');
+    wakeLock.addEventListener('release', () => { wakeLock = null; });
+  }catch(e){ /* user denied or not supported */ }
+}
+function releaseWakeLock(){
+  if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock = null; }
+}
+// Re-request when the tab becomes visible again
+document.addEventListener('visibilitychange', () => {
+  if(document.visibilityState === 'visible' && state.screen !== 'setup' && !wakeLock){
+    requestWakeLock();
+  }
+});
+
+// ---------- 8. EVENT WIRING ----------
+document.getElementById('armBtn').addEventListener('click', armAlarm);
+document.getElementById('disarmBtn').addEventListener('click', () => {
+  if(confirm('Disarm the alarm?')) disarm();
+});
+document.getElementById('awakeBtn').addEventListener('click', iAmAwake);
+document.getElementById('successReset').addEventListener('click', () => showScreen('setup'));
+document.getElementById('failedReset').addEventListener('click', () => showScreen('setup'));
+
+// live-save settings as user changes them on the setup screen
+for(const id of ['firstTime','interval','maxAlarms','testMode']){
+  document.getElementById(id).addEventListener('change', () => {
+    state.firstTime   = document.getElementById('firstTime').value;
+    state.intervalMin = parseInt(document.getElementById('interval').value, 10);
+    state.maxAlarms   = parseInt(document.getElementById('maxAlarms').value, 10);
+    state.testMode    = document.getElementById('testMode').checked;
+    saveSettings();
+    document.getElementById('hudMode').textContent = state.testMode ? 'TEST MODE' : '';
+  });
+}
+
+// ---------- BOOT ----------
+loadSettings();
+document.getElementById('firstTime').value  = state.firstTime;
+document.getElementById('interval').value   = state.intervalMin;
+document.getElementById('maxAlarms').value  = state.maxAlarms;
+document.getElementById('testMode').checked = state.testMode;
+tick(); // paint immediately so the clock isn't blank
+</script>
+</body>
+</html>
