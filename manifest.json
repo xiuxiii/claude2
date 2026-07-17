@@ -1,0 +1,22 @@
+{
+  "name": "maimai Alarm",
+  "short_name": "maimaiAlarm",
+  "start_url": "alarm.html",
+  "display": "standalone",
+  "theme_color": "#0a0620",
+  "background_color": "#0a0620",
+  "icons": [
+    {
+      "src": "mascot.png",
+      "sizes": "472x529",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "mascot.png",
+      "sizes": "any",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
