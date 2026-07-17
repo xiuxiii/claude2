@@ -33,13 +33,18 @@ body{
 }
 body[data-in-alarm="1"]{ touch-action:none; }
 body::before{
-  content:"";position:fixed;inset:-40px;
+  content:"";position:fixed;inset:-80px;
   background:
     repeating-linear-gradient( 45deg,rgba(255,79,163,.04) 0 20px,transparent 20px 40px),
     repeating-linear-gradient(-45deg,rgba(0,217,255,.04) 0 20px,transparent 20px 40px);
-  animation:gridScroll 40s linear infinite;pointer-events:none;z-index:0;
+  animation:gridScroll 60s linear infinite;
+  will-change:transform;
+  transform:translate3d(0,0,0);
+  pointer-events:none;z-index:0;
 }
-@keyframes gridScroll{0%{background-position:0 0,0 0}100%{background-position:80px 80px,-80px 80px}}
+/* transform-based so the layer stays composited — no per-frame paint of
+   the gradient (previous version animated background-position). */
+@keyframes gridScroll{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(40px,40px,0)}}
 body::after{content:"";position:fixed;inset:0;background:linear-gradient(transparent 95%,rgba(255,255,255,.025) 95%) 0 0/100% 6px;pointer-events:none;z-index:0}
 
 .screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1}
@@ -196,15 +201,26 @@ h1.title{
   width:min(96vmin,600px);height:min(96vmin,600px);
   padding:0;justify-content:flex-start;overflow:hidden;
   border-color:rgba(255,79,163,.9);
-  box-shadow:0 0 100px rgba(255,79,163,.9),inset 0 0 80px rgba(255,79,163,.4);
-  transition:box-shadow .2s ease,border-color .2s ease;
+  /* Reduced blur radius (was 100px + 80px inset) — large-radius shadows
+     are one of the priciest ops on mobile GPUs. */
+  box-shadow:0 0 40px rgba(255,79,163,.85),inset 0 0 40px rgba(255,79,163,.35);
   touch-action:none;
 }
-#alarmScreen .field.on-beat{animation:onBeatPulse .28s ease-out}
-@keyframes onBeatPulse{
-  0%{box-shadow:0 0 160px rgba(255,79,163,1),inset 0 0 120px rgba(255,79,163,.6);border-color:rgba(255,255,255,.95)}
-  100%{box-shadow:0 0 100px rgba(255,79,163,.9),inset 0 0 80px rgba(255,79,163,.4);border-color:rgba(255,79,163,.9)}
+/* Beat pulse used to animate the FIELD's box-shadow — replaced with a
+   dedicated child ring that only animates transform + opacity so the
+   layer stays composited. */
+.beat-pulse-ring{
+  position:absolute;inset:-2px;border-radius:50%;
+  border:3px solid rgba(255,255,255,.9);
+  opacity:0;pointer-events:none;
+  transform:scale(0.96);
+  will-change:transform,opacity;
+  z-index:1;
 }
+.beat-pulse-ring.pa{animation:beatPulseA .28s ease-out}
+.beat-pulse-ring.pb{animation:beatPulseB .28s ease-out}
+@keyframes beatPulseA{0%{opacity:.9;transform:scale(.95)}100%{opacity:0;transform:scale(1.06)}}
+@keyframes beatPulseB{0%{opacity:.9;transform:scale(.95)}100%{opacity:0;transform:scale(1.06)}}
 
 .alarm-center{
   position:absolute;top:16%;left:50%;transform:translateX(-50%);
@@ -224,14 +240,15 @@ body[data-level="4"] .mascot.alarm-inline{width:108px;animation-duration:.1s;fil
 #alarmScreen .alarm-count{margin:0;font-size:11px;letter-spacing:.25em;opacity:.9}
 #alarmScreen .escalate-in{margin:4px 0 0;font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(11px,1.6vmin,14px);letter-spacing:.15em;color:var(--white)}
 
-/* score bar */
+/* score bar — solid dark bg (no backdrop-filter blur, which is very
+   expensive on mobile) */
 .alarm-score-bar{
   position:absolute;top:4%;left:5%;right:5%;z-index:20;
   display:flex;flex-direction:column;gap:3px;
-  padding:6px 8px;background:rgba(10,6,32,.72);
+  padding:6px 8px;background:rgba(10,6,32,.9);
   border:1px solid rgba(0,217,255,.45);border-radius:12px;
-  box-shadow:0 0 14px rgba(0,217,255,.28),inset 0 0 10px rgba(0,217,255,.1);
-  font-family:'Orbitron',sans-serif;backdrop-filter:blur(4px);
+  box-shadow:inset 0 0 10px rgba(0,217,255,.1);
+  font-family:'Orbitron',sans-serif;
 }
 .sp-r1,.sp-r2{display:flex;justify-content:space-between;align-items:center;gap:4px}
 .sp-item{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0}
@@ -260,42 +277,51 @@ body[data-level="4"] .mascot.alarm-inline{width:108px;animation-duration:.1s;fil
   cursor:pointer;
   pointer-events:auto;
 }
+/* Notes use ONE outer shadow (not two stacked blurs) — the blur is the
+   most expensive raster op, so cutting a 60px layer alone is a big win.
+   The pulse animates opacity, which is composited on the GPU, instead of
+   `filter: brightness` which forces the browser to reraster each frame. */
 .tap-note .note-body{
   position:absolute;inset:0;border-radius:50%;
   background:radial-gradient(circle at 50% 40%,#ffb4d6 0%,var(--pink) 55%,var(--pink-2) 100%);
   border:5px solid var(--white);
   box-shadow:
-    0 0 30px rgba(255,79,163,.9),0 0 60px rgba(255,79,163,.6),
-    inset 0 -6px 12px rgba(0,0,0,.25),inset 0 6px 12px rgba(255,255,255,.4);
+    0 0 18px rgba(255,79,163,.85),
+    inset 0 -4px 10px rgba(0,0,0,.25),inset 0 4px 10px rgba(255,255,255,.4);
   animation:notePulse .9s ease-in-out infinite;
 }
 .tap-note.hold .note-body{
   background:radial-gradient(circle at 50% 40%,#b7fff0 0%,var(--cyan) 55%,#0090c0 100%);
-  box-shadow:0 0 30px rgba(0,217,255,.9),0 0 60px rgba(0,217,255,.6),inset 0 -6px 12px rgba(0,0,0,.25),inset 0 6px 12px rgba(255,255,255,.4);
+  box-shadow:
+    0 0 18px rgba(0,217,255,.85),
+    inset 0 -4px 10px rgba(0,0,0,.25),inset 0 4px 10px rgba(255,255,255,.4);
 }
 .tap-note.break .note-body{
   background:radial-gradient(circle at 50% 40%,#fff6b8 0%,var(--gold) 45%,#c26e00 100%);
   box-shadow:
-    0 0 40px rgba(255,179,0,1),0 0 90px rgba(255,179,0,.7),
-    inset 0 -6px 12px rgba(0,0,0,.25),inset 0 6px 12px rgba(255,255,255,.5);
+    0 0 22px rgba(255,179,0,.95),
+    inset 0 -4px 10px rgba(0,0,0,.25),inset 0 4px 10px rgba(255,255,255,.5);
   animation:breakPulse .6s ease-in-out infinite;
 }
 .tap-note.break::after{
-  content:"";position:absolute;inset:-30%;border-radius:50%;
-  background:radial-gradient(circle,rgba(255,220,120,.55) 0%,transparent 60%);
-  pointer-events:none;animation:sparkle 1.4s linear infinite;
+  content:"";position:absolute;inset:-25%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,220,120,.5) 0%,transparent 60%);
+  pointer-events:none;
+  animation:sparkle 1.4s linear infinite;
+  will-change:opacity,transform;
 }
-@keyframes notePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
-@keyframes breakPulse{0%,100%{filter:brightness(1.05) saturate(1.1)}50%{filter:brightness(1.35) saturate(1.4)}}
-@keyframes sparkle{0%,100%{opacity:.6;transform:scale(1) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(180deg)}}
+@keyframes notePulse{0%,100%{opacity:1}50%{opacity:.85}}
+@keyframes breakPulse{0%,100%{opacity:1}50%{opacity:.82}}
+@keyframes sparkle{0%,100%{opacity:.55;transform:scale(1)}50%{opacity:.95;transform:scale(1.08)}}
 
-/* hold arc */
+/* hold arc — no drop-shadow filter (very costly with a per-frame
+   changing conic-gradient); the cyan is bright enough on its own. */
 .tap-note .hold-arc{
   position:absolute;inset:-14px;border-radius:50%;
   background:conic-gradient(from -90deg,var(--cyan) 0deg,var(--cyan) calc(var(--arc,1) * 360deg),transparent calc(var(--arc,1) * 360deg));
   -webkit-mask:radial-gradient(circle,transparent calc(50% - 8px),black calc(50% - 8px) 50%,transparent 51%);
           mask:radial-gradient(circle,transparent calc(50% - 8px),black calc(50% - 8px) 50%,transparent 51%);
-  filter:drop-shadow(0 0 12px var(--cyan));pointer-events:none;display:none;
+  pointer-events:none;display:none;
 }
 .tap-note.hold .hold-arc{display:block}
 
@@ -348,17 +374,19 @@ body[data-level="4"] .mascot.alarm-inline{width:108px;animation-duration:.1s;fil
 .slide-marker.start{
   background:conic-gradient(from -90deg,var(--cyan) 0deg,#7dffff 72deg,var(--cyan) 144deg,#7dffff 216deg,var(--cyan) 288deg,#7dffff 360deg);
   clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
-  filter:drop-shadow(0 0 12px var(--cyan)) drop-shadow(0 0 22px rgba(0,217,255,.7));
+  /* Static drop-shadow (was animated with double drop-shadow every frame,
+     which was very expensive on mobile). Opacity carries the pulse now. */
+  filter:drop-shadow(0 0 12px var(--cyan));
   animation:slidePulse .8s ease-in-out infinite;
 }
 .slide-marker.end{
   background:radial-gradient(circle,rgba(255,255,255,.9) 0%,var(--cyan) 55%,#0090c0 100%);
   border:3px solid rgba(255,255,255,.85);
-  box-shadow:0 0 20px var(--cyan);
+  box-shadow:0 0 14px var(--cyan);
   opacity:.75;
   pointer-events:none;
 }
-@keyframes slidePulse{0%,100%{filter:drop-shadow(0 0 12px var(--cyan)) drop-shadow(0 0 22px rgba(0,217,255,.7))}50%{filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(0 0 32px var(--cyan))}}
+@keyframes slidePulse{0%,100%{opacity:1}50%{opacity:.82}}
 
 /* burst + judgment popups */
 .burst{
@@ -568,6 +596,7 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 <section id="alarmScreen" class="screen">
   <div class="flash"></div>
   <div class="field" id="alarmField">
+    <div class="beat-pulse-ring" id="beatPulseRing"></div>
     <div class="alarm-score-bar" id="scorePanel">
       <div class="sp-r1">
         <div class="sp-item"><span class="sp-lbl">スコア</span><span class="sp-val" id="spScore">0</span></div>
@@ -1113,13 +1142,21 @@ function stopMetronome(){
   rhythm.metronomeOscs = [];
 }
 // Field-ring beat pulse — driven from render loop, not setTimeout.
+// We alternate two identical @keyframes classes (pa / pb) on a dedicated
+// child ring so the animation restarts each beat WITHOUT a forced reflow
+// (previous version toggled a class + read offsetWidth to restart, which
+// thrashed layout every beat).
 let lastPulsedBeat = -1;
 function maybePulseBeat(currentBeat){
   const b = Math.floor(currentBeat);
   if(b !== lastPulsedBeat && b >= 0){
     lastPulsedBeat = b;
-    const f = document.getElementById('alarmField');
-    if(f){ f.classList.remove('on-beat'); void f.offsetWidth; f.classList.add('on-beat'); }
+    const r = document.getElementById('beatPulseRing');
+    if(r){
+      const useA = (b & 1) === 0;
+      r.classList.toggle('pa', useA);
+      r.classList.toggle('pb', !useA);
+    }
   }
 }
 
@@ -1295,11 +1332,20 @@ function spawnSlide(idx){
   field.appendChild(end);
   field.appendChild(start);
 
+  // Cache the end-marker's screen-space center at spawn so the pointermove
+  // handler doesn't call getBoundingClientRect() every touch event.
+  const fRect = field.getBoundingClientRect();
+  const fCx = fRect.x + fRect.width/2, fCy = fRect.y + fRect.height/2;
+  const endMarkerSize = parseFloat(getComputedStyle(end).width) || 60;
+
   const live = {
     chartIdx:idx, elem:start, endElem:end, lineElem:line,
     type:'slide', isBreak:false,
     posDeg:note.pos, endPosDeg:note.endPos,
     destPx:startPx, endPx,
+    endScreenX: fCx + endPx.x,
+    endScreenY: fCy + endPx.y,
+    endRadius: endMarkerSize * 0.75,
     arrivalBeat:note.beat,
     arrivalAudioT: rhythm.startAudioT + note.beat * rhythm.beatSec,
     resolved:false, holding:false,
@@ -1367,11 +1413,12 @@ function attachSlideHandlers(live){
   const onMove = (e) => {
     if(!live.startedAtStart || live.resolved) return;
     if(e.pointerId !== live.pointerId) return;
-    // reachedEnd once pointer crosses within a radius of the end marker
-    const rect = live.endElem.getBoundingClientRect();
-    const cx = rect.x + rect.width/2, cy = rect.y + rect.height/2;
-    const dx = e.clientX - cx, dy = e.clientY - cy;
-    if(Math.sqrt(dx*dx + dy*dy) < rect.width * 0.75){ live.reachedEnd = true; judgeSlideNow(live); }
+    // Use cached end-marker center + radius (avoids getBoundingClientRect
+    // on every pointermove — that read forces a layout flush).
+    const dx = e.clientX - live.endScreenX, dy = e.clientY - live.endScreenY;
+    if((dx*dx + dy*dy) < live.endRadius * live.endRadius){
+      live.reachedEnd = true; judgeSlideNow(live);
+    }
   };
   const onUp = (e) => {
     if(live.resolved) return;
@@ -1490,16 +1537,16 @@ function spawnBurst(destPx, cls){
   setTimeout(() => b.remove(), 500);
 }
 function emitSparks(destPx){
-  // Small gold particle burst for break hits — cap at 8 so weaker phones cope.
+  // Gold particle burst — cap at 4 so mid-range phones don't drop frames.
   const field = document.getElementById('alarmField');
   const t0 = performance.now();
-  const N = 8;
+  const N = 4;
   const parts = [];
   for(let i = 0; i < N; i++){
     const s = document.createElement('div'); s.className = 'spark';
     field.appendChild(s);
-    const ang = (i / N) * Math.PI * 2;
-    parts.push({el:s, ang, speed:80 + Math.random()*60, life: 500 + Math.random()*200});
+    const ang = (i / N) * Math.PI * 2 + Math.random() * 0.4;
+    parts.push({el:s, ang, speed:70 + Math.random()*50, life: 420 + Math.random()*160});
   }
   const step = (now) => {
     const t = now - t0;
