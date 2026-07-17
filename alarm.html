@@ -276,6 +276,35 @@ body[data-level="4"] .mascot.alarm-inline{width:108px;animation-duration:.1s;fil
 #spCombo,#spMax{color:var(--yellow);text-shadow:0 0 6px var(--yellow)}
 #spDx{color:var(--ok);text-shadow:0 0 6px var(--ok)}
 #spStyle{color:var(--cyan);text-shadow:0 0 6px var(--cyan);font-size:10px;letter-spacing:.15em}
+.sp-beat{
+  font-size:10px;letter-spacing:.1em;color:var(--ok);
+  text-align:center;opacity:.85;padding-top:3px;
+  border-top:1px solid rgba(0,217,255,.18);margin-top:2px;
+  font-family:'Fredoka','Noto Sans JP',sans-serif;
+}
+.sp-beat #spBeat{color:var(--white);font-weight:700;text-shadow:0 0 6px rgba(125,255,176,.6)}
+
+/* Beat picker on the setup form */
+.beat-picker{
+  display:flex;align-items:center;gap:6px;
+  min-width:150px;justify-content:flex-end;
+}
+.beat-nav{
+  width:32px;height:32px;border-radius:8px;
+  background:rgba(0,217,255,.18);
+  border:1px solid rgba(0,217,255,.55);
+  color:var(--white);font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:13px;line-height:1;cursor:pointer;padding:0;
+  touch-action:manipulation;
+  box-shadow:0 0 8px rgba(0,217,255,.35);
+}
+.beat-nav:active{transform:scale(.94)}
+.beat-name{
+  min-width:88px;text-align:center;
+  font-family:'Fredoka','Noto Sans JP',sans-serif;
+  font-weight:700;color:var(--white);font-size:14px;
+  text-shadow:0 0 8px rgba(0,217,255,.5);
+}
 
 /* ============ NOTES (tap / hold / slide / break) ============ */
 /* Notes spawn at the field center at scale ~0.35 and scale + translate outward
@@ -717,6 +746,13 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
           <option value="CHAOS">カオス</option>
         </select>
       </div>
+      <div class="row"><label>ビートパターン</label>
+        <div class="beat-picker">
+          <button class="beat-nav" id="beatPrev" aria-label="前のビート">◀</button>
+          <span class="beat-name" id="beatName">朝の光</span>
+          <button class="beat-nav" id="beatNext" aria-label="次のビート">▶</button>
+        </div>
+      </div>
       <div class="toggle"><input type="checkbox" id="testMode" /><label for="testMode">テストモード (15秒起床 / 30秒エスカレート)</label></div>
       <button class="btn big" id="armBtn">アラームセット</button>
       <div class="setup-actions">
@@ -762,6 +798,7 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
         <div class="sp-item"><span class="sp-lbl">ミス</span><span class="sp-val" id="spMiss">0 / 3</span></div>
         <div class="sp-item"><span class="sp-lbl">スタイル</span><span class="sp-val" id="spStyle">BASIC</span></div>
       </div>
+      <div class="sp-beat">♪ <span id="spBeat">朝の光</span></div>
     </div>
     <div class="alarm-center">
       <div class="mascot-aura"></div>
@@ -954,7 +991,7 @@ const STYLE_KEYS   = ['BASIC','STREAM','SYNC','CHAOS'];
 const state = {
   screen:'setup',
   firstTime:'08:00', intervalMin:30, maxAlarms:4, testMode:false,
-  noteSpeed:1.5, chartStyle:'BASIC',
+  noteSpeed:1.5, chartStyle:'BASIC', beatPreset:'morning',
   scheduleMs:[], currentAlarmIndex:-1, alarmRingingSince:null,
 };
 
@@ -971,7 +1008,6 @@ const rhythm = {
   dxScore:0, dxMax:0,
   // per-type counts and hits (used for the results breakdown)
   types:{tap:{t:0,h:0}, hold:{t:0,h:0}, slide:{t:0,h:0}, break:{t:0,h:0}},
-  metronomeOscs:[],
   animFrame:null,
   fieldPx:0,     // cached field size in px for transform math
 };
@@ -989,6 +1025,7 @@ function saveSettings(){
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       firstTime:state.firstTime, intervalMin:state.intervalMin, maxAlarms:state.maxAlarms,
       testMode:state.testMode, noteSpeed:state.noteSpeed, chartStyle:state.chartStyle,
+      beatPreset:state.beatPreset,
     }));
   }catch(e){}
 }
@@ -1002,6 +1039,7 @@ function loadSettings(){
     if(typeof s.testMode === 'boolean') state.testMode = s.testMode;
     if(typeof s.noteSpeed === 'number' && s.noteSpeed > 0) state.noteSpeed = s.noteSpeed;
     if(typeof s.chartStyle === 'string' && STYLE_KEYS.includes(s.chartStyle)) state.chartStyle = s.chartStyle;
+    if(typeof s.beatPreset === 'string' && BEAT_PRESETS[s.beatPreset]) state.beatPreset = s.beatPreset;
   }catch(e){}
 }
 function loadStats(){
@@ -1325,47 +1363,240 @@ function angleToPx(deg){
   return {x: r * Math.cos(rad), y: r * Math.sin(rad)};
 }
 
-/* ============ RHYTHM: METRONOME (audio-clock scheduled) ============ */
-function scheduleKick(when){
+/* ============ BACKING TRACK (preset patterns, audio-clock scheduled) ==========
+   Same engine services BOTH the setup preview and the in-game backing music
+   so seams are impossible — swap presets by stopping the current track and
+   scheduling the new one from the next bar boundary.
+   All timings are derived from audioCtx.currentTime — no setTimeout drift. */
+
+const currentTrack = {
+  oscs: [],           // active oscillators/buffer sources (for hard stop)
+  schedTimer: null,   // setTimeout id for the lookahead scheduler
+  running: false,
+  nextBarT: 0,        // audioCtx.currentTime when the next unscheduled bar starts
+  barIdx: 0,          // total bar counter (used mod 4 for the 4-bar loop position)
+  presetKey: null,
+  mode: null,         // 'preview' | 'gameplay'
+};
+
+// -------- single-voice helpers used by every preset --------
+function playKick(when, vel){
   if(!audioCtx) return;
+  const v = Math.max(0, Math.min(1, vel != null ? vel : 0.7));
   const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(160, when);
   osc.frequency.exponentialRampToValueAtTime(50, when + 0.06);
   g.gain.setValueAtTime(0.001, when);
-  g.gain.exponentialRampToValueAtTime(0.7, when + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.8 * v, when + 0.005);
   g.gain.exponentialRampToValueAtTime(0.001, when + 0.08);
   osc.connect(g).connect(masterGain);
   osc.start(when); osc.stop(when + 0.1);
-  rhythm.metronomeOscs.push(osc);
+  currentTrack.oscs.push(osc);
 }
-function scheduleHat(when){
+function playHat(when, vel, isOpen){
   if(!audioCtx) return;
-  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.03), audioCtx.sampleRate);
+  const decayS = isOpen ? 0.11 : 0.03;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * (decayS + 0.02)), audioCtx.sampleRate);
   const data = buf.getChannelData(0);
   for(let i = 0; i < data.length; i++) data[i] = Math.random()*2 - 1;
   const src = audioCtx.createBufferSource(); src.buffer = buf;
-  const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6000;
+  const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = isOpen ? 5000 : 6500;
   const g = audioCtx.createGain();
   g.gain.setValueAtTime(0.0001, when);
-  g.gain.exponentialRampToValueAtTime(0.18, when + 0.002);
-  g.gain.exponentialRampToValueAtTime(0.0001, when + 0.03);
+  g.gain.exponentialRampToValueAtTime(vel, when + 0.002);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + decayS);
   src.connect(hp).connect(g).connect(masterGain);
-  src.start(when); src.stop(when + 0.04);
-  rhythm.metronomeOscs.push(src);
+  src.start(when); src.stop(when + decayS + 0.02);
+  currentTrack.oscs.push(src);
 }
-function startMetronome(){
-  const last = rhythm.chart[rhythm.chart.length - 1];
-  const endBeat = Math.ceil(last.beat + (last.holdBeats || 0) + 2);
-  const startAT = rhythm.startAudioT;
-  for(let b = 0; b <= endBeat; b++){
-    scheduleKick(startAT + b * rhythm.beatSec);
-    scheduleHat( startAT + (b + 0.5) * rhythm.beatSec);
-  }
+function playSynth(when, dur, freq, wave, vol){
+  if(!audioCtx) return;
+  const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
+  osc.type = wave;
+  osc.frequency.setValueAtTime(freq, when);
+  const attack = Math.min(0.02, dur * 0.15);
+  const sustainT = when + attack;
+  const releaseS = Math.max(0.04, dur - attack);
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(vol, when + attack);
+  g.gain.exponentialRampToValueAtTime(0.0001, sustainT + releaseS);
+  osc.connect(g).connect(masterGain);
+  osc.start(when); osc.stop(sustainT + releaseS + 0.03);
+  currentTrack.oscs.push(osc);
 }
-function stopMetronome(){
-  for(const o of rhythm.metronomeOscs){ try{ o.stop(); }catch(e){} }
-  rhythm.metronomeOscs = [];
+function playNoiseDrum(when, vol){
+  if(!audioCtx) return;
+  const dur = 0.08;
+  const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * (dur + 0.02)), audioCtx.sampleRate);
+  const data = buf.getChannelData(0);
+  for(let i = 0; i < data.length; i++) data[i] = Math.random()*2 - 1;
+  const src = audioCtx.createBufferSource(); src.buffer = buf;
+  const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 2000;
+  const g = audioCtx.createGain();
+  g.gain.setValueAtTime(0.0001, when);
+  g.gain.exponentialRampToValueAtTime(vol, when + 0.003);
+  g.gain.exponentialRampToValueAtTime(0.0001, when + dur);
+  src.connect(hp).connect(g).connect(masterGain);
+  src.start(when); src.stop(when + dur + 0.02);
+  currentTrack.oscs.push(src);
+}
+
+// -------- the 6 presets: schedule one bar at time t --------
+// `barIdx % 4` chooses the current bar within the 4-bar loop. `stepSec`
+// is a sixteenth note, `beatSec` a quarter — 110 BPM everywhere.
+const BEAT_PRESETS = {
+  morning: {
+    name:'朝の光',
+    schedule(barMod, t, stepSec, beatSec){
+      // soft kick on 1 & 3
+      playKick(t + 0*stepSec, 0.55);
+      playKick(t + 8*stepSec, 0.55);
+      // closed hats on eighths
+      for(let i = 0; i < 16; i += 2) playHat(t + i*stepSec, 0.10, false);
+      // triangle arpeggio — bar 2 gets a D-F-A-F variation for lift
+      const arp = (barMod === 2)
+        ? [293.66, 349.23, 440.00, 349.23]
+        : [261.63, 329.63, 392.00, 329.63];
+      for(let i = 0; i < 4; i++)
+        playSynth(t + i*4*stepSec, 0.5, arp[i], 'triangle', 0.14);
+      // warm sustained low pad
+      playSynth(t, beatSec*4 - 0.05, 130.81, 'sine', 0.05);
+    },
+  },
+  genki: {
+    name:'元気アラーム',
+    schedule(barMod, t, stepSec, beatSec){
+      // four-on-the-floor
+      for(const s of [0,4,8,12]) playKick(t + s*stepSec, 0.75);
+      // open hat on offbeats
+      for(const s of [2,6,10,14]) playHat(t + s*stepSec, 0.18, true);
+      // bouncy square hook (2 notes / beat)
+      const hookA = [523.25,659.25,783.99,880.00,783.99,659.25,523.25,587.33];
+      const hookB = [587.33,698.46,880.00,987.77,880.00,698.46,587.33,659.25];
+      const hook = (barMod === 3) ? hookB : hookA;
+      for(let i = 0; i < 8; i++)
+        playSynth(t + i*2*stepSec, 0.22, hook[i], 'square', 0.12);
+    },
+  },
+  cyber: {
+    name:'サイバー',
+    schedule(barMod, t, stepSec, beatSec){
+      // punchy syncopated kick
+      for(const s of [0,4,6,8,12]) playKick(t + s*stepSec, 0.7);
+      // side-chain feel: hats dip during kick step (implicit via lower vel)
+      for(let i = 0; i < 16; i++)
+        playHat(t + i*stepSec, (i===0||i===4||i===8||i===12) ? 0.03 : 0.07, false);
+      // walking sawtooth bass in A minor
+      const bass = [110.00,110.00,130.81,110.00,164.81,130.81,110.00,98.00];
+      for(let i = 0; i < 8; i++)
+        playSynth(t + i*2*stepSec, 0.24, bass[i], 'sawtooth', 0.13);
+      // high sparkle every other beat
+      const spark = [1046.5, 1174.66, 1318.51, 1174.66];
+      for(let i = 0; i < 4; i++)
+        playSynth(t + (i*4 + 3)*stepSec, 0.13, spark[(i + barMod) & 3], 'sine', 0.07);
+    },
+  },
+  wafu: {
+    name:'和風',
+    schedule(barMod, t, stepSec, beatSec){
+      // taiko: deep long kick on 1 & 3, accent on 4& in odd bars
+      playKick(t + 0*stepSec, 0.9);
+      playKick(t + 8*stepSec, 0.9);
+      if(barMod === 1 || barMod === 3) playKick(t + 14*stepSec, 0.55);
+      // no hi-hat
+      // koto-like pentatonic (A minor) — slow triangle with long sustain
+      const scales = [
+        [440.00, 523.25, 587.33, 659.25],  // bar 0: A C D E
+        [523.25, 587.33, 659.25, 783.99],  // bar 1: C D E G
+        [659.25, 587.33, 523.25, 440.00],  // bar 2: E D C A (descend)
+        [440.00, 523.25, 659.25, 523.25],  // bar 3: A C E C
+      ];
+      const seq = scales[barMod];
+      for(let i = 0; i < 4; i++)
+        playSynth(t + i*4*stepSec, 0.95, seq[i], 'triangle', 0.13);
+    },
+  },
+  berserk: {
+    name:'バーサク',
+    schedule(barMod, t, stepSec, beatSec){
+      // fast double kick — every eighth
+      for(const s of [0,2,4,6,8,10,12,14]) playKick(t + s*stepSec, 0.75);
+      // driving hats on all 16ths
+      for(let i = 0; i < 16; i++) playHat(t + i*stepSec, 0.10, false);
+      // dissonant square stabs — chromatic tension in A minor
+      const stabs = [220.00, 261.63, 233.08, 220.00];
+      for(let i = 0; i < 4; i++)
+        playSynth(t + i*4*stepSec, 0.28, stabs[i], 'square', 0.15);
+      // low sawtooth drone
+      playSynth(t,                beatSec*2 - 0.05, 55, 'sawtooth', 0.09);
+      playSynth(t + beatSec*2,    beatSec*2 - 0.05, 55, 'sawtooth', 0.09);
+    },
+  },
+  chiptune: {
+    name:'8ビット',
+    schedule(barMod, t, stepSec, beatSec){
+      // NES-style kick pattern
+      for(const s of [0, 8]) playKick(t + s*stepSec, 0.65);
+      // noise snare on 2 & 4
+      for(const s of [4, 12]) playNoiseDrum(t + s*stepSec, 0.14);
+      // Square lead — a catchy 4-bar arc that says WAKE UP
+      const melodies = [
+        [523.25,659.25,783.99,659.25,523.25,587.33,659.25,587.33],
+        [523.25,659.25,783.99,1046.5,783.99,659.25,523.25,587.33],
+        [587.33,698.46,880.00,698.46,587.33,659.25,698.46,659.25],
+        [523.25,587.33,659.25,523.25,440.00,493.88,523.25,587.33],
+      ];
+      const seq = melodies[barMod];
+      for(let i = 0; i < 8; i++)
+        playSynth(t + i*2*stepSec, 0.2, seq[i], 'square', 0.14);
+      // pulse bass
+      const bass = [130.81,196.00,130.81,196.00];
+      for(let i = 0; i < 4; i++)
+        playSynth(t + i*4*stepSec, 0.4, bass[i & 3], 'square', 0.09);
+    },
+  },
+};
+const BEAT_KEYS = Object.keys(BEAT_PRESETS);
+
+// -------- start / stop --------
+function trackStop(){
+  currentTrack.running = false;
+  if(currentTrack.schedTimer){ clearTimeout(currentTrack.schedTimer); currentTrack.schedTimer = null; }
+  for(const o of currentTrack.oscs){ try{ o.stop(); }catch(_){} }
+  currentTrack.oscs = [];
+  currentTrack.mode = null;
+  currentTrack.presetKey = null;
+}
+function trackStart(presetKey, mode){
+  trackStop();
+  ensureAudio();
+  const preset = BEAT_PRESETS[presetKey];
+  if(!preset) return;
+  currentTrack.presetKey = presetKey;
+  currentTrack.mode = mode;
+  currentTrack.running = true;
+  const beatSec = rhythm.beatSec;   // 60/110
+  const stepSec = beatSec / 4;
+  const barSec  = beatSec * 4;
+  // Anchor the very first bar to the moment the rhythm session started
+  // when we're driving gameplay; anchor to "now" for previews.
+  currentTrack.nextBarT = (mode === 'gameplay' && rhythm.startAudioT != null)
+                        ? rhythm.startAudioT
+                        : audioCtx.currentTime + 0.05;
+  currentTrack.barIdx = 0;
+
+  const scheduler = () => {
+    if(!currentTrack.running) return;
+    // Keep about 1.2s of audio scheduled ahead of currentTime.
+    while(currentTrack.nextBarT < audioCtx.currentTime + 1.2){
+      preset.schedule(currentTrack.barIdx & 3, currentTrack.nextBarT, stepSec, beatSec);
+      currentTrack.nextBarT += barSec;
+      currentTrack.barIdx++;
+    }
+    currentTrack.schedTimer = setTimeout(scheduler, 180);
+  };
+  scheduler();
 }
 // Field-ring beat pulse — driven from render loop, not setTimeout.
 // We alternate two identical @keyframes classes (pa / pb) on a dedicated
@@ -1802,6 +2033,8 @@ function updateScoreDisplay(){
   document.getElementById('spNotes').textContent = `${rhythm.resolvedCount} / ${rhythm.totalNotes}`;
   document.getElementById('spMiss').textContent  = `${rhythm.misses} / ${MAX_MISSES}`;
   document.getElementById('spStyle').textContent = STYLE_LABELS[state.chartStyle] || state.chartStyle;
+  const preset = BEAT_PRESETS[state.beatPreset];
+  document.getElementById('spBeat').textContent = preset ? preset.name : '';
 }
 
 /* ============ RHYTHM: SESSION LIFECYCLE ============ */
@@ -1839,10 +2072,12 @@ function startRhythmSession(){
   rhythm.startAudioT = audioCtx.currentTime + 0.02;
   // The frozen first note's arrivalAudioT = startAudioT (beat 0).
   if(rhythm.live[0]) rhythm.live[0].arrivalAudioT = rhythm.startAudioT;
-  startMetronome();
+  // Kick off the selected preset as the gameplay backing music
+  // (kick + hi-hat + melody + optional pad, looped every 4 bars).
+  trackStart(state.beatPreset, 'gameplay');
 }
 function stopRhythmSession(){
-  stopMetronome();
+  trackStop();
   if(rhythm.animFrame){ cancelAnimationFrame(rhythm.animFrame); rhythm.animFrame = null; }
   const field = document.getElementById('alarmField');
   if(field){
@@ -1861,6 +2096,8 @@ function showScreen(name){
   const statusMap = {setup:'セットアップ', armed:'セット済み', alarm:'！！アラーム！！', success:'クリア', failed:'失敗', stats:'プロファイル'};
   document.getElementById('hudStatus').textContent = statusMap[name] || name;
   document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
+  // Kill any preview loop when navigating away from the setup screen.
+  if(name !== 'setup' && currentTrack.mode === 'preview') trackStop();
   if(name === 'stats') renderStatsScreen();
 }
 function armAlarm(){
@@ -2034,6 +2271,24 @@ document.getElementById('helpOverlay').addEventListener('click', (e) => {
   // click on the dim backdrop (not the card) also closes
   if(e.target.id === 'helpOverlay') e.currentTarget.classList.remove('on');
 });
+
+// Beat picker — cycles through the 6 presets and plays each one as a
+// preview loop the moment it lands so the user hears before committing.
+function updateBeatPickerUI(){
+  const p = BEAT_PRESETS[state.beatPreset];
+  document.getElementById('beatName').textContent = p ? p.name : '';
+}
+function cyclePreset(dir){
+  const idx = BEAT_KEYS.indexOf(state.beatPreset);
+  const next = (idx + dir + BEAT_KEYS.length) % BEAT_KEYS.length;
+  state.beatPreset = BEAT_KEYS[next];
+  saveSettings();
+  updateBeatPickerUI();
+  // A tap is a valid user gesture, so this call also unlocks AudioContext.
+  trackStart(state.beatPreset, 'preview');
+}
+document.getElementById('beatPrev').addEventListener('click', () => cyclePreset(-1));
+document.getElementById('beatNext').addEventListener('click', () => cyclePreset(1));
 for(const id of ['firstTime','interval','maxAlarms','testMode','noteSpeed','chartStyle']){
   const el = document.getElementById(id);
   if(!el) continue;
@@ -2057,6 +2312,7 @@ document.getElementById('maxAlarms').value  = state.maxAlarms;
 document.getElementById('testMode').checked = state.testMode;
 document.getElementById('noteSpeed').value  = state.noteSpeed;
 document.getElementById('chartStyle').value = state.chartStyle;
+updateBeatPickerUI();
 decorateFields();
 document.body.setAttribute('data-screen', 'setup');
 tick();
