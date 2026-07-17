@@ -383,6 +383,98 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 
 .gap{height:10px}
 .hidden{display:none !important}
+
+/* =========================================================
+   Stats / profile card screen
+   ========================================================= */
+.profile-card{
+  position:relative;
+  width:min(94vmin,600px);
+  max-height:88vh;
+  padding:22px 22px 18px;
+  border-radius:26px;
+  background:linear-gradient(180deg,rgba(20,10,52,.92),rgba(10,6,32,.92));
+  border:2px solid rgba(0,217,255,.45);
+  box-shadow:0 0 60px rgba(0,217,255,.25),inset 0 0 40px rgba(255,79,163,.15);
+  display:flex;flex-direction:column;gap:14px;
+}
+.pc-header{
+  display:flex;align-items:center;gap:16px;
+  padding-bottom:12px;border-bottom:1px dashed rgba(0,217,255,.3);
+}
+.pc-mascot{width:78px;height:auto;filter:drop-shadow(0 4px 12px rgba(0,217,255,.5))}
+.pc-title{display:flex;flex-direction:column;gap:2px}
+.pc-name{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:22px;
+  letter-spacing:.18em;color:var(--white);
+  text-shadow:0 0 12px var(--pink),0 0 24px rgba(255,79,163,.4);
+}
+.pc-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.pc-tile{
+  padding:12px 10px;border-radius:14px;
+  border:1px solid rgba(0,217,255,.35);
+  background:rgba(255,255,255,.03);
+  box-shadow:inset 0 0 14px rgba(0,217,255,.1);
+  text-align:center;
+}
+.pc-tile.streak{border-color:rgba(255,79,163,.5);box-shadow:inset 0 0 14px rgba(255,79,163,.15)}
+.pc-tile.score {border-color:rgba(0,217,255,.5)}
+.pc-tile.combo {border-color:rgba(255,225,74,.5);box-shadow:inset 0 0 14px rgba(255,225,74,.12)}
+.pc-lbl{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:10px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);opacity:.85;
+}
+.pc-val{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(24px,4.5vmin,34px);letter-spacing:.02em;line-height:1.1;
+  color:var(--white);margin-top:2px;
+}
+.pc-tile.streak .pc-val{color:var(--pink);text-shadow:0 0 12px var(--pink)}
+.pc-tile.score  .pc-val{color:var(--cyan);text-shadow:0 0 12px var(--cyan)}
+.pc-tile.combo  .pc-val{color:var(--yellow);text-shadow:0 0 12px var(--yellow)}
+.pc-sub{font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.55);text-transform:uppercase;margin-top:2px}
+.pc-history-lbl{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);
+  padding-top:6px;border-top:1px dashed rgba(0,217,255,.3);
+}
+.pc-history{
+  overflow-y:auto;max-height:40vh;
+  display:flex;flex-direction:column;gap:6px;padding-right:4px;
+  scrollbar-width:thin;scrollbar-color:rgba(0,217,255,.5) transparent;
+}
+.pc-history::-webkit-scrollbar{width:6px}
+.pc-history::-webkit-scrollbar-thumb{background:rgba(0,217,255,.5);border-radius:3px}
+.pc-row{
+  display:grid;grid-template-columns:1fr auto auto auto auto;gap:10px;align-items:center;
+  padding:8px 10px;border-radius:10px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+  font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:.06em;
+}
+.pc-date{color:rgba(255,255,255,.7);font-weight:700}
+.pc-alarm-badge{
+  padding:2px 8px;border-radius:999px;
+  font-weight:900;font-size:10px;letter-spacing:.1em;
+  border:1px solid currentColor;
+}
+.pc-alarm-badge.a1{color:var(--ok)}
+.pc-alarm-badge.a2{color:var(--yellow)}
+.pc-alarm-badge.a3{color:#ff9650}
+.pc-alarm-badge.a4{color:var(--danger)}
+.pc-alarm-badge.a5,.pc-alarm-badge.a6{color:var(--danger)}
+.pc-score{color:var(--pink);font-weight:900;text-shadow:0 0 6px rgba(255,79,163,.5)}
+.pc-combo{color:var(--yellow);font-weight:700}
+.pc-acc  {color:var(--cyan);font-weight:700;min-width:44px;text-align:right}
+.pc-empty{
+  padding:20px 8px;text-align:center;font-size:12px;color:rgba(255,255,255,.5);
+  letter-spacing:.1em;
+}
+.pc-footer{display:flex;justify-content:center;padding-top:6px}
+
+/* Small STATS button on the setup screen */
+.setup-actions{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
+.setup-actions .btn.ghost{margin-top:4px}
 </style>
 </head>
 <body>
@@ -421,6 +513,44 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
       </div>
       <div class="toggle"><input type="checkbox" id="testMode" /><label for="testMode">TEST MODE (15s wake / 30s escalate)</label></div>
       <button class="btn big" id="armBtn">ARM ALARM</button>
+      <div class="setup-actions">
+        <button class="btn ghost small" id="statsBtn">STATS</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- STATS / PROFILE -->
+<section id="statsScreen" class="screen">
+  <div class="profile-card">
+    <div class="pc-header">
+      <img class="mascot pc-mascot" src="mascot.png" alt="" onerror="this.style.display='none'">
+      <div class="pc-title">
+        <div class="pc-name">PLAYER PROFILE</div>
+        <div class="subtitle" style="margin:0">maimai Alarm</div>
+      </div>
+    </div>
+    <div class="pc-tiles">
+      <div class="pc-tile streak">
+        <div class="pc-lbl">Wake Streak</div>
+        <div class="pc-val" id="statStreak">0</div>
+        <div class="pc-sub">days on alarm 1</div>
+      </div>
+      <div class="pc-tile score">
+        <div class="pc-lbl">Best Score</div>
+        <div class="pc-val" id="statBestScore">0</div>
+        <div class="pc-sub">all-time</div>
+      </div>
+      <div class="pc-tile combo">
+        <div class="pc-lbl">Best Combo</div>
+        <div class="pc-val" id="statBestCombo">0</div>
+        <div class="pc-sub">max chain</div>
+      </div>
+    </div>
+    <div class="pc-history-lbl">Recent Sessions</div>
+    <div class="pc-history" id="statHistory"></div>
+    <div class="pc-footer">
+      <button class="btn ghost small" id="statsBack">BACK</button>
     </div>
   </div>
 </section>
@@ -524,8 +654,20 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 
 // ---------- 1. STATE ----------
 const STORAGE_KEY = 'maimai-alarm-v1';
+const STATS_KEY   = 'maimai-alarm-stats-v1';
 const MAX_MISSES = 3;                 // >3 misses -> escalate immediately
 const BUTTON_ANGLES = [0,45,90,135,180,225,270,315];
+const HISTORY_MAX = 30;
+
+// Persistent player stats — separate from alarm settings so a settings
+// reset doesn't nuke the streak.
+const stats = {
+  streak: 0,
+  lastAlarm1Date: null,   // "YYYY-MM-DD" of last alarm-1 wake
+  bestScore: 0,
+  bestMaxCombo: 0,
+  history: [],            // [{date, alarm, score, maxCombo, accuracy}], newest first, max 30
+};
 
 const state = {
   screen:'setup',
@@ -574,6 +716,65 @@ function loadSettings(){
     if(s.maxAlarms)   state.maxAlarms   = s.maxAlarms;
     if(typeof s.testMode === 'boolean') state.testMode = s.testMode;
   }catch(e){}
+}
+
+function loadStats(){
+  try{
+    const raw = localStorage.getItem(STATS_KEY); if(!raw) return;
+    const s = JSON.parse(raw);
+    if(typeof s.streak === 'number')       stats.streak       = s.streak;
+    if(typeof s.lastAlarm1Date === 'string') stats.lastAlarm1Date = s.lastAlarm1Date;
+    if(typeof s.bestScore === 'number')    stats.bestScore    = s.bestScore;
+    if(typeof s.bestMaxCombo === 'number') stats.bestMaxCombo = s.bestMaxCombo;
+    if(Array.isArray(s.history))           stats.history      = s.history.slice(0, HISTORY_MAX);
+  }catch(e){}
+}
+function saveStats(){
+  try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){}
+}
+function dateKey(d = new Date()){
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+}
+function yesterdayKey(){
+  const d = new Date(); d.setDate(d.getDate() - 1); return dateKey(d);
+}
+// Read the "effective" current streak: the stored streak only counts as
+// active if the last alarm-1 wake was today or yesterday, otherwise the
+// user broke it by not waking on alarm 1 since.
+function currentStreak(){
+  if(!stats.lastAlarm1Date) return 0;
+  if(stats.lastAlarm1Date === dateKey() || stats.lastAlarm1Date === yesterdayKey()){
+    return stats.streak;
+  }
+  return 0;
+}
+// Called from finishAlarm when a session clears. `alarm` is the 1-based
+// alarm number that got the user up.
+function recordSession({alarm, score, maxCombo, accuracy}){
+  stats.history.unshift({date: new Date().toISOString(), alarm, score, maxCombo, accuracy});
+  if(stats.history.length > HISTORY_MAX) stats.history.length = HISTORY_MAX;
+  if(score    > stats.bestScore)    stats.bestScore    = score;
+  if(maxCombo > stats.bestMaxCombo) stats.bestMaxCombo = maxCombo;
+  if(alarm === 1){
+    const t = dateKey(), y = yesterdayKey();
+    if(stats.lastAlarm1Date === t){
+      // already counted today — leave streak
+    } else if(stats.lastAlarm1Date === y){
+      stats.streak++;
+    } else {
+      stats.streak = 1;
+    }
+    stats.lastAlarm1Date = t;
+  } else {
+    // dismissed on alarm 2+ — streak broken
+    stats.streak = 0;
+  }
+  saveStats();
+}
+function recordFailure(){
+  // all alarms missed → streak broken
+  stats.streak = 0;
+  saveStats();
 }
 
 // ---------- 3. CLOCK LOOP ----------
@@ -657,6 +858,7 @@ function escalate(){
   const nextIdx = state.currentAlarmIndex + 1;
   stopCurrentAlarm();
   if(nextIdx >= state.maxAlarms){
+    recordFailure();
     document.getElementById('failedMax').textContent = state.maxAlarms;
     const lastT = state.scheduleMs[state.scheduleMs.length - 1];
     document.getElementById('failedLast').textContent = fmtHM(new Date(lastT));
@@ -677,6 +879,8 @@ function finishAlarm(){
   const accPct     = total ? (hits / total) * 100 : 0;
 
   stopCurrentAlarm();
+
+  recordSession({alarm: level, score: finalScore, maxCombo: finalMax, accuracy: accPct});
 
   document.getElementById('successGrade').textContent = computeRank(hits, total, level);
   document.getElementById('successCombo').textContent = misses === 0 ? 'FULL COMBO' : 'CLEAR';
@@ -1085,11 +1289,41 @@ function showScreen(name){
   for(const s of document.querySelectorAll('.screen')){
     s.classList.toggle('active', s.id === name + 'Screen');
   }
-  const statusMap = {setup:'SETUP', armed:'ARMED', alarm:'!! ALARM !!', success:'CLEARED', failed:'FAILED'};
+  const statusMap = {setup:'SETUP', armed:'ARMED', alarm:'!! ALARM !!', success:'CLEARED', failed:'FAILED', stats:'PROFILE'};
   document.getElementById('hudStatus').textContent = statusMap[name] || name;
   document.getElementById('hudMode').textContent = state.testMode ? 'TEST MODE' : '';
   if(name !== 'alarm'){
     document.getElementById('scorePanel').classList.remove('on');
+  }
+  if(name === 'stats') renderStatsScreen();
+}
+
+function renderStatsScreen(){
+  document.getElementById('statStreak').textContent    = currentStreak();
+  document.getElementById('statBestScore').textContent = stats.bestScore.toLocaleString();
+  document.getElementById('statBestCombo').textContent = stats.bestMaxCombo;
+  const list = document.getElementById('statHistory');
+  list.innerHTML = '';
+  if(!stats.history.length){
+    const empty = document.createElement('div');
+    empty.className = 'pc-empty';
+    empty.textContent = 'No sessions yet — arm your first alarm to build history.';
+    list.appendChild(empty);
+    return;
+  }
+  for(const h of stats.history){
+    const d = new Date(h.date);
+    const dateStr = `${d.toLocaleString('en-US',{month:'short',day:'numeric'})} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    const row = document.createElement('div');
+    row.className = 'pc-row';
+    const alarmClass = 'a' + Math.min(Math.max(h.alarm,1), 6);
+    row.innerHTML =
+      `<span class="pc-date">${dateStr}</span>` +
+      `<span class="pc-alarm-badge ${alarmClass}">A${h.alarm}</span>` +
+      `<span class="pc-score">${(h.score||0).toLocaleString()}</span>` +
+      `<span class="pc-combo">${h.maxCombo||0}x</span>` +
+      `<span class="pc-acc">${(h.accuracy||0).toFixed(0)}%</span>`;
+    list.appendChild(row);
   }
 }
 function armAlarm(){
@@ -1240,6 +1474,8 @@ document.getElementById('armBtn').addEventListener('click', armAlarm);
 document.getElementById('disarmBtn').addEventListener('click', () => { if(confirm('Disarm the alarm?')) disarm(); });
 document.getElementById('successReset').addEventListener('click', () => showScreen('setup'));
 document.getElementById('failedReset').addEventListener('click', () => showScreen('setup'));
+document.getElementById('statsBtn').addEventListener('click', () => showScreen('stats'));
+document.getElementById('statsBack').addEventListener('click', () => showScreen('setup'));
 for(const id of ['firstTime','interval','maxAlarms','testMode']){
   document.getElementById(id).addEventListener('change', () => {
     state.firstTime   = document.getElementById('firstTime').value;
@@ -1253,6 +1489,7 @@ for(const id of ['firstTime','interval','maxAlarms','testMode']){
 
 // ---------- BOOT ----------
 loadSettings();
+loadStats();
 document.getElementById('firstTime').value  = state.firstTime;
 document.getElementById('interval').value   = state.intervalMin;
 document.getElementById('maxAlarms').value  = state.maxAlarms;
