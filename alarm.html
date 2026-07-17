@@ -60,6 +60,24 @@ body::after{content:"";position:fixed;inset:0;background:linear-gradient(transpa
 .hud-bottom{bottom:0;opacity:.75;font-size:12px}
 .brand{color:var(--pink);text-shadow:0 0 12px var(--pink)}
 .now{color:var(--cyan)}
+.hud-left{display:flex;align-items:center;gap:10px;min-width:0}
+.help-btn{
+  display:none;align-items:center;justify-content:center;
+  width:36px;height:36px;border-radius:50%;
+  background:linear-gradient(180deg,var(--cyan),#0090c0);
+  color:#001a24;font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:20px;line-height:1;
+  border:2px solid rgba(255,255,255,.5);
+  box-shadow:0 0 12px rgba(0,217,255,.6);
+  cursor:pointer;touch-action:manipulation;
+  padding:0;
+}
+.help-btn:active{transform:scale(.94)}
+/* Only visible while the user is choosing settings or waiting for the
+   alarm — the button hides itself once gameplay is live so it can't
+   be tapped by accident mid-chart. */
+body[data-screen="setup"] .help-btn,
+body[data-screen="armed"] .help-btn{display:flex}
 
 .field{
   position:relative;
@@ -514,12 +532,147 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 .pc-empty{padding:20px 8px;text-align:center;font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.1em}
 .pc-footer{display:flex;justify-content:center;padding-top:4px}
 .hidden{display:none !important}
+
+/* ============ HELP / TUTORIAL OVERLAY ============ */
+.help-overlay{
+  position:fixed;inset:0;z-index:100;
+  background:rgba(5,3,15,.92);
+  display:none;align-items:center;justify-content:center;
+  padding:16px;
+  overflow-y:auto;
+}
+.help-overlay.on{display:flex}
+.help-card{
+  width:min(94vmin,560px);max-height:92vh;overflow-y:auto;
+  padding:20px;border-radius:22px;
+  background:linear-gradient(180deg,rgba(20,10,52,.95),rgba(10,6,32,.95));
+  border:2px solid rgba(0,217,255,.45);
+  box-shadow:0 0 60px rgba(0,217,255,.28),inset 0 0 40px rgba(255,79,163,.15);
+  display:flex;flex-direction:column;gap:12px;
+  scrollbar-width:thin;scrollbar-color:rgba(0,217,255,.5) transparent;
+}
+.help-card::-webkit-scrollbar{width:6px}
+.help-card::-webkit-scrollbar-thumb{background:rgba(0,217,255,.5);border-radius:3px}
+.help-header{
+  display:flex;align-items:center;gap:14px;
+  padding-bottom:10px;border-bottom:1px dashed rgba(0,217,255,.3);
+}
+.help-mascot{width:70px;height:auto;filter:drop-shadow(0 4px 12px rgba(0,217,255,.5))}
+.help-title{display:flex;flex-direction:column;gap:2px}
+.help-name{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:22px;
+  letter-spacing:.18em;color:var(--white);
+  text-shadow:0 0 12px var(--pink),0 0 24px rgba(255,79,163,.4);
+}
+.help-section-lbl{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);
+  padding-top:6px;border-top:1px dashed rgba(0,217,255,.3);
+}
+
+/* Note preview rows — reuse the actual .tap-note / .slide-marker /
+   .hold-arc CSS so the visuals are byte-for-byte the same as gameplay.
+   The `.preview` modifier only overrides positioning (no absolute
+   center + transform math) so the note lays out in normal flow. */
+.help-notes{display:flex;flex-direction:column;gap:8px}
+.help-note-row{
+  display:grid;grid-template-columns:100px 1fr;
+  gap:12px;align-items:center;
+  padding:10px 12px;border-radius:12px;
+  background:rgba(255,255,255,.03);
+  border:1px solid rgba(255,255,255,.08);
+}
+.help-note-row.slide{grid-template-columns:140px 1fr}
+.help-note-visual{
+  position:relative;
+  height:70px;
+  display:flex;align-items:center;justify-content:center;
+}
+.hn-name{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:14px;letter-spacing:.08em;color:var(--white);
+}
+.hn-desc{
+  font-size:12px;color:rgba(255,255,255,.8);
+  line-height:1.4;margin-top:3px;
+}
+
+/* Override .tap-note's absolute+transform positioning for previews */
+.tap-note.preview{
+  position:relative;left:auto;top:auto;
+  transform:none;
+  width:60px;height:60px;
+  cursor:default;pointer-events:none;
+  z-index:auto;
+}
+.tap-note.preview .hold-arc{
+  /* the arc is normally hidden until .hold; kept correct via existing rule */
+}
+/* Slide preview: laid out horizontally so start / arrow / end all fit. */
+.preview-slide{
+  position:relative;
+  width:130px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.preview-slide .slide-marker.start,
+.preview-slide .slide-marker.end{
+  position:relative;left:auto;top:auto;
+  transform:none;
+  width:44px;height:44px;
+  animation:none;
+  pointer-events:none;flex-shrink:0;
+}
+.preview-slide .slide-marker.start{filter:drop-shadow(0 0 10px var(--cyan))}
+.preview-slide .preview-line{
+  position:relative;
+  flex:1;height:5px;margin:0 -4px;
+  background:linear-gradient(90deg,var(--cyan) 0%,rgba(0,217,255,.4) 100%);
+  border-radius:3px;
+  box-shadow:0 0 12px var(--cyan);
+}
+.preview-slide .preview-line::after{
+  content:"▶";
+  position:absolute;right:-6px;top:-9px;
+  color:var(--cyan);font-size:14px;line-height:1;
+  text-shadow:0 0 8px var(--cyan);
+}
+
+/* Judgment tiers — colored per tier, left-border matches text color */
+.help-judg{display:flex;flex-direction:column;gap:5px}
+.hj-row{
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+  padding:8px 12px;border-radius:8px;
+  background:rgba(255,255,255,.03);
+  border-left:4px solid transparent;
+  font-family:'Orbitron',sans-serif;
+  font-size:12px;letter-spacing:.08em;
+}
+.hj-row .hj-name{font-weight:900}
+.hj-row .hj-desc{
+  font-family:'Fredoka','Noto Sans JP',sans-serif;
+  letter-spacing:.02em;color:rgba(255,255,255,.75);
+  text-align:right;flex-shrink:0;
+}
+.hj-row.critical{border-color:#fff}
+.hj-row.critical .hj-name{color:#fff;text-shadow:0 0 12px #fff,0 0 24px var(--pink),0 0 40px var(--cyan)}
+.hj-row.perfect{border-color:var(--yellow)}
+.hj-row.perfect  .hj-name{color:var(--yellow);text-shadow:0 0 10px var(--yellow)}
+.hj-row.great{border-color:var(--ok)}
+.hj-row.great    .hj-name{color:var(--ok);text-shadow:0 0 10px var(--ok)}
+.hj-row.good{border-color:#7cc4ff}
+.hj-row.good     .hj-name{color:#7cc4ff;text-shadow:0 0 10px #7cc4ff}
+.hj-row.miss{border-color:var(--danger)}
+.hj-row.miss     .hj-name{color:var(--danger);text-shadow:0 0 10px var(--danger)}
+.help-footer{display:flex;justify-content:center;padding-top:6px}
 </style>
 </head>
 <body>
 
 <div class="hud-top">
-  <div class="brand">◆ maimai アラーム</div>
+  <div class="hud-left">
+    <button class="help-btn" id="helpBtn" aria-label="ヘルプ">？</button>
+    <div class="brand">◆ maimai アラーム</div>
+  </div>
   <div class="now">現在時刻: <span id="hudClock">--:--:--</span></div>
 </div>
 <div class="hud-bottom">
@@ -663,6 +816,79 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
     <button class="btn ghost small" id="failedReset">リセット</button>
   </div>
 </section>
+
+<!-- HELP / TUTORIAL OVERLAY -->
+<div class="help-overlay" id="helpOverlay">
+  <div class="help-card">
+    <div class="help-header">
+      <img class="mascot help-mascot" src="mascot.png" alt="" onerror="this.style.display='none'">
+      <div class="help-title">
+        <div class="help-name">遊び方</div>
+        <div class="subtitle" style="margin:0">HOW TO PLAY</div>
+      </div>
+    </div>
+
+    <div class="help-section-lbl">ノーツの種類</div>
+    <div class="help-notes">
+      <div class="help-note-row">
+        <div class="help-note-visual">
+          <div class="tap-note preview"><div class="hold-arc"></div><div class="note-body"></div></div>
+        </div>
+        <div>
+          <div class="hn-name">タップノーツ</div>
+          <div class="hn-desc">リングエッジに到着したらタップ。</div>
+        </div>
+      </div>
+
+      <div class="help-note-row">
+        <div class="help-note-visual">
+          <div class="tap-note hold preview" style="--arc:.55"><div class="hold-arc"></div><div class="note-body"></div></div>
+        </div>
+        <div>
+          <div class="hn-name">ホールドノーツ</div>
+          <div class="hn-desc">アークが尽きるまで押し続ける。</div>
+        </div>
+      </div>
+
+      <div class="help-note-row slide">
+        <div class="help-note-visual">
+          <div class="preview-slide">
+            <div class="slide-marker start"></div>
+            <div class="preview-line"></div>
+            <div class="slide-marker end"></div>
+          </div>
+        </div>
+        <div>
+          <div class="hn-name">スライドノーツ</div>
+          <div class="hn-desc">スタートをタッチし、アローに沿ってエンドまでドラッグ。</div>
+        </div>
+      </div>
+
+      <div class="help-note-row">
+        <div class="help-note-visual">
+          <div class="tap-note break preview"><div class="hold-arc"></div><div class="note-body"></div></div>
+        </div>
+        <div>
+          <div class="hn-name">ブレイクノーツ</div>
+          <div class="hn-desc">高得点タップ。満点にはより厳しいタイミングが必要。</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="help-section-lbl">ジャッジメント</div>
+    <div class="help-judg">
+      <div class="hj-row critical"><span class="hj-name">CRITICAL PERFECT</span><span class="hj-desc">±16ms 完璧</span></div>
+      <div class="hj-row perfect"><span class="hj-name">PERFECT</span><span class="hj-desc">±40ms 高得点</span></div>
+      <div class="hj-row great"><span class="hj-name">GREAT</span><span class="hj-desc">±80ms 良好</span></div>
+      <div class="hj-row good"><span class="hj-name">GOOD</span><span class="hj-desc">±120ms コンボ継続</span></div>
+      <div class="hj-row miss"><span class="hj-name">MISS</span><span class="hj-desc">±120ms 超 コンボ切断</span></div>
+    </div>
+
+    <div class="help-footer">
+      <button class="btn ghost small" id="helpClose">閉じる</button>
+    </div>
+  </div>
+</div>
 
 <!-- STATS -->
 <section id="statsScreen" class="screen">
@@ -1629,6 +1855,8 @@ function stopRhythmSession(){
 /* ============ SCREENS ============ */
 function showScreen(name){
   state.screen = name;
+  // Body attribute drives the .help-btn visibility rule (setup + armed only).
+  document.body.setAttribute('data-screen', name);
   for(const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === name + 'Screen');
   const statusMap = {setup:'セットアップ', armed:'セット済み', alarm:'！！アラーム！！', success:'クリア', failed:'失敗', stats:'プロファイル'};
   document.getElementById('hudStatus').textContent = statusMap[name] || name;
@@ -1800,6 +2028,12 @@ document.getElementById('successReset').addEventListener('click', () => showScre
 document.getElementById('failedReset').addEventListener('click', () => showScreen('setup'));
 document.getElementById('statsBtn').addEventListener('click', () => showScreen('stats'));
 document.getElementById('statsBack').addEventListener('click', () => showScreen('setup'));
+document.getElementById('helpBtn').addEventListener('click', () => document.getElementById('helpOverlay').classList.add('on'));
+document.getElementById('helpClose').addEventListener('click', () => document.getElementById('helpOverlay').classList.remove('on'));
+document.getElementById('helpOverlay').addEventListener('click', (e) => {
+  // click on the dim backdrop (not the card) also closes
+  if(e.target.id === 'helpOverlay') e.currentTarget.classList.remove('on');
+});
 for(const id of ['firstTime','interval','maxAlarms','testMode','noteSpeed','chartStyle']){
   const el = document.getElementById(id);
   if(!el) continue;
@@ -1824,6 +2058,7 @@ document.getElementById('testMode').checked = state.testMode;
 document.getElementById('noteSpeed').value  = state.noteSpeed;
 document.getElementById('chartStyle').value = state.chartStyle;
 decorateFields();
+document.body.setAttribute('data-screen', 'setup');
 tick();
 </script>
 </body>
