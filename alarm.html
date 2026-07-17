@@ -1,8 +1,8 @@
 <!doctype html>
-<html lang="en">
+<html lang="ja">
 <head>
 <meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
 <meta name="theme-color" content="#0a0620" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -14,19 +14,12 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Orbitron:wght@700;900&family=Noto+Sans+JP:wght@500;700;900&display=swap" rel="stylesheet">
 <style>
-/* =========================================================
-   maimai Alarm — styles
-   ========================================================= */
+/* ============ maimai Alarm — styles ============ */
 :root{
-  --bg-0:#0a0620;
-  --bg-1:#140a34;
-  --pink:#ff4fa3;
-  --pink-2:#ff1f7a;
-  --cyan:#00d9ff;
-  --yellow:#ffe14a;
-  --white:#ffffff;
-  --danger:#ff2a2a;
-  --ok:#7dffb0;
+  --bg-0:#0a0620; --bg-1:#140a34;
+  --pink:#ff4fa3; --pink-2:#ff1f7a;
+  --cyan:#00d9ff; --yellow:#ffe14a; --white:#ffffff;
+  --danger:#ff2a2a; --ok:#7dffb0; --gold:#ffb300;
   --ring:520px;
 }
 *{box-sizing:border-box;margin:0;padding:0}
@@ -35,11 +28,10 @@ body{
   font-family:'Fredoka','Noto Sans JP',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   color:var(--white);
   background:radial-gradient(1200px 800px at 50% 40%,#1a0e4a 0%,var(--bg-0) 60%,#05030f 100%);
-  min-height:100vh;
-  user-select:none;-webkit-user-select:none;overflow:hidden;
+  min-height:100vh;user-select:none;-webkit-user-select:none;overflow:hidden;
+  overscroll-behavior:none;
 }
-
-/* animated diagonal grid backdrop */
+body[data-in-alarm="1"]{ touch-action:none; }
 body::before{
   content:"";position:fixed;inset:-40px;
   background:
@@ -48,16 +40,11 @@ body::before{
   animation:gridScroll 40s linear infinite;pointer-events:none;z-index:0;
 }
 @keyframes gridScroll{0%{background-position:0 0,0 0}100%{background-position:80px 80px,-80px 80px}}
-body::after{
-  content:"";position:fixed;inset:0;
-  background:linear-gradient(transparent 95%,rgba(255,255,255,.025) 95%) 0 0/100% 6px;
-  pointer-events:none;z-index:0;
-}
+body::after{content:"";position:fixed;inset:0;background:linear-gradient(transparent 95%,rgba(255,255,255,.025) 95%) 0 0/100% 6px;pointer-events:none;z-index:0}
 
 .screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1}
 .screen.active{display:flex}
 
-/* HUD */
 .hud-top,.hud-bottom{
   position:fixed;left:0;right:0;padding:14px 24px;
   display:flex;justify-content:space-between;align-items:center;
@@ -69,7 +56,6 @@ body::after{
 .brand{color:var(--pink);text-shadow:0 0 12px var(--pink)}
 .now{color:var(--cyan)}
 
-/* central circle "play field" */
 .field{
   position:relative;
   width:min(90vmin,var(--ring));
@@ -84,7 +70,6 @@ body::after{
   padding:6%;text-align:center;
 }
 
-/* deco rings */
 .deco{position:absolute;inset:-26px;border-radius:50%;pointer-events:none}
 .deco-cw{
   border:1px solid rgba(0,217,255,.35);
@@ -108,24 +93,19 @@ body::after{
 .deco-ccw{inset:-42px;border:1px dashed rgba(255,79,163,.35);animation:spinCCW 40s linear infinite}
 @keyframes spinCW{to{transform:rotate(360deg)}}
 @keyframes spinCCW{to{transform:rotate(-360deg)}}
-
 .ring{position:absolute;inset:-14px;border-radius:50%;border:2px dashed rgba(0,217,255,.35);animation:spinCW 20s linear infinite;pointer-events:none}
 .ring.inner{inset:-2px;border:2px solid rgba(255,79,163,.55);border-style:solid;animation:pulseRing 2.4s ease-in-out infinite}
 @keyframes pulseRing{0%,100%{box-shadow:0 0 20px rgba(255,79,163,.4)}50%{box-shadow:0 0 55px rgba(255,79,163,.9)}}
 
 .btn-marker{
   position:absolute;
-  width:clamp(22px,3.4vmin,30px);
-  height:clamp(22px,3.4vmin,30px);
+  width:clamp(22px,3.4vmin,30px);height:clamp(22px,3.4vmin,30px);
   border-radius:50%;
   transform:translate(-50%,-50%);
   background:radial-gradient(circle,rgba(255,255,255,.9) 0%,rgba(0,217,255,.55) 55%,transparent 100%);
   border:2px solid rgba(255,255,255,.55);
   box-shadow:0 0 14px rgba(0,217,255,.65),inset 0 0 8px rgba(255,255,255,.3);
-  opacity:.55;
-  transition:opacity .3s,box-shadow .3s,background .3s;
-  pointer-events:none;
-  z-index:2;
+  opacity:.55;transition:opacity .3s;pointer-events:none;z-index:2;
 }
 #alarmScreen .btn-marker{
   opacity:.9;
@@ -136,7 +116,7 @@ body::after{
 }
 @keyframes markerBlink{0%,100%{opacity:.55}50%{opacity:1}}
 
-/* mascot */
+/* ============ mascot ============ */
 .mascot{display:block;filter:drop-shadow(0 6px 16px rgba(0,217,255,.35));pointer-events:none;will-change:transform}
 .mascot.setup{width:120px;height:auto;margin-bottom:6px;animation:mascotBob 3s ease-in-out infinite}
 .mascot.armed{width:80px;height:auto;margin-bottom:8px;animation:mascotSleep 3.5s ease-in-out infinite}
@@ -145,37 +125,20 @@ body::after{
 @keyframes mascotBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
 @keyframes mascotSleep{0%,100%{transform:rotate(-4deg) translateY(0)}50%{transform:rotate(-4deg) translateY(-4px)}}
 @keyframes mascotHappy{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-14px) scale(1.05)}}
-/* Red aura sits behind the inline mascot inside .alarm-center */
 .alarm-center .mascot-aura{
-  position:absolute;
-  top:-14px;left:50%;
-  width:120px;height:120px;
-  transform:translateX(-50%);
-  border-radius:50%;
-  background:radial-gradient(circle,rgba(255,60,60,.55) 0%,transparent 70%);
-  z-index:-1;
-  opacity:0;
-  transition:opacity .4s;
-  pointer-events:none;
+  position:absolute;top:-14px;left:50%;
+  width:120px;height:120px;transform:translateX(-50%);
+  border-radius:50%;background:radial-gradient(circle,rgba(255,60,60,.55) 0%,transparent 70%);
+  z-index:-1;opacity:0;transition:opacity .4s;pointer-events:none;
 }
-body[data-level="3"] .alarm-center .mascot-aura{
-  opacity:.6;
-  animation:auraPulseLocal .5s ease-in-out infinite;
-}
-body[data-level="4"] .alarm-center .mascot-aura{
-  opacity:1;width:160px;height:160px;
-  animation:auraPulseLocal .25s ease-in-out infinite;
-}
-@keyframes auraPulseLocal{
-  0%,100%{transform:translateX(-50%) scale(1)}
-  50%    {transform:translateX(-50%) scale(1.18)}
-}
-
+body[data-level="3"] .alarm-center .mascot-aura{opacity:.6;animation:auraPulseLocal .5s ease-in-out infinite}
+body[data-level="4"] .alarm-center .mascot-aura{opacity:1;width:160px;height:160px;animation:auraPulseLocal .25s ease-in-out infinite}
+@keyframes auraPulseLocal{0%,100%{transform:translateX(-50%) scale(1)}50%{transform:translateX(-50%) scale(1.18)}}
 .zzz{display:inline-block;color:var(--cyan);font-family:'Orbitron',sans-serif;font-weight:900;font-size:16px;letter-spacing:.1em;margin-left:6px;animation:zzzFloat 2.4s ease-in-out infinite;text-shadow:0 0 8px var(--cyan)}
 .mascot-row{display:flex;align-items:center;justify-content:center;margin-bottom:6px}
 @keyframes zzzFloat{0%{transform:translate(0,4px);opacity:0}30%{opacity:1}100%{transform:translate(10px,-24px);opacity:0}}
 
-/* type */
+/* ============ typography / forms / buttons ============ */
 h1.title{
   font-family:'Orbitron',sans-serif;font-weight:900;
   font-size:clamp(28px,5vmin,54px);letter-spacing:.14em;color:var(--white);
@@ -190,266 +153,265 @@ h1.title{
   50%{text-shadow:0 0 12px var(--pink),0 0 30px var(--pink-2),0 0 60px rgba(255,79,163,.4)}
 }
 .subtitle{font-size:clamp(12px,1.6vmin,16px);letter-spacing:.3em;color:var(--cyan);text-transform:uppercase;text-shadow:0 0 10px var(--cyan);margin-bottom:14px}
-
-/* setup form */
-.form{display:grid;gap:14px;width:100%;max-width:340px}
+.form{display:grid;gap:10px;width:100%;max-width:340px}
 .row{
   display:flex;justify-content:space-between;align-items:center;
   background:rgba(255,255,255,.05);border:1px solid rgba(0,217,255,.35);
-  border-radius:14px;padding:10px 14px;box-shadow:inset 0 0 12px rgba(0,217,255,.1);
+  border-radius:14px;padding:8px 12px;box-shadow:inset 0 0 12px rgba(0,217,255,.1);
 }
-.row label{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan)}
-.row input,.row select{background:transparent;color:var(--white);font-family:'Orbitron',sans-serif;font-weight:700;font-size:18px;border:none;outline:none;text-align:right;min-width:110px}
+.row label{font-size:12px;letter-spacing:.1em;color:var(--cyan)}
+.row input,.row select{background:transparent;color:var(--white);font-family:'Orbitron',sans-serif;font-weight:700;font-size:16px;border:none;outline:none;text-align:right;min-width:110px}
 .row input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1) drop-shadow(0 0 4px var(--cyan));cursor:pointer}
 .row select{appearance:none;padding-right:4px;cursor:pointer}
 .row select option{background:var(--bg-1);color:var(--white)}
-.toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:6px;font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--yellow)}
+.toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:4px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--yellow)}
 .toggle input{width:18px;height:18px;accent-color:var(--yellow)}
-
-/* buttons */
 .btn{
   cursor:pointer;font-family:'Orbitron',sans-serif;font-weight:900;
   letter-spacing:.18em;text-transform:uppercase;border:none;outline:none;color:var(--white);
-  padding:16px 30px;border-radius:999px;
+  padding:14px 26px;border-radius:999px;
   background:linear-gradient(180deg,var(--pink) 0%,var(--pink-2) 100%);
   box-shadow:0 0 30px rgba(255,79,163,.7),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.35);
   transition:transform .08s ease,box-shadow .2s ease;
+  touch-action:manipulation;
 }
 .btn:active{transform:translateY(2px) scale(.98)}
 .btn.cyan{background:linear-gradient(180deg,var(--cyan) 0%,#0090c0 100%);color:#001a24;box-shadow:0 0 30px rgba(0,217,255,.7),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.35)}
 .btn.ghost{background:transparent;color:var(--white);border:2px solid rgba(255,255,255,.35);box-shadow:none;padding:10px 18px;font-size:12px}
 .btn.small{padding:10px 18px;font-size:13px}
-.btn.big{font-size:clamp(18px,3vmin,26px);padding:22px 40px;margin-top:10px}
+.btn.big{font-size:clamp(18px,3vmin,26px);padding:20px 36px;margin-top:6px}
+.setup-actions{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:2px}
 
-/* armed screen */
+/* armed */
 .clock{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(48px,10vmin,110px);letter-spacing:.06em;color:var(--white);text-shadow:0 0 20px var(--cyan),0 0 50px rgba(0,217,255,.5);line-height:1}
 .next-label{margin-top:16px;font-size:13px;letter-spacing:.3em;color:var(--pink);text-transform:uppercase;text-shadow:0 0 10px var(--pink)}
 .next-time{font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(22px,3.5vmin,32px);color:var(--yellow);text-shadow:0 0 10px var(--yellow);letter-spacing:.1em;margin-top:4px}
 .countdown{margin-top:10px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(16px,2.4vmin,22px);color:var(--cyan)}
-.warning{margin-top:16px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:rgba(255,225,74,.85);max-width:280px;line-height:1.4}
+.warning{margin-top:16px;font-size:11px;letter-spacing:.05em;color:rgba(255,225,74,.85);max-width:280px;line-height:1.5}
 .corner{position:fixed;top:50px;right:20px;z-index:6}
 
-/* =========================================================
-   ALARM MODE
-   ========================================================= */
+/* ============ ALARM MODE ============ */
 #alarmScreen{background:transparent}
 #alarmScreen .field{
-  /* Bigger on mobile — fills most of the viewport. Play area is the
-     bottom half; top half is score bar + mascot + labels. */
-  width:min(96vmin,600px);
-  height:min(96vmin,600px);
-  padding:0;
-  justify-content:flex-start;
-  overflow:hidden;
+  width:min(96vmin,600px);height:min(96vmin,600px);
+  padding:0;justify-content:flex-start;overflow:hidden;
   border-color:rgba(255,79,163,.9);
   box-shadow:0 0 100px rgba(255,79,163,.9),inset 0 0 80px rgba(255,79,163,.4);
   transition:box-shadow .2s ease,border-color .2s ease;
+  touch-action:none;
 }
-/* Mascot + WAKE UP! + alarm count + escalate timer, stacked in the
-   upper-middle of the play field. */
-.alarm-center{
-  position:absolute;
-  top:16%;left:50%;
-  transform:translateX(-50%);
-  display:flex;flex-direction:column;align-items:center;
-  gap:2px;
-  z-index:5;
-  text-align:center;
-  width:78%;
-  pointer-events:none;
-}
-.mascot.alarm-inline{
-  width:80px;height:auto;
-  margin-bottom:2px;
-  animation:mascotShakeInline .5s ease-in-out infinite;
-  filter:drop-shadow(0 4px 12px rgba(0,217,255,.5));
-  will-change:transform;
-}
-body[data-level="2"] .mascot.alarm-inline{
-  width:88px;animation-duration:.3s;
-  filter:drop-shadow(0 0 14px rgba(255,79,163,.7));
-}
-body[data-level="3"] .mascot.alarm-inline{
-  width:96px;animation-duration:.18s;
-  filter:drop-shadow(0 0 20px rgba(255,60,60,.85));
-}
-body[data-level="4"] .mascot.alarm-inline{
-  width:108px;animation-duration:.1s;
-  filter:drop-shadow(0 0 30px rgba(255,20,20,1));
-}
-@keyframes mascotShakeInline{
-  0%,100%{transform:rotate(0)}
-  25%    {transform:rotate(-3deg)}
-  75%    {transform:rotate(3deg)}
-}
-#alarmScreen .alarm-label{
-  margin:2px 0 0;
-  font-size:clamp(18px,2.8vmin,26px);
-}
-#alarmScreen .alarm-count{
-  margin:0;font-size:11px;letter-spacing:.25em;opacity:.9;
-}
-#alarmScreen .escalate-in{
-  margin:4px 0 0;
-  font-size:clamp(11px,1.6vmin,14px);letter-spacing:.15em;
-}
-#alarmScreen .field.on-beat{
-  animation:onBeatPulse .28s ease-out;
-}
+#alarmScreen .field.on-beat{animation:onBeatPulse .28s ease-out}
 @keyframes onBeatPulse{
-  0%  {box-shadow:0 0 160px rgba(255,79,163,1),inset 0 0 120px rgba(255,79,163,.6);border-color:rgba(255,255,255,.95)}
+  0%{box-shadow:0 0 160px rgba(255,79,163,1),inset 0 0 120px rgba(255,79,163,.6);border-color:rgba(255,255,255,.95)}
   100%{box-shadow:0 0 100px rgba(255,79,163,.9),inset 0 0 80px rgba(255,79,163,.4);border-color:rgba(255,79,163,.9)}
 }
-.alarm-label{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(20px,3vmin,32px);letter-spacing:.2em;color:var(--yellow);text-shadow:0 0 20px var(--yellow);margin-bottom:8px}
-.alarm-count{font-size:14px;letter-spacing:.3em;color:var(--white);text-transform:uppercase;margin-bottom:14px;opacity:.85}
-.escalate-in{margin-top:14px;font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(14px,2vmin,20px);color:var(--white);letter-spacing:.15em}
 
-/* score bar — lives INSIDE the play field, pinned to its top edge
-   so the mobile browser chrome never crops it. */
+.alarm-center{
+  position:absolute;top:16%;left:50%;transform:translateX(-50%);
+  display:flex;flex-direction:column;align-items:center;gap:2px;
+  z-index:5;text-align:center;width:78%;pointer-events:none;
+}
+.mascot.alarm-inline{
+  width:80px;height:auto;margin-bottom:2px;
+  animation:mascotShakeInline .5s ease-in-out infinite;
+  filter:drop-shadow(0 4px 12px rgba(0,217,255,.5));will-change:transform;
+}
+body[data-level="2"] .mascot.alarm-inline{width:88px;animation-duration:.3s;filter:drop-shadow(0 0 14px rgba(255,79,163,.7))}
+body[data-level="3"] .mascot.alarm-inline{width:96px;animation-duration:.18s;filter:drop-shadow(0 0 20px rgba(255,60,60,.85))}
+body[data-level="4"] .mascot.alarm-inline{width:108px;animation-duration:.1s;filter:drop-shadow(0 0 30px rgba(255,20,20,1))}
+@keyframes mascotShakeInline{0%,100%{transform:rotate(0)}25%{transform:rotate(-3deg)}75%{transform:rotate(3deg)}}
+#alarmScreen .alarm-label{margin:2px 0 0;font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(18px,2.8vmin,26px);letter-spacing:.2em;color:var(--yellow);text-shadow:0 0 20px var(--yellow)}
+#alarmScreen .alarm-count{margin:0;font-size:11px;letter-spacing:.25em;opacity:.9}
+#alarmScreen .escalate-in{margin:4px 0 0;font-family:'Orbitron',sans-serif;font-weight:700;font-size:clamp(11px,1.6vmin,14px);letter-spacing:.15em;color:var(--white)}
+
+/* score bar */
 .alarm-score-bar{
-  position:absolute;
-  top:4%;left:5%;right:5%;
-  z-index:20;
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  gap:4px;
-  padding:6px 8px;
-  background:rgba(10,6,32,.7);
-  border:1px solid rgba(0,217,255,.45);
-  border-radius:12px;
+  position:absolute;top:4%;left:5%;right:5%;z-index:20;
+  display:flex;flex-direction:column;gap:3px;
+  padding:6px 8px;background:rgba(10,6,32,.72);
+  border:1px solid rgba(0,217,255,.45);border-radius:12px;
   box-shadow:0 0 14px rgba(0,217,255,.28),inset 0 0 10px rgba(0,217,255,.1);
-  font-family:'Orbitron',sans-serif;
-  backdrop-filter:blur(4px);
+  font-family:'Orbitron',sans-serif;backdrop-filter:blur(4px);
 }
-.sp-item{
-  display:flex;flex-direction:column;align-items:center;
-  flex:1;min-width:0;
-}
-.sp-lbl{
-  font-family:'Fredoka','Noto Sans JP',sans-serif;
-  font-size:9px;letter-spacing:.02em;
-  color:var(--cyan);opacity:.9;
-  white-space:nowrap;
-}
-.sp-val{
-  font-size:clamp(11px,1.8vmin,14px);
-  font-weight:900;color:var(--white);line-height:1.1;margin-top:2px;
-  white-space:nowrap;
-}
-#spScore{color:var(--pink);text-shadow:0 0 6px var(--pink);font-size:clamp(13px,2.1vmin,16px)}
+.sp-r1,.sp-r2{display:flex;justify-content:space-between;align-items:center;gap:4px}
+.sp-item{display:flex;flex-direction:column;align-items:center;flex:1;min-width:0}
+.sp-lbl{font-family:'Fredoka','Noto Sans JP',sans-serif;font-size:8px;letter-spacing:.02em;color:var(--cyan);opacity:.9;white-space:nowrap}
+.sp-val{font-size:clamp(11px,1.7vmin,13px);font-weight:900;color:var(--white);line-height:1.1;margin-top:1px;white-space:nowrap}
+#spScore{color:var(--pink);text-shadow:0 0 6px var(--pink);font-size:clamp(13px,2vmin,16px)}
 #spCombo,#spMax{color:var(--yellow);text-shadow:0 0 6px var(--yellow)}
+#spDx{color:var(--ok);text-shadow:0 0 6px var(--ok)}
+#spStyle{color:var(--cyan);text-shadow:0 0 6px var(--cyan);font-size:10px;letter-spacing:.15em}
 
-/* =========================================================
-   Notes (tap + hold)
-   ========================================================= */
+/* ============ NOTES (tap / hold / slide / break) ============ */
+/* Notes spawn at the field center at scale ~0.35 and scale + translate outward
+   over their travel time, reaching scale 1 at their destination on-beat.
+   Position updates use CSS custom properties driven by requestAnimationFrame,
+   so we only ever change transform + opacity (no layout thrash). */
 .tap-note{
-  position:absolute;
-  width:clamp(80px,14vmin,110px);
-  height:clamp(80px,14vmin,110px);
+  position:absolute;left:50%;top:50%;
+  width:clamp(72px,13vmin,100px);height:clamp(72px,13vmin,100px);
   border-radius:50%;
-  transform:translate(-50%,-50%);
+  transform:translate(-50%,-50%) translate3d(var(--tx,0),var(--ty,0),0) scale(var(--sc,0.35));
+  transform-origin:center center;
+  will-change:transform,opacity;
+  opacity:var(--op,1);
   z-index:8;
-  touch-action:manipulation;
-  -webkit-tap-highlight-color:transparent;
+  touch-action:none;-webkit-tap-highlight-color:transparent;
   cursor:pointer;
+  pointer-events:auto;
 }
 .tap-note .note-body{
   position:absolute;inset:0;border-radius:50%;
   background:radial-gradient(circle at 50% 40%,#ffb4d6 0%,var(--pink) 55%,var(--pink-2) 100%);
   border:5px solid var(--white);
   box-shadow:
-    0 0 30px rgba(255,79,163,.9),
-    0 0 60px rgba(255,79,163,.6),
-    inset 0 -6px 12px rgba(0,0,0,.25),
-    inset 0 6px 12px rgba(255,255,255,.4);
+    0 0 30px rgba(255,79,163,.9),0 0 60px rgba(255,79,163,.6),
+    inset 0 -6px 12px rgba(0,0,0,.25),inset 0 6px 12px rgba(255,255,255,.4);
   animation:notePulse .9s ease-in-out infinite;
 }
 .tap-note.hold .note-body{
   background:radial-gradient(circle at 50% 40%,#b7fff0 0%,var(--cyan) 55%,#0090c0 100%);
+  box-shadow:0 0 30px rgba(0,217,255,.9),0 0 60px rgba(0,217,255,.6),inset 0 -6px 12px rgba(0,0,0,.25),inset 0 6px 12px rgba(255,255,255,.4);
+}
+.tap-note.break .note-body{
+  background:radial-gradient(circle at 50% 40%,#fff6b8 0%,var(--gold) 45%,#c26e00 100%);
   box-shadow:
-    0 0 30px rgba(0,217,255,.9),
-    0 0 60px rgba(0,217,255,.6),
-    inset 0 -6px 12px rgba(0,0,0,.25),
-    inset 0 6px 12px rgba(255,255,255,.4);
+    0 0 40px rgba(255,179,0,1),0 0 90px rgba(255,179,0,.7),
+    inset 0 -6px 12px rgba(0,0,0,.25),inset 0 6px 12px rgba(255,255,255,.5);
+  animation:breakPulse .6s ease-in-out infinite;
+}
+.tap-note.break::after{
+  content:"";position:absolute;inset:-30%;border-radius:50%;
+  background:radial-gradient(circle,rgba(255,220,120,.55) 0%,transparent 60%);
+  pointer-events:none;animation:sparkle 1.4s linear infinite;
 }
 @keyframes notePulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.2)}}
+@keyframes breakPulse{0%,100%{filter:brightness(1.05) saturate(1.1)}50%{filter:brightness(1.35) saturate(1.4)}}
+@keyframes sparkle{0%,100%{opacity:.6;transform:scale(1) rotate(0)}50%{opacity:1;transform:scale(1.1) rotate(180deg)}}
 
-/* approach ring drawn as a real child so JS can drive its scale each frame */
-.tap-note .approach{
-  position:absolute;inset:0;border-radius:50%;
-  border:3px solid rgba(255,255,255,.85);
-  box-shadow:0 0 20px var(--white);
-  transform:scale(var(--approach,2));
-  opacity:var(--approach-op,0);
-  pointer-events:none;
-}
-.tap-note.hold .approach{border-color:rgba(125,255,176,.9);box-shadow:0 0 20px var(--cyan)}
-
-/* hold arc — conic gradient masked to a ring */
+/* hold arc */
 .tap-note .hold-arc{
   position:absolute;inset:-14px;border-radius:50%;
-  background:conic-gradient(from -90deg,
-    var(--cyan) 0deg,
-    var(--cyan) calc(var(--arc,1) * 360deg),
-    transparent calc(var(--arc,1) * 360deg));
+  background:conic-gradient(from -90deg,var(--cyan) 0deg,var(--cyan) calc(var(--arc,1) * 360deg),transparent calc(var(--arc,1) * 360deg));
   -webkit-mask:radial-gradient(circle,transparent calc(50% - 8px),black calc(50% - 8px) 50%,transparent 51%);
           mask:radial-gradient(circle,transparent calc(50% - 8px),black calc(50% - 8px) 50%,transparent 51%);
-  filter:drop-shadow(0 0 12px var(--cyan));
-  pointer-events:none;display:none;
+  filter:drop-shadow(0 0 12px var(--cyan));pointer-events:none;display:none;
 }
 .tap-note.hold .hold-arc{display:block}
 
-/* frozen tap-to-start note */
+/* frozen tap-to-start */
 .tap-note.frozen .note-body{animation-duration:1.4s;opacity:.85}
-.tap-note.frozen .approach{
-  border-color:rgba(255,225,74,.85);box-shadow:0 0 24px var(--yellow);
-  opacity:1;transform:scale(1);
-  animation:freezePulse 1.1s ease-in-out infinite;
-}
-@keyframes freezePulse{0%,100%{opacity:.5;transform:scale(1)}50%{opacity:1;transform:scale(1.2)}}
-.tap-note .tap-hint-text{
+.tap-note.frozen .tap-hint-text{
   position:absolute;top:calc(100% + 12px);left:50%;transform:translateX(-50%);
-  white-space:nowrap;font-family:'Orbitron',sans-serif;font-weight:900;
-  font-size:14px;color:var(--yellow);text-shadow:0 0 12px var(--yellow),0 0 24px rgba(255,225,74,.6);
+  white-space:nowrap;font-family:'Orbitron',sans-serif;font-weight:900;font-size:14px;
+  color:var(--yellow);text-shadow:0 0 12px var(--yellow),0 0 24px rgba(255,225,74,.6);
   animation:pulseText 1s ease-in-out infinite;pointer-events:none;letter-spacing:.15em;
 }
 @keyframes pulseText{0%,100%{opacity:.6;transform:translateX(-50%) scale(1)}50%{opacity:1;transform:translateX(-50%) scale(1.1)}}
 
-/* burst + popups */
+/* hit zones — subtle destination glows at each ring position */
+.hit-zone{
+  position:absolute;left:50%;top:50%;
+  width:clamp(74px,13.5vmin,105px);height:clamp(74px,13.5vmin,105px);
+  border-radius:50%;
+  transform:translate(-50%,-50%) translate3d(var(--tx,0),var(--ty,0),0);
+  border:2px dashed rgba(255,255,255,.55);
+  box-shadow:0 0 18px rgba(255,255,255,.35);
+  background:radial-gradient(circle,rgba(255,255,255,.08) 0%,transparent 70%);
+  opacity:var(--hz-op,0);
+  transition:opacity .15s ease-out;
+  pointer-events:none;z-index:3;
+  will-change:opacity;
+}
+.hit-zone.break{border-color:var(--gold);box-shadow:0 0 28px var(--gold)}
+
+/* slides */
+.slide-line{
+  position:absolute;left:50%;top:50%;
+  transform-origin:0% 50%;
+  transform:translate(0,-2px) translate3d(var(--tx,0),var(--ty,0),0) rotate(var(--ang,0deg)) scaleX(var(--len,0));
+  height:5px;
+  background:linear-gradient(90deg,var(--cyan) 0%,rgba(0,217,255,.4) 100%);
+  border-radius:3px;box-shadow:0 0 12px var(--cyan);
+  opacity:var(--op,.9);pointer-events:none;z-index:6;
+  will-change:transform,opacity;
+}
+.slide-marker{
+  position:absolute;left:50%;top:50%;
+  width:clamp(56px,10vmin,80px);height:clamp(56px,10vmin,80px);
+  border-radius:50%;
+  transform:translate(-50%,-50%) translate3d(var(--tx,0),var(--ty,0),0) scale(var(--sc,1));
+  z-index:7;touch-action:none;-webkit-tap-highlight-color:transparent;
+  will-change:transform,opacity;
+  cursor:pointer;pointer-events:auto;
+}
+.slide-marker.start{
+  background:conic-gradient(from -90deg,var(--cyan) 0deg,#7dffff 72deg,var(--cyan) 144deg,#7dffff 216deg,var(--cyan) 288deg,#7dffff 360deg);
+  clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);
+  filter:drop-shadow(0 0 12px var(--cyan)) drop-shadow(0 0 22px rgba(0,217,255,.7));
+  animation:slidePulse .8s ease-in-out infinite;
+}
+.slide-marker.end{
+  background:radial-gradient(circle,rgba(255,255,255,.9) 0%,var(--cyan) 55%,#0090c0 100%);
+  border:3px solid rgba(255,255,255,.85);
+  box-shadow:0 0 20px var(--cyan);
+  opacity:.75;
+  pointer-events:none;
+}
+@keyframes slidePulse{0%,100%{filter:drop-shadow(0 0 12px var(--cyan)) drop-shadow(0 0 22px rgba(0,217,255,.7))}50%{filter:drop-shadow(0 0 18px var(--cyan)) drop-shadow(0 0 32px var(--cyan))}}
+
+/* burst + judgment popups */
 .burst{
-  position:absolute;width:120px;height:120px;border-radius:50%;
-  transform:translate(-50%,-50%);border:6px solid var(--white);
+  position:absolute;left:50%;top:50%;
+  width:110px;height:110px;border-radius:50%;
+  transform:translate(-50%,-50%) translate3d(var(--tx,0),var(--ty,0),0);
+  border:5px solid var(--white);
   box-shadow:0 0 40px var(--white),0 0 80px var(--pink);
   animation:burstOut .5s ease-out forwards;pointer-events:none;z-index:9;
 }
-.burst.great{box-shadow:0 0 40px var(--white),0 0 80px var(--cyan)}
+.burst.great{box-shadow:0 0 40px var(--white),0 0 80px var(--ok)}
+.burst.good{box-shadow:0 0 40px var(--white),0 0 80px #7cc4ff}
+.burst.critical{border-color:#ffffff;box-shadow:0 0 60px #ffffff,0 0 120px #ffe0f5,0 0 150px var(--pink)}
+.burst.break{border-color:var(--gold);box-shadow:0 0 60px var(--gold),0 0 130px rgba(255,179,0,.7)}
 .burst.miss{border-color:var(--danger);box-shadow:0 0 40px var(--danger),0 0 80px rgba(255,42,42,.6)}
 @keyframes burstOut{
-  0%  {transform:translate(-50%,-50%) scale(.3);opacity:1;border-width:6px}
-  100%{transform:translate(-50%,-50%) scale(2.4);opacity:0;border-width:1px}
+  0%{transform:translate(-50%,-50%) translate3d(var(--tx,0),var(--ty,0),0) scale(.3);opacity:1;border-width:6px}
+  100%{transform:translate(-50%,-50%) translate3d(var(--tx,0),var(--ty,0),0) scale(2.4);opacity:0;border-width:1px}
 }
-.perfect-popup{
-  position:absolute;transform:translate(-50%,-50%);
+.judg-popup{
+  position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%) translate3d(var(--tx,0),var(--ty,0),0);
   font-family:'Orbitron',sans-serif;font-weight:900;
-  font-size:clamp(22px,3.4vmin,32px);letter-spacing:.15em;
-  color:var(--yellow);text-shadow:0 0 14px var(--yellow),0 0 30px var(--pink);
-  animation:perfectRise .8s ease-out forwards;pointer-events:none;z-index:10;white-space:nowrap;
+  font-size:clamp(20px,3.2vmin,30px);letter-spacing:.12em;white-space:nowrap;
+  pointer-events:none;z-index:10;text-align:center;
+  animation:judgRise .8s ease-out forwards;
 }
-.perfect-popup.great{color:var(--cyan);text-shadow:0 0 14px var(--cyan),0 0 30px rgba(0,217,255,.7)}
-.perfect-popup.miss{color:var(--danger);text-shadow:0 0 14px var(--danger),0 0 30px rgba(255,42,42,.6)}
-@keyframes perfectRise{
-  0%  {opacity:0;transform:translate(-50%,-30%) scale(.8)}
-  20% {opacity:1;transform:translate(-50%,-70%) scale(1.15)}
-  100%{opacity:0;transform:translate(-50%,-130%) scale(1)}
+.judg-popup .jlbl{display:block}
+.judg-popup .jsub{display:block;font-size:.55em;letter-spacing:.2em;opacity:.9;margin-top:2px}
+.judg-popup.critical{color:#ffffff;text-shadow:0 0 14px #fff,0 0 26px var(--pink),0 0 40px var(--cyan)}
+.judg-popup.perfect {color:var(--yellow);text-shadow:0 0 14px var(--yellow),0 0 30px rgba(255,225,74,.6)}
+.judg-popup.great   {color:var(--ok);text-shadow:0 0 14px var(--ok),0 0 30px rgba(125,255,176,.6)}
+.judg-popup.good    {color:#7cc4ff;text-shadow:0 0 14px #7cc4ff,0 0 30px rgba(124,196,255,.5)}
+.judg-popup.miss    {color:var(--danger);text-shadow:0 0 14px var(--danger),0 0 30px rgba(255,42,42,.6)}
+.judg-popup.break   {color:var(--gold);text-shadow:0 0 16px var(--gold),0 0 34px rgba(255,179,0,.7)}
+@keyframes judgRise{
+  0%  {opacity:0;transform:translate(-50%,-50%) translate3d(var(--tx,0),var(--ty,0),0) scale(.75)}
+  20% {opacity:1;transform:translate(-50%,-90%) translate3d(var(--tx,0),var(--ty,0),0) scale(1.2)}
+  100%{opacity:0;transform:translate(-50%,-160%) translate3d(var(--tx,0),var(--ty,0),0) scale(1)}
 }
 
-/* flash + shake overlays */
-.flash{
-  position:fixed;inset:0;pointer-events:none;z-index:0;
-  background:radial-gradient(circle,rgba(255,79,163,.35) 0%,transparent 70%);
-  animation:flashPulse 1s ease-in-out infinite;
+/* particle sparkles for break notes */
+.spark{
+  position:absolute;left:50%;top:50%;
+  width:6px;height:6px;border-radius:50%;
+  background:radial-gradient(circle,#fff 0%,var(--gold) 60%,transparent 100%);
+  transform:translate(-50%,-50%) translate3d(var(--sx,0),var(--sy,0),0) scale(var(--sc,1));
+  opacity:var(--op,1);pointer-events:none;z-index:9;
+  will-change:transform,opacity;
 }
+
+/* flash + shake */
+.flash{position:fixed;inset:0;pointer-events:none;z-index:0;background:radial-gradient(circle,rgba(255,79,163,.35) 0%,transparent 70%);animation:flashPulse 1s ease-in-out infinite}
 @keyframes flashPulse{0%,100%{opacity:.15}50%{opacity:.75}}
 body[data-level="2"] .flash{animation-duration:.7s;background:radial-gradient(circle,rgba(255,79,163,.5) 0%,transparent 70%)}
 body[data-level="3"] .flash{animation-duration:.45s;background:radial-gradient(circle,rgba(255,60,60,.55) 0%,transparent 70%)}
@@ -457,115 +419,73 @@ body[data-level="4"] .flash{animation-duration:.25s;background:radial-gradient(c
 body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 @keyframes shake{0%{transform:translate(0,0)}25%{transform:translate(-3px,2px)}50%{transform:translate(2px,-3px)}75%{transform:translate(-2px,-1px)}100%{transform:translate(0,0)}}
 
-/* results screens */
+/* results */
 .results{text-align:center}
 .grade{
   font-family:'Orbitron',sans-serif;font-weight:900;
   font-size:clamp(80px,18vmin,180px);line-height:1;letter-spacing:.02em;
   background:linear-gradient(180deg,#fff,var(--yellow) 50%,#ff9c00 100%);
   -webkit-background-clip:text;background-clip:text;color:transparent;
-  text-shadow:0 0 40px rgba(255,225,74,.5);margin-bottom:10px;
+  text-shadow:0 0 40px rgba(255,225,74,.5);margin-bottom:6px;
 }
-.combo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(24px,4vmin,42px);color:var(--white);letter-spacing:.2em;text-shadow:0 0 20px var(--cyan);margin-bottom:20px}
-.stats{display:grid;gap:6px;font-size:14px;letter-spacing:.1em;color:rgba(255,255,255,.9)}
+.combo{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(22px,3.8vmin,38px);color:var(--white);letter-spacing:.2em;text-shadow:0 0 20px var(--cyan);margin-bottom:12px}
+.stats{display:grid;gap:4px;font-size:13px;letter-spacing:.08em;color:rgba(255,255,255,.9);max-width:340px}
 .stats span{color:var(--cyan)}
+.breakdown{
+  margin:8px auto;padding:8px 12px;max-width:340px;
+  border-top:1px dashed rgba(0,217,255,.35);border-bottom:1px dashed rgba(0,217,255,.35);
+  display:grid;gap:3px;font-size:11px;font-family:'Orbitron',sans-serif;letter-spacing:.06em;
+}
+.bd-row{display:grid;grid-template-columns:60px 1fr auto;gap:6px;align-items:center}
+.bd-lbl{color:var(--cyan);font-weight:700}
+.bd-bar{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;position:relative}
+.bd-bar::after{content:"";position:absolute;left:0;top:0;bottom:0;width:var(--pct,0%);background:linear-gradient(90deg,var(--ok),var(--yellow));border-radius:3px}
+.bd-val{color:var(--white);font-weight:900;font-size:10px}
 .gameover .grade{background:linear-gradient(180deg,#666,#333);-webkit-background-clip:text;background-clip:text;color:transparent;text-shadow:0 0 20px rgba(255,40,40,.5);font-size:clamp(60px,12vmin,120px)}
 .gameover .field{border-color:rgba(120,120,120,.4);box-shadow:0 0 30px rgba(255,40,40,.3),inset 0 0 40px rgba(0,0,0,.5);background:radial-gradient(circle at 50% 50%,rgba(80,20,20,.4) 0%,rgba(10,6,32,.6) 60%,transparent 100%)}
+.gap{height:8px}
 
-.gap{height:10px}
-.hidden{display:none !important}
-
-/* =========================================================
-   Stats / profile card screen
-   ========================================================= */
+/* stats profile */
 .profile-card{
-  position:relative;
-  width:min(94vmin,600px);
-  max-height:88vh;
-  padding:22px 22px 18px;
-  border-radius:26px;
-  background:linear-gradient(180deg,rgba(20,10,52,.92),rgba(10,6,32,.92));
+  position:relative;width:min(94vmin,600px);max-height:88vh;padding:22px 22px 18px;
+  border-radius:26px;background:linear-gradient(180deg,rgba(20,10,52,.92),rgba(10,6,32,.92));
   border:2px solid rgba(0,217,255,.45);
   box-shadow:0 0 60px rgba(0,217,255,.25),inset 0 0 40px rgba(255,79,163,.15);
-  display:flex;flex-direction:column;gap:14px;
+  display:flex;flex-direction:column;gap:12px;
 }
-.pc-header{
-  display:flex;align-items:center;gap:16px;
-  padding-bottom:12px;border-bottom:1px dashed rgba(0,217,255,.3);
-}
+.pc-header{display:flex;align-items:center;gap:16px;padding-bottom:10px;border-bottom:1px dashed rgba(0,217,255,.3)}
 .pc-mascot{width:78px;height:auto;filter:drop-shadow(0 4px 12px rgba(0,217,255,.5))}
 .pc-title{display:flex;flex-direction:column;gap:2px}
-.pc-name{
-  font-family:'Orbitron',sans-serif;font-weight:900;font-size:22px;
-  letter-spacing:.18em;color:var(--white);
-  text-shadow:0 0 12px var(--pink),0 0 24px rgba(255,79,163,.4);
-}
-.pc-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
-.pc-tile{
-  padding:12px 10px;border-radius:14px;
-  border:1px solid rgba(0,217,255,.35);
-  background:rgba(255,255,255,.03);
-  box-shadow:inset 0 0 14px rgba(0,217,255,.1);
-  text-align:center;
-}
+.pc-name{font-family:'Orbitron',sans-serif;font-weight:900;font-size:22px;letter-spacing:.18em;color:var(--white);text-shadow:0 0 12px var(--pink),0 0 24px rgba(255,79,163,.4)}
+.pc-tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.pc-tile{padding:10px 8px;border-radius:12px;border:1px solid rgba(0,217,255,.35);background:rgba(255,255,255,.03);box-shadow:inset 0 0 14px rgba(0,217,255,.1);text-align:center}
 .pc-tile.streak{border-color:rgba(255,79,163,.5);box-shadow:inset 0 0 14px rgba(255,79,163,.15)}
-.pc-tile.score {border-color:rgba(0,217,255,.5)}
 .pc-tile.combo {border-color:rgba(255,225,74,.5);box-shadow:inset 0 0 14px rgba(255,225,74,.12)}
-.pc-lbl{
-  font-family:'Orbitron',sans-serif;font-weight:700;font-size:10px;
-  letter-spacing:.2em;text-transform:uppercase;color:var(--cyan);opacity:.85;
-}
-.pc-val{
-  font-family:'Orbitron',sans-serif;font-weight:900;
-  font-size:clamp(24px,4.5vmin,34px);letter-spacing:.02em;line-height:1.1;
-  color:var(--white);margin-top:2px;
-}
+.pc-tile.dx    {border-color:rgba(125,255,176,.5);box-shadow:inset 0 0 14px rgba(125,255,176,.12)}
+.pc-lbl{font-family:'Orbitron',sans-serif;font-weight:700;font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--cyan);opacity:.85}
+.pc-val{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(22px,4vmin,30px);letter-spacing:.02em;line-height:1.1;color:var(--white);margin-top:2px}
 .pc-tile.streak .pc-val{color:var(--pink);text-shadow:0 0 12px var(--pink)}
 .pc-tile.score  .pc-val{color:var(--cyan);text-shadow:0 0 12px var(--cyan)}
 .pc-tile.combo  .pc-val{color:var(--yellow);text-shadow:0 0 12px var(--yellow)}
-.pc-sub{font-size:9px;letter-spacing:.2em;color:rgba(255,255,255,.55);text-transform:uppercase;margin-top:2px}
-.pc-history-lbl{
-  font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;
-  letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);
-  padding-top:6px;border-top:1px dashed rgba(0,217,255,.3);
-}
-.pc-history{
-  overflow-y:auto;max-height:40vh;
-  display:flex;flex-direction:column;gap:6px;padding-right:4px;
-  scrollbar-width:thin;scrollbar-color:rgba(0,217,255,.5) transparent;
-}
+.pc-tile.dx     .pc-val{color:var(--ok);text-shadow:0 0 12px var(--ok)}
+.pc-sub{font-size:8px;letter-spacing:.14em;color:rgba(255,255,255,.55);text-transform:uppercase;margin-top:2px}
+.pc-history-lbl{font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);padding-top:4px;border-top:1px dashed rgba(0,217,255,.3)}
+.pc-history{overflow-y:auto;max-height:36vh;display:flex;flex-direction:column;gap:5px;padding-right:4px;scrollbar-width:thin;scrollbar-color:rgba(0,217,255,.5) transparent}
 .pc-history::-webkit-scrollbar{width:6px}
 .pc-history::-webkit-scrollbar-thumb{background:rgba(0,217,255,.5);border-radius:3px}
-.pc-row{
-  display:grid;grid-template-columns:1fr auto auto auto auto;gap:10px;align-items:center;
-  padding:8px 10px;border-radius:10px;
-  background:rgba(255,255,255,.03);
-  border:1px solid rgba(255,255,255,.08);
-  font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:.06em;
-}
+.pc-row{display:grid;grid-template-columns:1fr auto auto auto auto;gap:8px;align-items:center;padding:7px 10px;border-radius:10px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);font-family:'Orbitron',sans-serif;font-size:11px;letter-spacing:.06em}
 .pc-date{color:rgba(255,255,255,.7);font-weight:700}
-.pc-alarm-badge{
-  padding:2px 8px;border-radius:999px;
-  font-weight:900;font-size:10px;letter-spacing:.1em;
-  border:1px solid currentColor;
-}
+.pc-alarm-badge{padding:2px 8px;border-radius:999px;font-weight:900;font-size:10px;letter-spacing:.1em;border:1px solid currentColor}
 .pc-alarm-badge.a1{color:var(--ok)}
 .pc-alarm-badge.a2{color:var(--yellow)}
 .pc-alarm-badge.a3{color:#ff9650}
-.pc-alarm-badge.a4{color:var(--danger)}
-.pc-alarm-badge.a5,.pc-alarm-badge.a6{color:var(--danger)}
+.pc-alarm-badge.a4,.pc-alarm-badge.a5,.pc-alarm-badge.a6{color:var(--danger)}
 .pc-score{color:var(--pink);font-weight:900;text-shadow:0 0 6px rgba(255,79,163,.5)}
 .pc-combo{color:var(--yellow);font-weight:700}
-.pc-acc  {color:var(--cyan);font-weight:700;min-width:44px;text-align:right}
-.pc-empty{
-  padding:20px 8px;text-align:center;font-size:12px;color:rgba(255,255,255,.5);
-  letter-spacing:.1em;
-}
-.pc-footer{display:flex;justify-content:center;padding-top:6px}
-
-/* Small STATS button on the setup screen */
-.setup-actions{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap}
-.setup-actions .btn.ghost{margin-top:4px}
+.pc-acc{color:var(--cyan);font-weight:700;min-width:44px;text-align:right}
+.pc-empty{padding:20px 8px;text-align:center;font-size:12px;color:rgba(255,255,255,.5);letter-spacing:.1em}
+.pc-footer{display:flex;justify-content:center;padding-top:4px}
+.hidden{display:none !important}
 </style>
 </head>
 <body>
@@ -589,17 +509,31 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
       <div class="row"><label for="firstTime">最初のアラーム</label><input type="time" id="firstTime" value="08:00" /></div>
       <div class="row"><label for="interval">エスカレート間隔</label>
         <select id="interval">
-          <option value="15">15 分</option>
-          <option value="30" selected>30 分</option>
-          <option value="45">45 分</option>
-          <option value="60">60 分</option>
+          <option value="15">15 分</option><option value="30" selected>30 分</option>
+          <option value="45">45 分</option><option value="60">60 分</option>
         </select>
       </div>
       <div class="row"><label for="maxAlarms">最大アラーム数</label>
         <select id="maxAlarms">
           <option value="2">2</option><option value="3">3</option>
-          <option value="4" selected>4</option>
-          <option value="5">5</option><option value="6">6</option>
+          <option value="4" selected>4</option><option value="5">5</option><option value="6">6</option>
+        </select>
+      </div>
+      <div class="row"><label for="noteSpeed">ノートスピード</label>
+        <select id="noteSpeed">
+          <option value="1">1×</option>
+          <option value="1.5" selected>1.5×</option>
+          <option value="2">2×</option>
+          <option value="2.5">2.5×</option>
+          <option value="3">3×</option>
+        </select>
+      </div>
+      <div class="row"><label for="chartStyle">チャートスタイル</label>
+        <select id="chartStyle">
+          <option value="BASIC" selected>ベーシック</option>
+          <option value="STREAM">ストリーム</option>
+          <option value="SYNC">シンク</option>
+          <option value="CHAOS">カオス</option>
         </select>
       </div>
       <div class="toggle"><input type="checkbox" id="testMode" /><label for="testMode">テストモード (15秒起床 / 30秒エスカレート)</label></div>
@@ -607,41 +541,6 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
       <div class="setup-actions">
         <button class="btn ghost small" id="statsBtn">スタッツ</button>
       </div>
-    </div>
-  </div>
-</section>
-
-<!-- STATS / PROFILE -->
-<section id="statsScreen" class="screen">
-  <div class="profile-card">
-    <div class="pc-header">
-      <img class="mascot pc-mascot" src="mascot.png" alt="" onerror="this.style.display='none'">
-      <div class="pc-title">
-        <div class="pc-name">プレイヤープロファイル</div>
-        <div class="subtitle" style="margin:0">maimai アラーム</div>
-      </div>
-    </div>
-    <div class="pc-tiles">
-      <div class="pc-tile streak">
-        <div class="pc-lbl">起床連続記録</div>
-        <div class="pc-val" id="statStreak">0</div>
-        <div class="pc-sub">アラーム1日数</div>
-      </div>
-      <div class="pc-tile score">
-        <div class="pc-lbl">最高スコア</div>
-        <div class="pc-val" id="statBestScore">0</div>
-        <div class="pc-sub">累計</div>
-      </div>
-      <div class="pc-tile combo">
-        <div class="pc-lbl">最高コンボ</div>
-        <div class="pc-val" id="statBestCombo">0</div>
-        <div class="pc-sub">最大チェイン</div>
-      </div>
-    </div>
-    <div class="pc-history-lbl">最近のセッション</div>
-    <div class="pc-history" id="statHistory"></div>
-    <div class="pc-footer">
-      <button class="btn ghost small" id="statsBack">戻る</button>
     </div>
   </div>
 </section>
@@ -669,15 +568,19 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 <section id="alarmScreen" class="screen">
   <div class="flash"></div>
   <div class="field" id="alarmField">
-    <!-- score bar pinned inside the field's top edge -->
     <div class="alarm-score-bar" id="scorePanel">
-      <div class="sp-item"><span class="sp-lbl">スコア</span><span class="sp-val" id="spScore">0</span></div>
-      <div class="sp-item"><span class="sp-lbl">コンボ</span><span class="sp-val" id="spCombo">0</span></div>
-      <div class="sp-item"><span class="sp-lbl">最大</span><span class="sp-val" id="spMax">0</span></div>
-      <div class="sp-item"><span class="sp-lbl">ノーツ</span><span class="sp-val" id="spNotes">0 / 20</span></div>
-      <div class="sp-item"><span class="sp-lbl">ミス</span><span class="sp-val" id="spMiss">0 / 3</span></div>
+      <div class="sp-r1">
+        <div class="sp-item"><span class="sp-lbl">スコア</span><span class="sp-val" id="spScore">0</span></div>
+        <div class="sp-item"><span class="sp-lbl">コンボ</span><span class="sp-val" id="spCombo">0</span></div>
+        <div class="sp-item"><span class="sp-lbl">最大</span><span class="sp-val" id="spMax">0</span></div>
+        <div class="sp-item"><span class="sp-lbl">DX</span><span class="sp-val" id="spDx">0/0</span></div>
+      </div>
+      <div class="sp-r2">
+        <div class="sp-item"><span class="sp-lbl">ノーツ</span><span class="sp-val" id="spNotes">0 / 20</span></div>
+        <div class="sp-item"><span class="sp-lbl">ミス</span><span class="sp-val" id="spMiss">0 / 3</span></div>
+        <div class="sp-item"><span class="sp-lbl">スタイル</span><span class="sp-val" id="spStyle">BASIC</span></div>
+      </div>
     </div>
-    <!-- mascot + alarm text stacked in upper half; play area = bottom half -->
     <div class="alarm-center">
       <div class="mascot-aura"></div>
       <img class="mascot alarm-inline" id="alarmMascot" src="mascot.png" alt="" onerror="this.style.display='none'">
@@ -685,7 +588,6 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
       <div class="alarm-count" id="alarmCount">アラーム 1 / 4</div>
       <div class="escalate-in" id="escalateIn">エスカレートまで --:--</div>
     </div>
-    <!-- markers + notes injected here -->
   </div>
 </section>
 
@@ -698,8 +600,17 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
     <div class="combo" id="successCombo">フルコンボ</div>
     <div class="stats">
       <div>スコア <span id="finalScore">0</span></div>
+      <div>DXスコア <span id="finalDx">0/0</span> <span id="finalDxPct">(0%)</span></div>
       <div>最大コンボ <span id="finalMaxCombo">0</span></div>
       <div>正確度 <span id="finalAcc">0%</span></div>
+    </div>
+    <div class="breakdown" id="breakdown">
+      <div class="bd-row"><span class="bd-lbl">タップ</span><span class="bd-bar" id="bdBarTap"></span><span class="bd-val" id="bdValTap">0/0</span></div>
+      <div class="bd-row"><span class="bd-lbl">ホールド</span><span class="bd-bar" id="bdBarHold"></span><span class="bd-val" id="bdValHold">0/0</span></div>
+      <div class="bd-row"><span class="bd-lbl">スライド</span><span class="bd-bar" id="bdBarSlide"></span><span class="bd-val" id="bdValSlide">0/0</span></div>
+      <div class="bd-row"><span class="bd-lbl">ブレイク</span><span class="bd-bar" id="bdBarBreak"></span><span class="bd-val" id="bdValBreak">0/0</span></div>
+    </div>
+    <div class="stats">
       <div>起床時刻 <span id="wokeAt">--:--:--</span></div>
       <div>アラーム <span id="wokeOn">1</span> / <span id="wokeMax">4</span></div>
     </div>
@@ -724,82 +635,105 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
   </div>
 </section>
 
-<script>
-/* =========================================================
-   maimai Alarm — application logic
-   Sections:
-     1. Global state & constants
-     2. Persistence
-     3. Clock loop
-     4. Alarm scheduling & escalation
-     5. Rhythm game
-        5a. Chart generation
-        5b. Note element construction + positioning
-        5c. Metronome scheduling (kick + hi-hat, beat pulse)
-        5d. Render loop (spawn / update / miss timeouts)
-        5e. Hit / miss resolution (score, combo, popups)
-        5f. Session lifecycle (init / start / end / cleanup)
-     6. Screens / UI updates
-     7. Web Audio (alarm patterns + tap hit + kick + hat)
-     8. Wake Lock API
-     9. Event wiring + field decoration
-   ========================================================= */
+<!-- STATS -->
+<section id="statsScreen" class="screen">
+  <div class="profile-card">
+    <div class="pc-header">
+      <img class="mascot pc-mascot" src="mascot.png" alt="" onerror="this.style.display='none'">
+      <div class="pc-title">
+        <div class="pc-name">プレイヤープロファイル</div>
+        <div class="subtitle" style="margin:0">maimai アラーム</div>
+      </div>
+    </div>
+    <div class="pc-tiles">
+      <div class="pc-tile streak"><div class="pc-lbl">起床連続</div><div class="pc-val" id="statStreak">0</div><div class="pc-sub">アラーム1日数</div></div>
+      <div class="pc-tile score"><div class="pc-lbl">最高スコア</div><div class="pc-val" id="statBestScore">0</div><div class="pc-sub">累計</div></div>
+      <div class="pc-tile combo"><div class="pc-lbl">最高コンボ</div><div class="pc-val" id="statBestCombo">0</div><div class="pc-sub">最大チェイン</div></div>
+      <div class="pc-tile dx"><div class="pc-lbl">最高DX</div><div class="pc-val" id="statBestDx">0</div><div class="pc-sub">DXスコア</div></div>
+    </div>
+    <div class="pc-history-lbl">最近のセッション</div>
+    <div class="pc-history" id="statHistory"></div>
+    <div class="pc-footer"><button class="btn ghost small" id="statsBack">戻る</button></div>
+  </div>
+</section>
 
-// ---------- 1. STATE ----------
-const STORAGE_KEY = 'maimai-alarm-v1';
-const STATS_KEY   = 'maimai-alarm-stats-v1';
-const MAX_MISSES = 3;                 // >3 misses -> escalate immediately
-const BUTTON_ANGLES = [0,45,90,135,180,225,270,315]; // all 8 markers, ring edge
-// Notes only spawn in the bottom half of the ring (90° through 270°) so the
-// top half stays clear for the mascot + alarm HUD.
-const NOTE_ANGLES = [90,135,180,225,270];
+<script>
+/* ============ CONSTANTS ============ */
+const STORAGE_KEY = 'maimai-alarm-v2';
+const STATS_KEY   = 'maimai-alarm-stats-v2';
+const MAX_MISSES = 3;
 const HISTORY_MAX = 30;
 
-// Persistent player stats — separate from alarm settings so a settings
-// reset doesn't nuke the streak.
-const stats = {
-  streak: 0,
-  lastAlarm1Date: null,   // "YYYY-MM-DD" of last alarm-1 wake
-  bestScore: 0,
-  bestMaxCombo: 0,
-  history: [],            // [{date, alarm, score, maxCombo, accuracy}], newest first, max 30
-};
+// The 8 marker angles (visible dots on the ring). Notes only spawn on the 5
+// bottom-half positions (90..270) — that keeps the top half clear for the
+// mascot + HUD.
+const BUTTON_ANGLES = [0,45,90,135,180,225,270,315];
+const NOTE_ANGLES   = [90,135,180,225,270];
+const RING_RADIUS_PCT = 44;
+const BOTTOM_CENTER_IDX = NOTE_ANGLES.indexOf(180);
 
+// Judgment windows (ms) — measured against the audio clock's scheduled arrival.
+const JW = {crit:16, perf:40, great:80, good:120};
+const JW_BREAK = {crit:30, perf:40, great:80};
+const HOLD_RELEASE_MS = 200;
+const SLIDE_PERF_MS = 75;   // "perfect" slide → +150pts
+const SLIDE_GREAT_MS = 150; // "great" slide → +100pts
+
+// Scoring per judgment tier per note type.
+const SCORES = {
+  tap:   {critical:100, perfect:100, great:80,  good:50,  miss:0},
+  hold:  {critical:250, perfect:250, great:200, good:120, miss:0},
+  slide: {perfect:150, great:100, miss:0},
+  break: {critical:500, perfect:300, great:100, miss:0},
+};
+// DX score contribution per judgment.
+const DX_POINTS = {critical:3, perfect:2, great:1, good:0, miss:0};
+
+// Base travel time (in beats at 1× speed). Higher speed shrinks this.
+const BASE_TRAVEL_BEATS = 3.0;
+
+const STYLE_LABELS = {BASIC:'ベーシック', STREAM:'ストリーム', SYNC:'シンク', CHAOS:'カオス'};
+const STYLE_KEYS   = ['BASIC','STREAM','SYNC','CHAOS'];
+
+/* ============ STATE ============ */
 const state = {
   screen:'setup',
   firstTime:'08:00', intervalMin:30, maxAlarms:4, testMode:false,
+  noteSpeed:1.5, chartStyle:'BASIC',
   scheduleMs:[], currentAlarmIndex:-1, alarmRingingSince:null,
 };
 
-// Rhythm game state — reset per alarm session
+// Rhythm session — reset per alarm fire.
 const rhythm = {
-  chart:[],              // [{beat, pos, type:'tap'|'hold', holdBeats}]
-  bpm:110,
-  beatMs:60000/110,      // ~545.45 ms
-  approachBeats:2,       // approach ring covers 2 beats
-  missWindowBeats:1.5,   // grace after arrival before MISS
-  startMs:null,          // performance.now() at first-tap
-  startAudioT:null,      // audioCtx.currentTime at first-tap
+  chart:[],
+  bpm:110, beatSec:60/110,
+  startAudioT:null,
   started:false,
-  nextSpawnIdx:0,        // next chart index to spawn
-  live:[],               // notes on-screen (see spawnNote for shape)
+  nextSpawnIdx:0,
+  live:[],
   score:0, combo:0, maxCombo:0,
-  hits:0, misses:0, resolvedCount:0,
-  totalNotes:0,
-  animFrame:null,
+  hits:0, misses:0, resolvedCount:0, totalNotes:0,
+  dxScore:0, dxMax:0,
+  // per-type counts and hits (used for the results breakdown)
+  types:{tap:{t:0,h:0}, hold:{t:0,h:0}, slide:{t:0,h:0}, break:{t:0,h:0}},
   metronomeOscs:[],
-  metronomeTimers:[],
+  animFrame:null,
+  fieldPx:0,     // cached field size in px for transform math
 };
 
-function wakeWindowMs()  { return state.testMode ? 15 * 1000 : 5 * 60 * 1000; }
-function escalateStepMs(){ return state.testMode ? 30 * 1000 : state.intervalMin * 60 * 1000; }
+// Persistent player stats.
+const stats = {streak:0, lastAlarm1Date:null, bestScore:0, bestMaxCombo:0, bestDxScore:0, history:[]};
 
-// ---------- 2. PERSISTENCE ----------
+function wakeWindowMs(){ return state.testMode ? 15000 : 300000; }
+function escalateStepMs(){ return state.testMode ? 30000 : state.intervalMin * 60000; }
+function travelBeats(){ return BASE_TRAVEL_BEATS / state.noteSpeed; }
+
+/* ============ PERSISTENCE ============ */
 function saveSettings(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      firstTime:state.firstTime, intervalMin:state.intervalMin,
-      maxAlarms:state.maxAlarms, testMode:state.testMode,
+      firstTime:state.firstTime, intervalMin:state.intervalMin, maxAlarms:state.maxAlarms,
+      testMode:state.testMode, noteSpeed:state.noteSpeed, chartStyle:state.chartStyle,
     }));
   }catch(e){}
 }
@@ -811,69 +745,48 @@ function loadSettings(){
     if(s.intervalMin) state.intervalMin = s.intervalMin;
     if(s.maxAlarms)   state.maxAlarms   = s.maxAlarms;
     if(typeof s.testMode === 'boolean') state.testMode = s.testMode;
+    if(typeof s.noteSpeed === 'number' && s.noteSpeed > 0) state.noteSpeed = s.noteSpeed;
+    if(typeof s.chartStyle === 'string' && STYLE_KEYS.includes(s.chartStyle)) state.chartStyle = s.chartStyle;
   }catch(e){}
 }
-
 function loadStats(){
   try{
     const raw = localStorage.getItem(STATS_KEY); if(!raw) return;
     const s = JSON.parse(raw);
-    if(typeof s.streak === 'number')       stats.streak       = s.streak;
+    if(typeof s.streak === 'number') stats.streak = s.streak;
     if(typeof s.lastAlarm1Date === 'string') stats.lastAlarm1Date = s.lastAlarm1Date;
-    if(typeof s.bestScore === 'number')    stats.bestScore    = s.bestScore;
+    if(typeof s.bestScore === 'number') stats.bestScore = s.bestScore;
     if(typeof s.bestMaxCombo === 'number') stats.bestMaxCombo = s.bestMaxCombo;
-    if(Array.isArray(s.history))           stats.history      = s.history.slice(0, HISTORY_MAX);
+    if(typeof s.bestDxScore === 'number') stats.bestDxScore = s.bestDxScore;
+    if(Array.isArray(s.history)) stats.history = s.history.slice(0, HISTORY_MAX);
   }catch(e){}
 }
-function saveStats(){
-  try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){}
-}
-function dateKey(d = new Date()){
-  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
-}
-function yesterdayKey(){
-  const d = new Date(); d.setDate(d.getDate() - 1); return dateKey(d);
-}
-// Read the "effective" current streak: the stored streak only counts as
-// active if the last alarm-1 wake was today or yesterday, otherwise the
-// user broke it by not waking on alarm 1 since.
+function saveStats(){ try{ localStorage.setItem(STATS_KEY, JSON.stringify(stats)); }catch(e){} }
+function dateKey(d = new Date()){ return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; }
+function yesterdayKey(){ const d = new Date(); d.setDate(d.getDate()-1); return dateKey(d); }
 function currentStreak(){
   if(!stats.lastAlarm1Date) return 0;
-  if(stats.lastAlarm1Date === dateKey() || stats.lastAlarm1Date === yesterdayKey()){
-    return stats.streak;
-  }
+  if(stats.lastAlarm1Date === dateKey() || stats.lastAlarm1Date === yesterdayKey()) return stats.streak;
   return 0;
 }
-// Called from finishAlarm when a session clears. `alarm` is the 1-based
-// alarm number that got the user up.
-function recordSession({alarm, score, maxCombo, accuracy}){
-  stats.history.unshift({date: new Date().toISOString(), alarm, score, maxCombo, accuracy});
+function recordSession({alarm, score, maxCombo, accuracy, dxScore, dxMax}){
+  stats.history.unshift({date:new Date().toISOString(), alarm, score, maxCombo, accuracy, dxScore, dxMax});
   if(stats.history.length > HISTORY_MAX) stats.history.length = HISTORY_MAX;
   if(score    > stats.bestScore)    stats.bestScore    = score;
   if(maxCombo > stats.bestMaxCombo) stats.bestMaxCombo = maxCombo;
+  if(dxScore  > stats.bestDxScore)  stats.bestDxScore  = dxScore;
   if(alarm === 1){
     const t = dateKey(), y = yesterdayKey();
-    if(stats.lastAlarm1Date === t){
-      // already counted today — leave streak
-    } else if(stats.lastAlarm1Date === y){
-      stats.streak++;
-    } else {
-      stats.streak = 1;
-    }
+    if(stats.lastAlarm1Date === t){ /* already counted today */ }
+    else if(stats.lastAlarm1Date === y) stats.streak++;
+    else stats.streak = 1;
     stats.lastAlarm1Date = t;
-  } else {
-    // dismissed on alarm 2+ — streak broken
-    stats.streak = 0;
-  }
+  } else stats.streak = 0;
   saveStats();
 }
-function recordFailure(){
-  // all alarms missed → streak broken
-  stats.streak = 0;
-  saveStats();
-}
+function recordFailure(){ stats.streak = 0; saveStats(); }
 
-// ---------- 3. CLOCK LOOP ----------
+/* ============ CLOCK LOOP ============ */
 function pad(n){ return String(n).padStart(2,'0'); }
 function fmtHMS(d){ return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`; }
 function fmtHM(d){  return `${pad(d.getHours())}:${pad(d.getMinutes())}`; }
@@ -886,7 +799,6 @@ function fmtDurationMs(ms){
 function tick(){
   const now = new Date();
   document.getElementById('hudClock').textContent = fmtHMS(now);
-
   if(state.screen === 'armed'){
     document.getElementById('bigClock').textContent = fmtHMS(now);
     const nextIdx = state.scheduleMs.findIndex(t => t > now.getTime());
@@ -896,9 +808,7 @@ function tick(){
       document.getElementById('armedCountdown').textContent = 'あと ' + fmtDurationMs(nextT - now.getTime());
     }
     for(let i = 0; i < state.scheduleMs.length; i++){
-      if(now.getTime() >= state.scheduleMs[i] && i > state.currentAlarmIndex){
-        startAlarm(i); break;
-      }
+      if(now.getTime() >= state.scheduleMs[i] && i > state.currentAlarmIndex){ startAlarm(i); break; }
     }
   }
   if(state.screen === 'alarm'){
@@ -912,27 +822,23 @@ function tick(){
 }
 setInterval(tick, 250);
 
-// ---------- 4. ALARM SCHEDULING ----------
+/* ============ ALARM SCHEDULING ============ */
 function buildSchedule(){
   const now = new Date();
   const [hh, mm] = state.firstTime.split(':').map(Number);
   const first = new Date(now); first.setHours(hh, mm, 0, 0);
-  if(state.testMode){
-    first.setTime(now.getTime() + 5 * 1000);
-  } else if(first.getTime() <= now.getTime()){
-    first.setDate(first.getDate() + 1);
-  }
-  const step = escalateStepMs();
-  const schedule = [];
+  if(state.testMode){ first.setTime(now.getTime() + 5000); }
+  else if(first.getTime() <= now.getTime()){ first.setDate(first.getDate() + 1); }
+  const step = escalateStepMs(); const schedule = [];
   for(let i = 0; i < state.maxAlarms; i++) schedule.push(first.getTime() + i * step);
   return schedule;
 }
-
 function startAlarm(idx){
   state.currentAlarmIndex = idx;
   state.alarmRingingSince = Date.now();
   const level = idx + 1;
   document.body.setAttribute('data-level', String(level));
+  document.body.setAttribute('data-in-alarm', '1');
   document.getElementById('alarmCount').textContent = `アラーム ${level} / ${state.maxAlarms}`;
   document.getElementById('alarmLabel').textContent =
     level >= 4 ? '今すぐ起きろ！！！' : level >= 3 ? '起きろ！！' : '起きろ！';
@@ -940,14 +846,13 @@ function startAlarm(idx){
   showScreen('alarm');
   playAlarm(level);
 }
-
 function stopCurrentAlarm(){
   stopAlarm();
   stopRhythmSession();
   state.alarmRingingSince = null;
   document.body.removeAttribute('data-level');
+  document.body.removeAttribute('data-in-alarm');
 }
-
 function escalate(){
   const nextIdx = state.currentAlarmIndex + 1;
   stopCurrentAlarm();
@@ -961,133 +866,214 @@ function escalate(){
   }
   showScreen('armed');
 }
-
 function finishAlarm(){
   const now = new Date();
   const level = state.currentAlarmIndex + 1;
-  const finalScore = rhythm.score;
-  const finalMax   = rhythm.maxCombo;
-  const total      = rhythm.totalNotes;
-  const hits       = rhythm.hits;
-  const misses     = rhythm.misses;
-  const accPct     = total ? (hits / total) * 100 : 0;
+  const finalScore = rhythm.score, finalMax = rhythm.maxCombo;
+  const hits = rhythm.hits, total = rhythm.totalNotes, misses = rhythm.misses;
+  const accPct = total ? (hits/total)*100 : 0;
+  const dx = rhythm.dxScore, dxMax = rhythm.dxMax;
+  const dxAcc = dxMax ? (dx/dxMax)*100 : 0;
+
+  // capture breakdown snapshot before we tear down
+  const bd = JSON.parse(JSON.stringify(rhythm.types));
 
   stopCurrentAlarm();
+  recordSession({alarm:level, score:finalScore, maxCombo:finalMax, accuracy:accPct, dxScore:dx, dxMax});
 
-  recordSession({alarm: level, score: finalScore, maxCombo: finalMax, accuracy: accPct});
-
-  document.getElementById('successGrade').textContent = computeRank(hits, total, level);
+  document.getElementById('successGrade').textContent = computeRank(accPct, dxAcc, level);
   document.getElementById('successCombo').textContent = misses === 0 ? 'フルコンボ' : 'クリア';
   document.getElementById('finalScore').textContent = finalScore.toLocaleString();
+  document.getElementById('finalDx').textContent = `${dx} / ${dxMax}`;
+  document.getElementById('finalDxPct').textContent = `(${dxAcc.toFixed(1)}%)`;
   document.getElementById('finalMaxCombo').textContent = finalMax;
   document.getElementById('finalAcc').textContent = accPct.toFixed(1) + '%';
   document.getElementById('wokeAt').textContent = fmtHMS(now);
   document.getElementById('wokeOn').textContent = level;
   document.getElementById('wokeMax').textContent = state.maxAlarms;
+
+  // per-type breakdown bars
+  const setBd = (key, prefix) => {
+    const {t, h} = bd[key];
+    const pct = t ? Math.round(h/t*100) : 0;
+    document.getElementById('bdBar' + prefix).style.setProperty('--pct', pct + '%');
+    document.getElementById('bdVal' + prefix).textContent = `${h} / ${t} (${pct}%)`;
+  };
+  setBd('tap','Tap'); setBd('hold','Hold'); setBd('slide','Slide'); setBd('break','Break');
+
   showScreen('success');
 }
-
-function computeRank(hits, total, level){
-  const acc = total > 0 ? hits / total : 0;
-  if(acc >= 1     && level === 1) return 'SSS';
-  if(acc >= 0.95  && level <= 2) return 'SS';
-  if(acc >= 0.90  && level <= 3) return 'S';
-  if(acc >= 0.80) return 'A';
+function computeRank(scoreAcc, dxAcc, level){
+  const combined = (scoreAcc + dxAcc) / 2;
+  if(dxAcc >= 100 && level === 1) return 'SSS';
+  if(combined >= 97 && level <= 2) return 'SS';
+  if(combined >= 92 && level <= 3) return 'S';
+  if(combined >= 80) return 'A';
   return 'B';
 }
 
-// ---------- 5. RHYTHM GAME ----------
-
-// ---- 5a. Chart generation ----
-// Notes are pre-generated as an array of {beat,pos,type,holdBeats} where beat is
-// the fractional beat count from t=0 (t=0 = the first-tap moment). Pos is the
-// angle in degrees (0/45/90/... going CW from top).
-function generateChart(level){
+/* ============ RHYTHM: CHART GENERATION ============
+   Each style has its own generator branch; all output the same
+   {beat,pos,type,holdBeats?,endPos?,isBreak?} shape. */
+function pickPos(avoidIdx, extraAvoid){
+  const avoid = new Set(extraAvoid || []);
+  if(avoidIdx != null) avoid.add(avoidIdx);
+  const opts = [0,1,2,3,4].filter(x => !avoid.has(x));
+  return opts.length ? opts[Math.floor(Math.random()*opts.length)]
+                     : Math.floor(Math.random()*5);
+}
+function generateChart(level, style){
   const l = Math.min(Math.max(level,1), 4);
-  const specs = {
-    1: {count:20, holdChance:0.15, eighthChance:0.00, holdBeats:[1,1], streamMax:1, allowOverlap:false},
-    2: {count:23, holdChance:0.30, eighthChance:0.30, holdBeats:[1,2], streamMax:2, allowOverlap:false},
-    3: {count:26, holdChance:0.45, eighthChance:0.50, holdBeats:[1,3], streamMax:3, allowOverlap:false},
-    4: {count:30, holdChance:0.60, eighthChance:0.70, holdBeats:[2,4], streamMax:5, allowOverlap:true },
-  };
-  const s = specs[l];
-  const chart = [];
-  let beat = 0;
-  let lastPos = -1;
-  let holds = [];        // [{end, pos}]
-  let streamRemain = 0;  // when >0, force eighth notes (a "stream")
+  // baseline density per level
+  const base = {
+    1:{count:18, holdChance:0.15, holdBeats:[1,1], eighthChance:0.00, streamMax:1},
+    2:{count:22, holdChance:0.25, holdBeats:[1,2], eighthChance:0.30, streamMax:2},
+    3:{count:26, holdChance:0.35, holdBeats:[1,3], eighthChance:0.50, streamMax:3},
+    4:{count:30, holdChance:0.45, holdBeats:[2,4], eighthChance:0.70, streamMax:4},
+  }[l];
+  const s = {...base};
+  const slideChance = l >= 4 ? 0.30 : l >= 3 ? 0.20 : l >= 2 ? 0.10 : 0;
+  const breakCount  = 1 + Math.floor(Math.random() * 3); // 1..3
 
-  for(let i = 0; i < s.count; i++){
-    let gap;
-    if(i === 0){
-      gap = 0; // first note is at beat 0 (frozen "tap to start")
-    } else if(streamRemain > 0){
-      gap = 0.5; streamRemain--;
-    } else {
-      const eighth = Math.random() < s.eighthChance;
-      gap = eighth ? 0.5 : 1;
-      // occasionally begin a stream of eighths
-      if(eighth && Math.random() < 0.25 && s.streamMax > 1){
-        streamRemain = 1 + Math.floor(Math.random() * (s.streamMax - 1));
+  let chart;
+  if(style === 'SYNC')       chart = genSync(s, l);
+  else if(style === 'STREAM') chart = genStream(s, l);
+  else if(style === 'CHAOS')  chart = genChaos(s, l);
+  else                        chart = genBasic(s, l);
+
+  // first note is always a plain bottom-center tap ("tap to start")
+  chart[0].pos = 180; chart[0].type = 'tap'; chart[0].isBreak = false; chart[0].endPos = undefined;
+
+  // Convert some non-first taps into slides (levels 2+ only)
+  if(slideChance > 0){
+    for(let i = 1; i < chart.length; i++){
+      if(chart[i].type !== 'tap') continue;
+      if(Math.random() < slideChance){
+        chart[i].type = 'slide';
+        chart[i].endPos = pickSlideEnd(chart[i].pos);
       }
     }
-    beat += gap;
-
-    // prune expired holds
-    holds = holds.filter(h => h.end > beat);
-    const nPos = NOTE_ANGLES.length; // 5 bottom-half positions
-    let posIdx;
-    if(i === 0){
-      // The tap-to-start note is fixed at bottom-center (180°).
-      posIdx = NOTE_ANGLES.indexOf(180);
-    } else {
-      const avoid = new Set(); if(lastPos >= 0) avoid.add(lastPos);
-      for(const h of holds) avoid.add(h.pos); // even level-4 overlaps skip same slot
-      const range = Array.from({length:nPos},(_,k)=>k);
-      let choices = range.filter(x => !avoid.has(x));
-      if(!choices.length) choices = range.filter(x => x !== lastPos);
-      posIdx = choices[Math.floor(Math.random() * choices.length)];
-    }
-    const pos = NOTE_ANGLES[posIdx];
-
-    // first note is always a tap so the "tap to start" cue makes sense
-    const isHold = i > 0 && Math.random() < s.holdChance;
-    const [hbMin, hbMax] = s.holdBeats;
-    const holdBeats = isHold ? (hbMin + Math.floor(Math.random() * (hbMax - hbMin + 1))) : 0;
-
-    chart.push({beat, pos, type: isHold ? 'hold' : 'tap', holdBeats});
-    lastPos = posIdx;
-    if(isHold) holds.push({end: beat + holdBeats, pos: posIdx});
+  }
+  // Mark ~breakCount non-first taps as break (skip slides/holds — break flavor is tap only)
+  const tapIdxs = chart.map((n,i)=>({n,i})).filter(x => x.i > 0 && x.n.type === 'tap').map(x=>x.i);
+  for(let b = 0; b < Math.min(breakCount, tapIdxs.length); b++){
+    const pick = tapIdxs.splice(Math.floor(Math.random()*tapIdxs.length), 1)[0];
+    chart[pick].isBreak = true;
   }
   return chart;
 }
+function pickSlideEnd(startAngle){
+  // Slide end is 1, 2, or 4 index-slots away from the start in NOTE_ANGLES.
+  const startIdx = NOTE_ANGLES.indexOf(startAngle);
+  const shapes = [1, 2, 4]; // adjacent / diagonal / straight (opposite)
+  const shape = shapes[Math.floor(Math.random()*shapes.length)];
+  const dir = Math.random() < 0.5 ? 1 : -1;
+  let endIdx = startIdx + shape * dir;
+  if(endIdx < 0) endIdx = startIdx + shape;         // reflect if underflowed
+  if(endIdx > 4) endIdx = startIdx - shape;         // reflect if overflowed
+  if(endIdx === startIdx) endIdx = (startIdx + 1) % 5;
+  return NOTE_ANGLES[endIdx];
+}
+function genBasic(s, l){
+  const out = []; let beat = 0, lastPos = -1;
+  const holds = [];
+  for(let i = 0; i < s.count; i++){
+    let gap;
+    if(i === 0) gap = 0;
+    else gap = (Math.random() < Math.max(0, s.eighthChance - 0.2)) ? 0.5 : 1;
+    beat += gap;
+    while(holds.length && holds[0].end <= beat) holds.shift();
+    const posIdx = pickPos(lastPos, holds.map(h=>h.pos));
+    const isHold = i > 0 && Math.random() < s.holdChance;
+    const holdBeats = isHold ? (s.holdBeats[0] + Math.floor(Math.random()*(s.holdBeats[1]-s.holdBeats[0]+1))) : 0;
+    out.push({beat, pos:NOTE_ANGLES[posIdx], type:isHold?'hold':'tap', holdBeats, isBreak:false});
+    lastPos = posIdx;
+    if(isHold) holds.push({end:beat+holdBeats, pos:posIdx});
+  }
+  return out;
+}
+function genStream(s, l){
+  const out = []; let beat = 0, lastPos = -1;
+  const holds = []; let streamLeft = 0;
+  const count = Math.round(s.count * 1.15);
+  for(let i = 0; i < count; i++){
+    let gap;
+    if(i === 0) gap = 0;
+    else if(streamLeft > 0){ gap = 0.5; streamLeft--; }
+    else{
+      const eighth = Math.random() < Math.max(s.eighthChance, 0.7);
+      gap = eighth ? 0.5 : 1;
+      if(eighth && Math.random() < 0.5) streamLeft = 2 + Math.floor(Math.random() * (s.streamMax - 1));
+    }
+    beat += gap;
+    while(holds.length && holds[0].end <= beat) holds.shift();
+    const posIdx = pickPos(lastPos, holds.map(h=>h.pos));
+    const isHold = i > 0 && Math.random() < s.holdChance * 0.7; // fewer holds so streams stay tight
+    const holdBeats = isHold ? (s.holdBeats[0] + Math.floor(Math.random()*(s.holdBeats[1]-s.holdBeats[0]+1))) : 0;
+    out.push({beat, pos:NOTE_ANGLES[posIdx], type:isHold?'hold':'tap', holdBeats, isBreak:false});
+    lastPos = posIdx;
+    if(isHold) holds.push({end:beat+holdBeats, pos:posIdx});
+  }
+  return out;
+}
+function genSync(s, l){
+  // Alternate pairs at (90,270) / (135,225); occasional solo 180.
+  // Rests of ~1.5 beats between pair events.
+  const out = []; let beat = 0;
+  const pairs = [[90,270], [135,225]];
+  const target = s.count;
+  let event = 0;
+  while(out.length < target){
+    if(out.length > 0) beat += 1.5; // rest between events
+    if(event % 5 === 4){
+      out.push({beat, pos:180, type:'tap', holdBeats:0, isBreak:false});
+    } else {
+      const pair = pairs[event % 2];
+      const syncId = 'g' + event;
+      for(const p of pair){
+        out.push({beat, pos:p, type:'tap', holdBeats:0, isBreak:false, syncGroup:syncId});
+      }
+    }
+    event++;
+  }
+  // Trim if we overshot
+  if(out.length > target) out.length = target;
+  return out;
+}
+function genChaos(s, l){
+  const out = []; let beat = 0, lastPos = -1;
+  const gapPool = [0.25, 0.5, 0.5, 0.75, 1];
+  const holds = [];
+  for(let i = 0; i < s.count; i++){
+    beat += i === 0 ? 0 : gapPool[Math.floor(Math.random()*gapPool.length)];
+    while(holds.length && holds[0].end <= beat) holds.shift();
+    // chaos: random position (still avoid same-slot as previous)
+    const posIdx = pickPos(lastPos, holds.map(h=>h.pos));
+    const isHold = i > 0 && Math.random() < s.holdChance * 0.8;
+    const holdBeats = isHold ? (s.holdBeats[0] + Math.floor(Math.random()*(s.holdBeats[1]-s.holdBeats[0]+1))) : 0;
+    out.push({beat, pos:NOTE_ANGLES[posIdx], type:isHold?'hold':'tap', holdBeats, isBreak:false});
+    lastPos = posIdx;
+    if(isHold) holds.push({end:beat+holdBeats, pos:posIdx});
+  }
+  return out;
+}
 
-// ---- 5b. Note element construction ----
-// The visual "ring edge" of the field, in field-percent units. Notes and
-// button markers both use this radius so they land at the same spot.
-const RING_RADIUS_PCT = 44;
+/* ============ RHYTHM: POSITION HELPERS ============ */
 function angleToXY(deg){
   const rad = (deg - 90) * Math.PI / 180;
   return {x: 50 + RING_RADIUS_PCT * Math.cos(rad), y: 50 + RING_RADIUS_PCT * Math.sin(rad)};
 }
-function createNoteElement(note, x, y){
-  const el = document.createElement('button');
-  el.className = 'tap-note' + (note.type === 'hold' ? ' hold' : '');
-  el.style.left = x + '%';
-  el.style.top  = y + '%';
-  el.setAttribute('aria-label', note.type + ' note');
-  const arc = document.createElement('div'); arc.className = 'hold-arc';
-  const body = document.createElement('div'); body.className = 'note-body';
-  const approach = document.createElement('div'); approach.className = 'approach';
-  el.appendChild(arc); el.appendChild(body); el.appendChild(approach);
-  return el;
+// Destination offset from field center, in pixels — used for transform math.
+function angleToPx(deg){
+  const r = rhythm.fieldPx * RING_RADIUS_PCT / 100;
+  const rad = (deg - 90) * Math.PI / 180;
+  return {x: r * Math.cos(rad), y: r * Math.sin(rad)};
 }
 
-// ---- 5c. Metronome ----
+/* ============ RHYTHM: METRONOME (audio-clock scheduled) ============ */
 function scheduleKick(when){
   if(!audioCtx) return;
-  const osc = audioCtx.createOscillator();
-  const g = audioCtx.createGain();
+  const osc = audioCtx.createOscillator(); const g = audioCtx.createGain();
   osc.type = 'sine';
   osc.frequency.setValueAtTime(160, when);
   osc.frequency.exponentialRampToValueAtTime(50, when + 0.06);
@@ -1102,7 +1088,7 @@ function scheduleHat(when){
   if(!audioCtx) return;
   const buf = audioCtx.createBuffer(1, Math.floor(audioCtx.sampleRate * 0.03), audioCtx.sampleRate);
   const data = buf.getChannelData(0);
-  for(let i = 0; i < data.length; i++) data[i] = Math.random() * 2 - 1;
+  for(let i = 0; i < data.length; i++) data[i] = Math.random()*2 - 1;
   const src = audioCtx.createBufferSource(); src.buffer = buf;
   const hp = audioCtx.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6000;
   const g = audioCtx.createGain();
@@ -1114,305 +1100,530 @@ function scheduleHat(when){
   rhythm.metronomeOscs.push(src);
 }
 function startMetronome(){
-  // Pre-schedule kicks + hats + visual beat pulses for the chart duration.
   const last = rhythm.chart[rhythm.chart.length - 1];
   const endBeat = Math.ceil(last.beat + (last.holdBeats || 0) + 2);
   const startAT = rhythm.startAudioT;
   for(let b = 0; b <= endBeat; b++){
-    scheduleKick(startAT + b * rhythm.beatMs / 1000);
-    scheduleHat( startAT + (b + 0.5) * rhythm.beatMs / 1000);
-    // visual pulse in real time — offset from performance.now()
-    const delay = b * rhythm.beatMs;
-    rhythm.metronomeTimers.push(setTimeout(pulseBeatVisual, delay));
+    scheduleKick(startAT + b * rhythm.beatSec);
+    scheduleHat( startAT + (b + 0.5) * rhythm.beatSec);
   }
 }
-function pulseBeatVisual(){
-  const f = document.getElementById('alarmField');
-  if(!f) return;
-  f.classList.remove('on-beat');
-  void f.offsetWidth; // reflow to restart animation
-  f.classList.add('on-beat');
-}
 function stopMetronome(){
-  for(const id of rhythm.metronomeTimers) clearTimeout(id);
-  rhythm.metronomeTimers = [];
   for(const o of rhythm.metronomeOscs){ try{ o.stop(); }catch(e){} }
   rhythm.metronomeOscs = [];
 }
+// Field-ring beat pulse — driven from render loop, not setTimeout.
+let lastPulsedBeat = -1;
+function maybePulseBeat(currentBeat){
+  const b = Math.floor(currentBeat);
+  if(b !== lastPulsedBeat && b >= 0){
+    lastPulsedBeat = b;
+    const f = document.getElementById('alarmField');
+    if(f){ f.classList.remove('on-beat'); void f.offsetWidth; f.classList.add('on-beat'); }
+  }
+}
 
-// ---- 5d. Render loop ----
+/* ============ RHYTHM: RENDER LOOP ============ */
 function rhythmLoop(){
   if(state.screen !== 'alarm'){ rhythm.animFrame = null; return; }
-  const now = performance.now();
-
   if(rhythm.started){
-    const nowBeat = (now - rhythm.startMs) / rhythm.beatMs;
+    const nowAT = audioCtx.currentTime;
+    const nowBeat = (nowAT - rhythm.startAudioT) / rhythm.beatSec;
+    maybePulseBeat(nowBeat);
 
-    // spawn upcoming notes when they enter the approach window
+    // Spawn notes about to enter their travel window.
     while(rhythm.nextSpawnIdx < rhythm.chart.length &&
-          rhythm.chart[rhythm.nextSpawnIdx].beat - nowBeat <= rhythm.approachBeats){
-      spawnNote(rhythm.nextSpawnIdx);
-      rhythm.nextSpawnIdx++;
+          rhythm.chart[rhythm.nextSpawnIdx].beat - nowBeat <= travelBeats()){
+      spawnNote(rhythm.nextSpawnIdx); rhythm.nextSpawnIdx++;
     }
-
-    // update live notes
+    // Update visuals + miss checks.
     for(const live of rhythm.live){
       if(live.resolved) continue;
-      updateNoteVisuals(live, nowBeat, now);
-
-      // hold completed?
-      if(live.holding){
-        const held = now - live.holdStartMs;
-        if(held >= live.holdDurationMs){
-          resolveHit(live, 'hold');
-          continue;
-        }
+      updateNoteVisuals(live, nowBeat, nowAT);
+      // Hold auto-completion
+      if(live.holding && !live.resolved){
+        const heldSec = nowAT - live.holdStartAudioT;
+        if(heldSec >= live.holdDurationSec){ resolveHoldComplete(live); continue; }
       }
-      // miss timeout?
-      if(!live.holding && nowBeat > live.arrivalBeat + rhythm.missWindowBeats){
-        resolveMiss(live, 'ミス');
+      // Miss timeout (past good window). Slides use their own generous window.
+      const deltaMs = (nowAT - live.arrivalAudioT) * 1000;
+      if(!live.holding){
+        if(live.type === 'slide'){
+          if(deltaMs > SLIDE_GREAT_MS){ resolveMiss(live, 'ミス'); continue; }
+        } else if(live.isBreak){
+          if(deltaMs > JW_BREAK.great){ resolveMiss(live, 'ミス'); continue; }
+        } else {
+          if(deltaMs > JW.good){ resolveMiss(live, 'ミス'); continue; }
+        }
       }
     }
     rhythm.live = rhythm.live.filter(l => !l.resolved);
     if(rhythm.resolvedCount >= rhythm.totalNotes){
-      // chart complete — succeed
       rhythm.animFrame = null;
-      setTimeout(finishAlarm, 400);
-      return;
+      setTimeout(finishAlarm, 400); return;
     }
   }
   rhythm.animFrame = requestAnimationFrame(rhythmLoop);
 }
 
-function updateNoteVisuals(live, nowBeat, now){
+function updateNoteVisuals(live, nowBeat, nowAT){
+  // travel progress: 0 at spawn, 1 at arrival
   const beatsUntil = live.arrivalBeat - nowBeat;
-  if(!live.holding){
-    // approach ring: scale 2 -> 1 as it approaches, fade in as it gets close
-    const progress = 1 - Math.min(1, Math.max(0, beatsUntil / rhythm.approachBeats));
-    const scale = 1 + (1 - progress);       // 2 down to 1
-    const opacity = Math.min(1, progress * 1.4);
-    live.elem.style.setProperty('--approach', scale.toFixed(3));
-    live.elem.style.setProperty('--approach-op', opacity.toFixed(3));
-    if(live.type === 'hold'){
-      live.elem.style.setProperty('--arc', '1'); // full arc shown while awaiting hold
-    }
-  } else {
-    // holding — arc drains
-    const held = now - live.holdStartMs;
-    const arc = Math.max(0, 1 - held / live.holdDurationMs);
-    live.elem.style.setProperty('--arc', arc.toFixed(4));
-    live.elem.style.setProperty('--approach-op', '0');
+  const totalTravel = travelBeats();
+  const progress = Math.max(0, Math.min(1, 1 - beatsUntil / totalTravel));
+  const tx = progress * live.destPx.x;
+  const ty = progress * live.destPx.y;
+  const sc = 0.35 + progress * 0.65;
+  live.elem.style.setProperty('--tx', tx.toFixed(1) + 'px');
+  live.elem.style.setProperty('--ty', ty.toFixed(1) + 'px');
+  if(!live.holding) live.elem.style.setProperty('--sc', sc.toFixed(3));
+  // hit zone: fade in as note approaches
+  if(live.hitZone){
+    live.hitZone.style.setProperty('--hz-op', (progress * 0.9).toFixed(3));
   }
+  // hold arc drain while held
+  if(live.type === 'hold' && live.holding){
+    const held = nowAT - live.holdStartAudioT;
+    const arc = Math.max(0, 1 - held / live.holdDurationSec);
+    live.elem.style.setProperty('--arc', arc.toFixed(4));
+  } else if(live.type === 'hold'){
+    live.elem.style.setProperty('--arc', '1');
+  }
+  // slide end-marker updates (kept static at destination — no movement)
 }
 
-function spawnNote(idx){
-  const note = rhythm.chart[idx];
-  const {x, y} = angleToXY(note.pos);
-  const el = createNoteElement(note, x, y);
-  const live = {
-    chartIdx: idx, elem: el, x, y,
-    type: note.type,
-    arrivalBeat: note.beat,
-    arrivalMs: rhythm.startMs + note.beat * rhythm.beatMs,
-    resolved: false,
-    holding: false,
-    holdStartMs: 0,
-    holdDurationMs: (note.holdBeats || 0) * rhythm.beatMs,
-    pointerId: null,
-  };
-  attachNoteHandlers(el, live);
-  rhythm.live.push(live);
-  document.getElementById('alarmField').appendChild(el);
-}
-
+/* ============ RHYTHM: SPAWN / HANDLERS ============ */
 function spawnFrozenFirst(){
   const first = rhythm.chart[0];
-  const {x, y} = angleToXY(first.pos);
-  const el = createNoteElement(first, x, y);
+  const dest  = angleToPx(first.pos);
+  const el = createNoteElement(first);
   el.classList.add('frozen');
-  const hint = document.createElement('div');
-  hint.className = 'tap-hint-text';
-  hint.textContent = 'タップしてスタート';
-  el.appendChild(hint);
+  // frozen note sits AT the destination, full size, awaiting first tap
+  el.style.setProperty('--tx', dest.x.toFixed(1) + 'px');
+  el.style.setProperty('--ty', dest.y.toFixed(1) + 'px');
+  el.style.setProperty('--sc', '1');
+  const hint = document.createElement('div'); hint.className = 'tap-hint-text';
+  hint.textContent = 'タップしてスタート'; el.appendChild(hint);
   const live = {
-    chartIdx: 0, elem: el, x, y, type: 'tap', arrivalBeat: 0,
-    arrivalMs: 0, resolved: false, holding: false,
-    holdDurationMs: 0, isFrozenStart: true,
+    chartIdx:0, elem:el, type:'tap', isBreak:false,
+    posDeg:first.pos, destPx:dest,
+    arrivalBeat:0, arrivalAudioT:0, resolved:false,
+    holding:false, isFrozenStart:true, pointerId:null,
   };
   attachNoteHandlers(el, live);
   rhythm.live.push(live);
   document.getElementById('alarmField').appendChild(el);
 }
+function createNoteElement(note){
+  const el = document.createElement('button');
+  el.className = 'tap-note' + (note.type === 'hold' ? ' hold' : '')
+                            + (note.isBreak ? ' break' : '');
+  el.setAttribute('aria-label', note.type + ' note');
+  const arc = document.createElement('div'); arc.className = 'hold-arc';
+  const body = document.createElement('div'); body.className = 'note-body';
+  el.appendChild(arc); el.appendChild(body);
+  return el;
+}
+function spawnNote(idx){
+  const note = rhythm.chart[idx];
+  if(note.type === 'slide'){ spawnSlide(idx); return; }
+  const dest = angleToPx(note.pos);
+  const el = createNoteElement(note);
+  // start at center (translate 0,0), scale small
+  el.style.setProperty('--tx', '0px');
+  el.style.setProperty('--ty', '0px');
+  el.style.setProperty('--sc', '0.35');
+  // hit zone shows where this note will land
+  const hz = document.createElement('div');
+  hz.className = 'hit-zone' + (note.isBreak ? ' break' : '');
+  hz.style.setProperty('--tx', dest.x.toFixed(1) + 'px');
+  hz.style.setProperty('--ty', dest.y.toFixed(1) + 'px');
+  document.getElementById('alarmField').appendChild(hz);
 
-// ---- 5e. Hit / miss resolution ----
+  const live = {
+    chartIdx:idx, elem:el, hitZone:hz,
+    type:note.type, isBreak:!!note.isBreak,
+    posDeg:note.pos, destPx:dest,
+    arrivalBeat:note.beat,
+    arrivalAudioT: rhythm.startAudioT + note.beat * rhythm.beatSec,
+    resolved:false, holding:false,
+    holdDurationSec: (note.holdBeats || 0) * rhythm.beatSec,
+    holdStartAudioT:0, pointerId:null,
+  };
+  attachNoteHandlers(el, live);
+  rhythm.live.push(live);
+  document.getElementById('alarmField').appendChild(el);
+}
+function spawnSlide(idx){
+  const note = rhythm.chart[idx];
+  const startPx = angleToPx(note.pos);
+  const endPx   = angleToPx(note.endPos);
+
+  // Start marker (traveling from center to start position) — the tap target
+  const start = document.createElement('div');
+  start.className = 'slide-marker start';
+  start.style.setProperty('--tx', '0px');
+  start.style.setProperty('--ty', '0px');
+  start.style.setProperty('--sc', '0.35');
+  start.setAttribute('aria-label', 'slide start');
+
+  // End marker (static at destination end position)
+  const end = document.createElement('div');
+  end.className = 'slide-marker end';
+  end.style.setProperty('--tx', endPx.x.toFixed(1) + 'px');
+  end.style.setProperty('--ty', endPx.y.toFixed(1) + 'px');
+  end.style.setProperty('--sc', '1');
+
+  // Path line (start → end)
+  const line = document.createElement('div');
+  line.className = 'slide-line';
+  const dx = endPx.x - startPx.x, dy = endPx.y - startPx.y;
+  const len = Math.sqrt(dx*dx + dy*dy);
+  const ang = Math.atan2(dy, dx) * 180 / Math.PI;
+  line.style.setProperty('--tx', startPx.x.toFixed(1) + 'px');
+  line.style.setProperty('--ty', startPx.y.toFixed(1) + 'px');
+  line.style.setProperty('--ang', ang.toFixed(2) + 'deg');
+  line.style.setProperty('--len', len.toFixed(1) + 'px');
+  line.style.transformOrigin = '0% 50%';
+  // Line width baseline is set in CSS via scaleX(--len). Since --len holds
+  // pixels but scaleX takes a unitless multiplier, we substitute here:
+  line.style.transform = `translate(0,-2px) translate3d(${startPx.x.toFixed(1)}px,${startPx.y.toFixed(1)}px,0) rotate(${ang.toFixed(2)}deg) scaleX(1)`;
+  line.style.width = len.toFixed(1) + 'px';
+
+  const field = document.getElementById('alarmField');
+  field.appendChild(line);
+  field.appendChild(end);
+  field.appendChild(start);
+
+  const live = {
+    chartIdx:idx, elem:start, endElem:end, lineElem:line,
+    type:'slide', isBreak:false,
+    posDeg:note.pos, endPosDeg:note.endPos,
+    destPx:startPx, endPx,
+    arrivalBeat:note.beat,
+    arrivalAudioT: rhythm.startAudioT + note.beat * rhythm.beatSec,
+    resolved:false, holding:false,
+    pointerId:null, startedAtStart:false, reachedEnd:false,
+    holdStartAudioT:0, holdDurationSec:0,
+  };
+  attachSlideHandlers(live);
+  rhythm.live.push(live);
+}
 function attachNoteHandlers(el, live){
   const isHold = live.type === 'hold';
-
   const onDown = (e) => {
     if(live.resolved) return;
     e.preventDefault();
-
     if(live.isFrozenStart && !rhythm.started){
       startRhythmSession();
-      resolveHit(live, 'tap');
+      resolveHit(live, 'critical', 0);
       return;
     }
-    if(!rhythm.started) return; // ignore taps before start
-
+    if(!rhythm.started) return;
     if(isHold){
       try{ el.setPointerCapture(e.pointerId); }catch(_){}
+      // judge the initial press timing first
+      const deltaMs = (audioCtx.currentTime - live.arrivalAudioT) * 1000;
+      const judg = judgeTap(deltaMs, live.isBreak);
+      if(judg === 'miss'){ resolveMiss(live, 'ミス'); return; }
       live.holding = true;
-      live.holdStartMs = performance.now();
+      live.holdStartAudioT = audioCtx.currentTime;
       live.pointerId = e.pointerId;
+      live.initialJudg = judg;
+      live.initialDelta = deltaMs;
     } else {
-      resolveHit(live, 'tap');
+      const deltaMs = (audioCtx.currentTime - live.arrivalAudioT) * 1000;
+      const judg = judgeTap(deltaMs, live.isBreak);
+      if(judg === 'miss'){ resolveMiss(live, 'ミス'); return; }
+      resolveHit(live, judg, deltaMs);
     }
   };
   const onUp = (e) => {
     if(!isHold || live.resolved) return;
     if(!live.holding) return;
-    const held = performance.now() - live.holdStartMs;
-    if(held >= live.holdDurationMs - 30){
-      // let the loop / hold-complete branch handle it
-      return;
+    const heldSec = audioCtx.currentTime - live.holdStartAudioT;
+    const remainSec = live.holdDurationSec - heldSec;
+    if(remainSec <= HOLD_RELEASE_MS/1000){
+      // close enough — hold completes as if fully held
+      resolveHoldComplete(live);
+    } else {
+      live.holding = false;
+      resolveMiss(live, 'ブレイク！');
     }
-    live.holding = false;
-    resolveMiss(live, 'ブレイク！');
   };
   el.addEventListener('pointerdown', onDown);
-  el.addEventListener('pointerup', onUp);
-  el.addEventListener('pointercancel', onUp);
+  el.addEventListener('pointerup',    onUp);
+  el.addEventListener('pointercancel',onUp);
+}
+function attachSlideHandlers(live){
+  const startEl = live.elem;
+  const onStartDown = (e) => {
+    if(live.resolved || !rhythm.started) return;
+    e.preventDefault();
+    try{ startEl.setPointerCapture(e.pointerId); }catch(_){}
+    live.pointerId = e.pointerId;
+    live.startedAtStart = true;
+  };
+  const onMove = (e) => {
+    if(!live.startedAtStart || live.resolved) return;
+    if(e.pointerId !== live.pointerId) return;
+    // reachedEnd once pointer crosses within a radius of the end marker
+    const rect = live.endElem.getBoundingClientRect();
+    const cx = rect.x + rect.width/2, cy = rect.y + rect.height/2;
+    const dx = e.clientX - cx, dy = e.clientY - cy;
+    if(Math.sqrt(dx*dx + dy*dy) < rect.width * 0.75){ live.reachedEnd = true; judgeSlideNow(live); }
+  };
+  const onUp = (e) => {
+    if(live.resolved) return;
+    if(e.pointerId !== live.pointerId) return;
+    if(!live.reachedEnd){ resolveMiss(live, 'ミス'); }
+  };
+  startEl.addEventListener('pointerdown', onStartDown);
+  startEl.addEventListener('pointermove', onMove);
+  startEl.addEventListener('pointerup',    onUp);
+  startEl.addEventListener('pointercancel',onUp);
+}
+function judgeSlideNow(live){
+  if(live.resolved) return;
+  const deltaMs = (audioCtx.currentTime - live.arrivalAudioT) * 1000;
+  const abs = Math.abs(deltaMs);
+  let tier;
+  if(abs <= SLIDE_PERF_MS) tier = 'perfect';
+  else if(abs <= SLIDE_GREAT_MS) tier = 'great';
+  else { resolveMiss(live, 'ミス'); return; }
+  resolveHit(live, tier, deltaMs);
+}
+function judgeTap(deltaMs, isBreak){
+  const abs = Math.abs(deltaMs);
+  if(isBreak){
+    if(abs <= JW_BREAK.crit)  return 'critical';
+    if(abs <= JW_BREAK.perf)  return 'perfect';
+    if(abs <= JW_BREAK.great) return 'great';
+    return 'miss';
+  }
+  if(abs <= JW.crit)  return 'critical';
+  if(abs <= JW.perf)  return 'perfect';
+  if(abs <= JW.great) return 'great';
+  if(abs <= JW.good)  return 'good';
+  return 'miss';
 }
 
-function spawnBurst(x, y, kind){
-  const field = document.getElementById('alarmField');
-  const b = document.createElement('div');
-  b.className = 'burst' + (kind === 'great' ? ' great' : kind === 'miss' ? ' miss' : '');
-  b.style.left = x + '%'; b.style.top = y + '%';
-  field.appendChild(b);
-  setTimeout(() => b.remove(), 500);
-}
-function spawnPopup(x, y, label, kind){
-  const field = document.getElementById('alarmField');
-  const p = document.createElement('div');
-  p.className = 'perfect-popup' + (kind === 'great' ? ' great' : kind === 'miss' ? ' miss' : '');
-  p.textContent = label;
-  p.style.left = x + '%'; p.style.top = y + '%';
-  field.appendChild(p);
-  setTimeout(() => p.remove(), 800);
-}
-
-function updateScoreDisplay(){
-  document.getElementById('spScore').textContent = rhythm.score.toLocaleString();
-  document.getElementById('spCombo').textContent = rhythm.combo;
-  document.getElementById('spMax').textContent   = rhythm.maxCombo;
-  document.getElementById('spNotes').textContent = `${rhythm.resolvedCount} / ${rhythm.totalNotes}`;
-  document.getElementById('spMiss').textContent  = `${rhythm.misses} / ${MAX_MISSES}`;
-}
-
-function resolveHit(live, type){
+/* ============ RHYTHM: RESOLVE ============ */
+function resolveHit(live, tier, deltaMs){
   if(live.resolved) return;
   live.resolved = true;
-  const points = (type === 'hold') ? 250 : 100;
-  rhythm.score += points;
-  rhythm.combo++;
-  if(rhythm.combo > rhythm.maxCombo) rhythm.maxCombo = rhythm.combo;
-  rhythm.hits++;
+  const noteType = live.type === 'hold' && !live.isBreak ? 'hold'
+                 : live.type === 'slide' ? 'slide'
+                 : live.isBreak ? 'break'
+                 : 'tap';
+  const pts = (SCORES[noteType] && SCORES[noteType][tier]) || 0;
+  rhythm.score += pts;
+  const dx = DX_POINTS[tier] || 0;
+  rhythm.dxScore += dx;
+  if(tier !== 'miss'){
+    rhythm.combo++;
+    if(rhythm.combo > rhythm.maxCombo) rhythm.maxCombo = rhythm.combo;
+    rhythm.hits++;
+    rhythm.types[noteType].h++;
+  }
   rhythm.resolvedCount++;
-  spawnBurst(live.x, live.y, type === 'hold' ? 'great' : 'perfect');
-  spawnPopup(live.x, live.y, type === 'hold' ? 'グレート！' : 'パーフェクト！', type === 'hold' ? 'great' : 'perfect');
-  playHitSound(type === 'hold');
-  live.elem.remove();
+  spawnBurst(live.destPx, tierBurstClass(tier, live.isBreak));
+  spawnJudgment(live, tier, deltaMs, noteType);
+  playHitSound(noteType === 'hold', live.isBreak);
+  if(live.isBreak) emitSparks(live.destPx);
+  cleanupNoteElements(live);
   updateScoreDisplay();
+}
+function resolveHoldComplete(live){
+  // Combines the release timing with the initial press tier: take the WORSE.
+  if(live.resolved) return;
+  const tier = live.initialJudg || 'perfect';
+  resolveHit(live, tier, live.initialDelta || 0);
 }
 function resolveMiss(live, label){
   if(live.resolved) return;
   live.resolved = true;
+  const noteType = live.type === 'hold' ? 'hold'
+                 : live.type === 'slide' ? 'slide'
+                 : live.isBreak ? 'break' : 'tap';
   rhythm.combo = 0;
   rhythm.misses++;
   rhythm.resolvedCount++;
-  spawnBurst(live.x, live.y, 'miss');
-  spawnPopup(live.x, live.y, label, 'miss');
-  live.elem.remove();
+  spawnBurst(live.destPx, 'miss');
+  spawnJudgment(live, 'miss', 0, noteType, label);
+  cleanupNoteElements(live);
   updateScoreDisplay();
-  if(rhythm.misses > MAX_MISSES){
-    // escalate immediately
-    setTimeout(escalate, 400);
+  if(rhythm.misses > MAX_MISSES){ setTimeout(escalate, 400); }
+}
+function cleanupNoteElements(live){
+  if(live.elem) live.elem.remove();
+  if(live.hitZone) live.hitZone.remove();
+  if(live.endElem) live.endElem.remove();
+  if(live.lineElem) live.lineElem.remove();
+}
+function tierBurstClass(tier, isBreak){
+  if(isBreak) return 'break';
+  return tier; // 'critical'|'perfect'|'great'|'good'|'miss'
+}
+const JUDG_LABELS = {
+  critical:'クリティカル', perfect:'パーフェクト', great:'グレート',
+  good:'グッド', miss:'ミス', break:'ブレイク！',
+};
+function spawnJudgment(live, tier, deltaMs, noteType, overrideLabel){
+  const p = document.createElement('div');
+  p.className = 'judg-popup ' + (live.isBreak && tier !== 'miss' ? 'break' : tier);
+  const lbl = overrideLabel || (live.isBreak && tier !== 'miss' ? 'ブレイク！' : JUDG_LABELS[tier]);
+  const showEL = tier !== 'critical' && tier !== 'miss' && noteType !== 'slide';
+  const el = (showEL && deltaMs !== 0) ? (deltaMs < 0 ? 'EARLY' : 'LATE') : '';
+  p.innerHTML = `<span class="jlbl">${lbl}</span>` + (el ? `<span class="jsub">${el}</span>` : '');
+  p.style.setProperty('--tx', live.destPx.x.toFixed(1) + 'px');
+  p.style.setProperty('--ty', live.destPx.y.toFixed(1) + 'px');
+  document.getElementById('alarmField').appendChild(p);
+  setTimeout(() => p.remove(), 800);
+}
+function spawnBurst(destPx, cls){
+  const b = document.createElement('div');
+  b.className = 'burst ' + cls;
+  b.style.setProperty('--tx', destPx.x.toFixed(1) + 'px');
+  b.style.setProperty('--ty', destPx.y.toFixed(1) + 'px');
+  document.getElementById('alarmField').appendChild(b);
+  setTimeout(() => b.remove(), 500);
+}
+function emitSparks(destPx){
+  // Small gold particle burst for break hits — cap at 8 so weaker phones cope.
+  const field = document.getElementById('alarmField');
+  const t0 = performance.now();
+  const N = 8;
+  const parts = [];
+  for(let i = 0; i < N; i++){
+    const s = document.createElement('div'); s.className = 'spark';
+    field.appendChild(s);
+    const ang = (i / N) * Math.PI * 2;
+    parts.push({el:s, ang, speed:80 + Math.random()*60, life: 500 + Math.random()*200});
   }
+  const step = (now) => {
+    const t = now - t0;
+    let alive = false;
+    for(const p of parts){
+      if(!p.el.isConnected) continue;
+      if(t > p.life){ p.el.remove(); continue; }
+      alive = true;
+      const prog = t / p.life;
+      const dist = p.speed * prog;
+      const sx = destPx.x + Math.cos(p.ang) * dist;
+      const sy = destPx.y + Math.sin(p.ang) * dist;
+      p.el.style.setProperty('--sx', sx.toFixed(1) + 'px');
+      p.el.style.setProperty('--sy', sy.toFixed(1) + 'px');
+      p.el.style.setProperty('--sc', (1 - prog).toFixed(3));
+      p.el.style.setProperty('--op', (1 - prog).toFixed(3));
+    }
+    if(alive) requestAnimationFrame(step);
+  };
+  requestAnimationFrame(step);
+}
+function updateScoreDisplay(){
+  document.getElementById('spScore').textContent = rhythm.score.toLocaleString();
+  document.getElementById('spCombo').textContent = rhythm.combo;
+  document.getElementById('spMax').textContent   = rhythm.maxCombo;
+  document.getElementById('spDx').textContent    = `${rhythm.dxScore}/${rhythm.dxMax}`;
+  document.getElementById('spNotes').textContent = `${rhythm.resolvedCount} / ${rhythm.totalNotes}`;
+  document.getElementById('spMiss').textContent  = `${rhythm.misses} / ${MAX_MISSES}`;
+  document.getElementById('spStyle').textContent = STYLE_LABELS[state.chartStyle] || state.chartStyle;
 }
 
-// ---- 5f. Session lifecycle ----
+/* ============ RHYTHM: SESSION LIFECYCLE ============ */
 function initRhythmSession(level){
-  // reset everything
   const field = document.getElementById('alarmField');
-  for(const el of field.querySelectorAll('.tap-note,.burst,.perfect-popup')) el.remove();
+  for(const el of field.querySelectorAll('.tap-note,.slide-marker,.slide-line,.hit-zone,.burst,.judg-popup,.spark')) el.remove();
 
-  rhythm.chart = generateChart(level);
+  rhythm.chart = generateChart(level, state.chartStyle);
   rhythm.totalNotes = rhythm.chart.length;
+  rhythm.dxMax = rhythm.totalNotes * DX_POINTS.critical;
   rhythm.started = false;
-  rhythm.startMs = null;
   rhythm.startAudioT = null;
-  rhythm.nextSpawnIdx = 1; // note 0 is spawned frozen
+  rhythm.nextSpawnIdx = 1; // first note is spawned frozen
   rhythm.live = [];
-  rhythm.score = 0;
-  rhythm.combo = 0;
-  rhythm.maxCombo = 0;
-  rhythm.hits = 0;
-  rhythm.misses = 0;
-  rhythm.resolvedCount = 0;
+  rhythm.score = 0; rhythm.combo = 0; rhythm.maxCombo = 0;
+  rhythm.hits = 0;  rhythm.misses = 0; rhythm.resolvedCount = 0;
+  rhythm.dxScore = 0;
+  rhythm.types = {tap:{t:0,h:0}, hold:{t:0,h:0}, slide:{t:0,h:0}, break:{t:0,h:0}};
+  // count per-type totals so the results breakdown can compute accuracy
+  for(const n of rhythm.chart){
+    const k = (n.isBreak && n.type === 'tap') ? 'break'
+            : n.type === 'hold' ? 'hold'
+            : n.type === 'slide' ? 'slide' : 'tap';
+    rhythm.types[k].t++;
+  }
+  rhythm.fieldPx = field.clientWidth || 400;
+  lastPulsedBeat = -1;
   updateScoreDisplay();
   spawnFrozenFirst();
   if(!rhythm.animFrame) rhythm.animFrame = requestAnimationFrame(rhythmLoop);
 }
 function startRhythmSession(){
-  rhythm.started = true;
-  rhythm.startMs = performance.now();
   ensureAudio();
+  rhythm.started = true;
   rhythm.startAudioT = audioCtx.currentTime + 0.02;
+  // The frozen first note's arrivalAudioT = startAudioT (beat 0).
+  if(rhythm.live[0]) rhythm.live[0].arrivalAudioT = rhythm.startAudioT;
   startMetronome();
-  pulseBeatVisual();
 }
 function stopRhythmSession(){
   stopMetronome();
   if(rhythm.animFrame){ cancelAnimationFrame(rhythm.animFrame); rhythm.animFrame = null; }
   const field = document.getElementById('alarmField');
   if(field){
-    for(const el of field.querySelectorAll('.tap-note,.burst,.perfect-popup')) el.remove();
+    for(const el of field.querySelectorAll('.tap-note,.slide-marker,.slide-line,.hit-zone,.burst,.judg-popup,.spark')) el.remove();
   }
   rhythm.live = [];
   rhythm.started = false;
 }
 
-// ---------- 6. SCREENS ----------
+/* ============ SCREENS ============ */
 function showScreen(name){
   state.screen = name;
-  for(const s of document.querySelectorAll('.screen')){
-    s.classList.toggle('active', s.id === name + 'Screen');
-  }
+  for(const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === name + 'Screen');
   const statusMap = {setup:'セットアップ', armed:'セット済み', alarm:'！！アラーム！！', success:'クリア', failed:'失敗', stats:'プロファイル'};
   document.getElementById('hudStatus').textContent = statusMap[name] || name;
   document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
   if(name === 'stats') renderStatsScreen();
+}
+function armAlarm(){
+  state.firstTime   = document.getElementById('firstTime').value || '08:00';
+  state.intervalMin = parseInt(document.getElementById('interval').value, 10);
+  state.maxAlarms   = parseInt(document.getElementById('maxAlarms').value, 10);
+  state.noteSpeed   = parseFloat(document.getElementById('noteSpeed').value);
+  state.chartStyle  = document.getElementById('chartStyle').value;
+  state.testMode    = document.getElementById('testMode').checked;
+  saveSettings();
+  ensureAudio(); requestWakeLock();
+  state.scheduleMs = buildSchedule();
+  state.currentAlarmIndex = -1;
+  showScreen('armed');
+}
+function disarm(){
+  stopCurrentAlarm();
+  state.scheduleMs = []; state.currentAlarmIndex = -1;
+  releaseWakeLock();
+  showScreen('setup');
 }
 
 function renderStatsScreen(){
   document.getElementById('statStreak').textContent    = currentStreak();
   document.getElementById('statBestScore').textContent = stats.bestScore.toLocaleString();
   document.getElementById('statBestCombo').textContent = stats.bestMaxCombo;
+  document.getElementById('statBestDx').textContent    = stats.bestDxScore.toLocaleString();
   const list = document.getElementById('statHistory');
   list.innerHTML = '';
   if(!stats.history.length){
-    const empty = document.createElement('div');
-    empty.className = 'pc-empty';
+    const empty = document.createElement('div'); empty.className = 'pc-empty';
     empty.textContent = 'セッション履歴なし — 最初のアラームをセットして履歴を作成してください。';
-    list.appendChild(empty);
-    return;
+    list.appendChild(empty); return;
   }
   for(const h of stats.history){
     const d = new Date(h.date);
     const dateStr = `${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-    const row = document.createElement('div');
-    row.className = 'pc-row';
+    const row = document.createElement('div'); row.className = 'pc-row';
     const alarmClass = 'a' + Math.min(Math.max(h.alarm,1), 6);
     row.innerHTML =
       `<span class="pc-date">${dateStr}</span>` +
@@ -1423,33 +1634,10 @@ function renderStatsScreen(){
     list.appendChild(row);
   }
 }
-function armAlarm(){
-  state.firstTime   = document.getElementById('firstTime').value || '08:00';
-  state.intervalMin = parseInt(document.getElementById('interval').value, 10);
-  state.maxAlarms   = parseInt(document.getElementById('maxAlarms').value, 10);
-  state.testMode    = document.getElementById('testMode').checked;
-  saveSettings();
-  ensureAudio();
-  requestWakeLock();
-  state.scheduleMs = buildSchedule();
-  state.currentAlarmIndex = -1;
-  showScreen('armed');
-}
-function disarm(){
-  stopCurrentAlarm();
-  state.scheduleMs = [];
-  state.currentAlarmIndex = -1;
-  releaseWakeLock();
-  showScreen('setup');
-}
 
-// ---------- 7. WEB AUDIO ----------
-// ----- SWAP-IN POINT FOR MP3 CLIPS -----
-// See earlier notes: replace playAlarm/playHitSound/scheduleKick/scheduleHat
-// with <audio> element playback if you want real samples.
+/* ============ AUDIO (alarms + hit sounds) ============ */
 let audioCtx = null, masterGain = null;
 let alarmTimers = [], alarmOscillators = [];
-
 function ensureAudio(){
   if(audioCtx) return;
   const AC = window.AudioContext || window.webkitAudioContext;
@@ -1460,8 +1648,7 @@ function ensureAudio(){
   if(audioCtx.state === 'suspended') audioCtx.resume();
 }
 function note(freq, when, dur, type, vol){
-  const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
+  const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
   osc.type = type || 'sine';
   osc.frequency.setValueAtTime(freq, when);
   gain.gain.setValueAtTime(0.0001, when);
@@ -1469,24 +1656,23 @@ function note(freq, when, dur, type, vol){
   gain.gain.exponentialRampToValueAtTime(0.0001, when + dur);
   osc.connect(gain).connect(masterGain);
   osc.start(when); osc.stop(when + dur + 0.05);
-  alarmOscillators.push(osc);
-  return osc;
+  alarmOscillators.push(osc); return osc;
 }
 function playAlarm(level){
   ensureAudio(); stopAlarm();
-  const masterVol = [0.35, 0.55, 0.8, 1.0][level - 1] || 1.0;
+  const masterVol = [0.35,0.55,0.8,1.0][level-1] || 1.0;
   masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
   masterGain.gain.setValueAtTime(masterVol, audioCtx.currentTime);
   const patterns = {
-    1:{seq:[{f:523.25,d:0.35,t:'sine',v:0.4},{f:659.25,d:0.35,t:'sine',v:0.4},{f:783.99,d:0.35,t:'sine',v:0.4},{f:1046.5,d:0.6,t:'sine',v:0.5},{rest:0.6}],loopEvery:2.5},
-    2:{seq:[{f:659.25,d:0.15,t:'triangle',v:0.55},{f:880,d:0.15,t:'triangle',v:0.55},{f:1046.5,d:0.15,t:'triangle',v:0.55},{f:1318.5,d:0.25,t:'triangle',v:0.6},{rest:0.15}],loopEvery:1.0},
-    3:{seq:[{f:880,d:0.25,t:'sawtooth',v:0.8},{f:1200,d:0.25,t:'sawtooth',v:0.8}],loopEvery:0.55},
-    4:{seq:[{f:1600,d:0.08,t:'square',v:1.0},{rest:0.05},{f:2100,d:0.08,t:'square',v:1.0},{rest:0.05},{f:1800,d:0.08,t:'square',v:1.0},{rest:0.05}],loopEvery:0.6},
+    1:{seq:[{f:523.25,d:0.35,t:'sine',v:0.4},{f:659.25,d:0.35,t:'sine',v:0.4},{f:783.99,d:0.35,t:'sine',v:0.4},{f:1046.5,d:0.6,t:'sine',v:0.5},{rest:0.6}], loopEvery:2.5},
+    2:{seq:[{f:659.25,d:0.15,t:'triangle',v:0.55},{f:880,d:0.15,t:'triangle',v:0.55},{f:1046.5,d:0.15,t:'triangle',v:0.55},{f:1318.5,d:0.25,t:'triangle',v:0.6},{rest:0.15}], loopEvery:1.0},
+    3:{seq:[{f:880,d:0.25,t:'sawtooth',v:0.8},{f:1200,d:0.25,t:'sawtooth',v:0.8}], loopEvery:0.55},
+    4:{seq:[{f:1600,d:0.08,t:'square',v:1.0},{rest:0.05},{f:2100,d:0.08,t:'square',v:1.0},{rest:0.05},{f:1800,d:0.08,t:'square',v:1.0},{rest:0.05}], loopEvery:0.6},
   };
   const p = patterns[level] || patterns[4];
   function scheduleOneLoop(startTime){
     let t = startTime;
-    for(const step of p.seq){ if(step.rest){ t += step.rest; continue; } note(step.f, t, step.d, step.t, step.v); t += step.d; }
+    for(const step of p.seq){ if(step.rest){ t += step.rest; continue; } note(step.f,t,step.d,step.t,step.v); t += step.d; }
     return t;
   }
   let cursor = audioCtx.currentTime + 0.05;
@@ -1508,33 +1694,29 @@ function stopAlarm(){
     masterGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
   }
 }
-
-// Hit sound — bright short chirp. Two flavors: tap (pink) vs hold-complete (cyan).
-function playHitSound(isHold){
+function playHitSound(isHold, isBreak){
   if(!audioCtx) return;
   const t = audioCtx.currentTime;
   const g = audioCtx.createGain();
   g.gain.setValueAtTime(0.0001, t);
-  g.gain.exponentialRampToValueAtTime(0.5, t + 0.005);
-  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18);
+  g.gain.exponentialRampToValueAtTime(isBreak ? 0.75 : 0.5, t + 0.005);
+  g.gain.exponentialRampToValueAtTime(0.0001, t + 0.22);
   g.connect(masterGain || audioCtx.destination);
-
-  const base = isHold ? 900 : 1200;
-  const top  = isHold ? 1800 : 2400;
+  const base = isBreak ? 700 : isHold ? 900 : 1200;
+  const top  = isBreak ? 2600 : isHold ? 1800 : 2400;
   const o1 = audioCtx.createOscillator();
-  o1.type = 'triangle';
+  o1.type = isBreak ? 'sawtooth' : 'triangle';
   o1.frequency.setValueAtTime(base, t);
-  o1.frequency.exponentialRampToValueAtTime(top, t + 0.12);
-  o1.connect(g); o1.start(t); o1.stop(t + 0.2);
-
+  o1.frequency.exponentialRampToValueAtTime(top, t + 0.14);
+  o1.connect(g); o1.start(t); o1.stop(t + 0.22);
   const o2 = audioCtx.createOscillator();
   o2.type = 'sine';
-  o2.frequency.setValueAtTime(base / 2, t);
-  o2.frequency.exponentialRampToValueAtTime(top / 2, t + 0.08);
+  o2.frequency.setValueAtTime(base/2, t);
+  o2.frequency.exponentialRampToValueAtTime(top/2, t + 0.08);
   o2.connect(g); o2.start(t); o2.stop(t + 0.15);
 }
 
-// ---------- 8. WAKE LOCK ----------
+/* ============ WAKE LOCK ============ */
 let wakeLock = null;
 async function requestWakeLock(){
   if(!('wakeLock' in navigator)) return;
@@ -1545,12 +1727,10 @@ async function requestWakeLock(){
 }
 function releaseWakeLock(){ if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock = null; } }
 document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible' && state.screen !== 'setup' && !wakeLock){
-    requestWakeLock();
-  }
+  if(document.visibilityState === 'visible' && state.screen !== 'setup' && !wakeLock){ requestWakeLock(); }
 });
 
-// ---------- 9. EVENT WIRING + FIELD DECORATION ----------
+/* ============ EVENT WIRING + FIELD DECORATION ============ */
 function decorateFields(){
   for(const field of document.querySelectorAll('.field')){
     const cw  = document.createElement('div'); cw.className  = 'deco deco-cw';
@@ -1560,11 +1740,9 @@ function decorateFields(){
     const r2 = document.createElement('div'); r2.className = 'ring inner';
     field.prepend(r2); field.prepend(r1);
     for(const angle of BUTTON_ANGLES){
-      const m = document.createElement('div');
-      m.className = 'btn-marker';
+      const m = document.createElement('div'); m.className = 'btn-marker';
       const {x, y} = angleToXY(angle);
-      m.style.left = x + '%';
-      m.style.top  = y + '%';
+      m.style.left = x + '%'; m.style.top = y + '%';
       field.appendChild(m);
     }
   }
@@ -1575,24 +1753,29 @@ document.getElementById('successReset').addEventListener('click', () => showScre
 document.getElementById('failedReset').addEventListener('click', () => showScreen('setup'));
 document.getElementById('statsBtn').addEventListener('click', () => showScreen('stats'));
 document.getElementById('statsBack').addEventListener('click', () => showScreen('setup'));
-for(const id of ['firstTime','interval','maxAlarms','testMode']){
-  document.getElementById(id).addEventListener('change', () => {
+for(const id of ['firstTime','interval','maxAlarms','testMode','noteSpeed','chartStyle']){
+  const el = document.getElementById(id);
+  if(!el) continue;
+  el.addEventListener('change', () => {
     state.firstTime   = document.getElementById('firstTime').value;
     state.intervalMin = parseInt(document.getElementById('interval').value, 10);
     state.maxAlarms   = parseInt(document.getElementById('maxAlarms').value, 10);
     state.testMode    = document.getElementById('testMode').checked;
+    state.noteSpeed   = parseFloat(document.getElementById('noteSpeed').value);
+    state.chartStyle  = document.getElementById('chartStyle').value;
     saveSettings();
-    document.getElementById('hudMode').textContent = state.testMode ? 'TEST MODE' : '';
+    document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
   });
 }
 
-// ---------- BOOT ----------
-loadSettings();
-loadStats();
+/* ============ BOOT ============ */
+loadSettings(); loadStats();
 document.getElementById('firstTime').value  = state.firstTime;
 document.getElementById('interval').value   = state.intervalMin;
 document.getElementById('maxAlarms').value  = state.maxAlarms;
 document.getElementById('testMode').checked = state.testMode;
+document.getElementById('noteSpeed').value  = state.noteSpeed;
+document.getElementById('chartStyle').value = state.chartStyle;
 decorateFields();
 tick();
 </script>
