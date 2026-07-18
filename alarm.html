@@ -1240,6 +1240,10 @@ function generateChart(level, style){
     4:{count:24, holdChance:0.30, holdBeats:[2,4], eighthChance:0.60, streamMax:3},
   }[l];
   const s = {...base};
+  // Minimum spacing between adjacent chart events (in beats). SYNC pair
+  // notes and stream continuations bypass this — they're intentional
+  // simultaneity / density. Everything else gets clamped up.
+  s.minGap = l <= 1 ? 1.5 : l <= 2 ? 1.0 : 0.75;
   const slideChance = l >= 4 ? 0.15 : l >= 3 ? 0.10 : l >= 2 ? 0.05 : 0;
   const breakCount  = l >= 4 ? 3 : l >= 3 ? 2 : l >= 2 ? 1 : 0;
 
@@ -1288,7 +1292,10 @@ function genBasic(s, l){
   for(let i = 0; i < s.count; i++){
     let gap;
     if(i === 0) gap = 0;
-    else gap = (Math.random() < Math.max(0, s.eighthChance - 0.2)) ? 0.5 : 1;
+    else {
+      gap = (Math.random() < Math.max(0, s.eighthChance - 0.2)) ? 0.5 : 1;
+      gap = Math.max(gap, s.minGap);
+    }
     beat += gap;
     while(holds.length && holds[0].end <= beat) holds.shift();
     const posIdx = pickPos(lastPos, holds.map(h=>h.pos));
@@ -1321,6 +1328,10 @@ function genStream(s, l){
     else{
       const eighth = Math.random() < Math.max(s.eighthChance, 0.55);
       gap = eighth ? 0.5 : 1;
+      // Non-stream gaps get clamped to level minimum; the in-stream 0.5
+      // gaps above bypass minGap intentionally (streams are meant to be
+      // the one dense pocket the style allows).
+      gap = Math.max(gap, s.minGap);
       // Start streams less often (0.35 vs 0.5) and cap total stream length
       // at 3 notes — s.streamMax is now clamped to 3 by the spec table.
       if(eighth && Math.random() < 0.35){
@@ -1341,13 +1352,14 @@ function genStream(s, l){
 }
 function genSync(s, l){
   // Alternate pairs at (90,270) / (135,225); occasional solo 180.
-  // Rests of ~1.5 beats between pair events.
+  // Event-to-event rest respects level minimum spacing.
   const out = []; let beat = 0;
   const pairs = [[90,270], [135,225]];
   const target = s.count;
   let event = 0;
+  const eventGap = Math.max(1.5, s.minGap);
   while(out.length < target){
-    if(out.length > 0) beat += 1.5; // rest between events
+    if(out.length > 0) beat += eventGap;
     if(event % 5 === 4){
       out.push({beat, pos:180, type:'tap', holdBeats:0, isBreak:false});
     } else {
@@ -1370,7 +1382,12 @@ function genChaos(s, l){
   const gapPool = [0.5, 0.5, 0.75, 1, 1, 1.5];
   const holds = [];
   for(let i = 0; i < s.count; i++){
-    beat += i === 0 ? 0 : gapPool[Math.floor(Math.random()*gapPool.length)];
+    let g = 0;
+    if(i > 0){
+      g = gapPool[Math.floor(Math.random()*gapPool.length)];
+      g = Math.max(g, s.minGap);
+    }
+    beat += g;
     while(holds.length && holds[0].end <= beat) holds.shift();
     // chaos: random position (still avoid same-slot as previous)
     const posIdx = pickPos(lastPos, holds.map(h=>h.pos));
@@ -1657,9 +1674,29 @@ function rhythmLoop(){
     const nowBeat = (nowAT - rhythm.startAudioT) / rhythm.beatSec;
     maybePulseBeat(nowBeat);
 
-    // Spawn notes about to enter their travel window.
+    // Spawn notes about to enter their travel window — but gate by
+    // per-level concurrency limits:
+    //   Alarm 1-2: strictly one active note at a time.
+    //   Alarm 3-4: max two, and the second only if it's the sibling of an
+    //              intentional SYNC pair (same syncGroup id on the chart
+    //              entry). Random overlap is still blocked.
+    // A blocked note is not lost — it simply waits until the previous
+    // one resolves; spawnNote() bumps arrivalBeat forward so the delayed
+    // note still gets a real travel window instead of teleporting home.
+    const level = state.currentAlarmIndex + 1;
     while(rhythm.nextSpawnIdx < rhythm.chart.length &&
           rhythm.chart[rhythm.nextSpawnIdx].beat - nowBeat <= travelBeats()){
+      const nextNote = rhythm.chart[rhythm.nextSpawnIdx];
+      let activeCount = 0, sameGroup = false;
+      for(const live of rhythm.live){
+        if(live.resolved) continue;
+        activeCount++;
+        if(nextNote.syncGroup && live.syncGroup === nextNote.syncGroup) sameGroup = true;
+      }
+      let canSpawn = false;
+      if(activeCount === 0) canSpawn = true;
+      else if(level >= 3 && nextNote.syncGroup && sameGroup && activeCount < 2) canSpawn = true;
+      if(!canSpawn) break;
       spawnNote(rhythm.nextSpawnIdx); rhythm.nextSpawnIdx++;
     }
     // Update visuals + miss checks.
@@ -1766,12 +1803,20 @@ function spawnNote(idx){
   hz.style.setProperty('--ty', dest.y.toFixed(1) + 'px');
   document.getElementById('alarmField').appendChild(hz);
 
+  // If the concurrency gate delayed us, the scheduled arrival may already
+  // be very close (or past). Guarantee at least 0.5 beats of travel so the
+  // note never teleports straight to the destination.
+  const nowBeat = (audioCtx.currentTime - rhythm.startAudioT) / rhythm.beatSec;
+  const MIN_REMAINING_TRAVEL = 0.5;
+  const arrivalBeat = Math.max(note.beat, nowBeat + MIN_REMAINING_TRAVEL);
+
   const live = {
     chartIdx:idx, elem:el, hitZone:hz,
     type:note.type, isBreak:!!note.isBreak,
+    syncGroup: note.syncGroup || null,
     posDeg:note.pos, destPx:dest,
-    arrivalBeat:note.beat,
-    arrivalAudioT: rhythm.startAudioT + note.beat * rhythm.beatSec,
+    arrivalBeat,
+    arrivalAudioT: rhythm.startAudioT + arrivalBeat * rhythm.beatSec,
     resolved:false, holding:false,
     holdDurationSec: (note.holdBeats || 0) * rhythm.beatSec,
     holdStartAudioT:0, pointerId:null,
@@ -1827,16 +1872,21 @@ function spawnSlide(idx){
   const fCx = fRect.x + fRect.width/2, fCy = fRect.y + fRect.height/2;
   const endMarkerSize = parseFloat(getComputedStyle(end).width) || 60;
 
+  // Same delay-safe arrival adjustment as spawnNote()
+  const nowBeat2 = (audioCtx.currentTime - rhythm.startAudioT) / rhythm.beatSec;
+  const arrivalBeat = Math.max(note.beat, nowBeat2 + 0.5);
+
   const live = {
     chartIdx:idx, elem:start, endElem:end, lineElem:line,
     type:'slide', isBreak:false,
+    syncGroup: note.syncGroup || null,
     posDeg:note.pos, endPosDeg:note.endPos,
     destPx:startPx, endPx,
     endScreenX: fCx + endPx.x,
     endScreenY: fCy + endPx.y,
     endRadius: endMarkerSize * 0.75,
-    arrivalBeat:note.beat,
-    arrivalAudioT: rhythm.startAudioT + note.beat * rhythm.beatSec,
+    arrivalBeat,
+    arrivalAudioT: rhythm.startAudioT + arrivalBeat * rhythm.beatSec,
     resolved:false, holding:false,
     pointerId:null, startedAtStart:false, reachedEnd:false,
     holdStartAudioT:0, holdDurationSec:0,
