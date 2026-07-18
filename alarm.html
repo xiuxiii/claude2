@@ -699,6 +699,137 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 .hj-row.miss{border-color:var(--danger)}
 .hj-row.miss     .hj-name{color:var(--danger);text-shadow:0 0 10px var(--danger)}
 .help-footer{display:flex;justify-content:center;padding-top:6px}
+
+/* ============ FREE PLAY / SONG SELECT ============ */
+.fp-card{
+  width:min(94vmin,560px);max-height:92vh;overflow-y:auto;
+  padding:20px;border-radius:22px;
+  background:linear-gradient(180deg,rgba(20,10,52,.95),rgba(10,6,32,.95));
+  border:2px solid rgba(0,217,255,.45);
+  box-shadow:0 0 60px rgba(0,217,255,.28),inset 0 0 40px rgba(255,79,163,.15);
+  display:flex;flex-direction:column;gap:14px;
+}
+.fp-header{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  padding-bottom:10px;border-bottom:1px dashed rgba(0,217,255,.3);
+}
+.fp-title{text-align:center;flex:1}
+.fp-name{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:22px;
+  letter-spacing:.18em;color:var(--white);
+  text-shadow:0 0 12px var(--pink),0 0 24px rgba(255,79,163,.4);
+}
+.fp-spacer{width:52px;flex-shrink:0}
+.fp-section-lbl{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:11px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);
+  padding-top:4px;border-top:1px dashed rgba(0,217,255,.3);
+}
+
+/* Song list — vertical scrollable cards, each row is one preset */
+.song-list{
+  display:flex;flex-direction:column;gap:6px;
+  max-height:38vh;overflow-y:auto;padding-right:4px;
+  scrollbar-width:thin;scrollbar-color:rgba(0,217,255,.5) transparent;
+}
+.song-list::-webkit-scrollbar{width:6px}
+.song-list::-webkit-scrollbar-thumb{background:rgba(0,217,255,.5);border-radius:3px}
+.song-card{
+  padding:10px 14px;border-radius:12px;
+  border:1px solid rgba(255,255,255,.08);
+  background:rgba(255,255,255,.03);
+  cursor:pointer;touch-action:manipulation;
+  transition:border-color .15s,background .15s,box-shadow .15s;
+}
+.song-card:active{transform:scale(.98)}
+.song-card.selected{
+  border-color:var(--pink);
+  background:rgba(255,79,163,.12);
+  box-shadow:0 0 14px rgba(255,79,163,.35);
+}
+.song-card .sc-name-row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.song-card .sc-name{
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:15px;letter-spacing:.08em;
+  color:var(--white);text-shadow:0 0 8px var(--cyan);
+}
+.song-card .sc-en{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:10px;letter-spacing:.15em;
+  color:rgba(255,255,255,.5);
+}
+.song-card .sc-desc{
+  font-size:11px;color:rgba(255,255,255,.7);margin-top:3px;line-height:1.4;
+}
+
+/* Difficulty buttons — 4-across, colored per tier (maimai colors) */
+.diff-buttons{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.diff-btn{
+  padding:10px 4px;border-radius:10px;border:2px solid transparent;
+  background:rgba(255,255,255,.03);color:rgba(255,255,255,.55);
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:11px;
+  letter-spacing:.08em;cursor:pointer;touch-action:manipulation;
+}
+.diff-btn.basic{border-color:rgba(125,255,176,.45);color:var(--ok)}
+.diff-btn.adv  {border-color:rgba(255,225,74,.45);color:var(--yellow)}
+.diff-btn.exp  {border-color:rgba(255,74,74,.45);color:#ff4a4a}
+.diff-btn.mst  {border-color:rgba(162,75,255,.5);color:#a24bff}
+.diff-btn.selected.basic{background:rgba(125,255,176,.2);color:var(--ok);text-shadow:0 0 8px var(--ok);box-shadow:0 0 12px rgba(125,255,176,.5)}
+.diff-btn.selected.adv  {background:rgba(255,225,74,.2);color:var(--yellow);text-shadow:0 0 8px var(--yellow);box-shadow:0 0 12px rgba(255,225,74,.5)}
+.diff-btn.selected.exp  {background:rgba(255,74,74,.2);color:#ff4a4a;text-shadow:0 0 8px #ff4a4a;box-shadow:0 0 12px rgba(255,74,74,.5)}
+.diff-btn.selected.mst  {background:rgba(162,75,255,.2);color:#a24bff;text-shadow:0 0 8px #a24bff;box-shadow:0 0 12px rgba(162,75,255,.5)}
+
+/* Note-type toggles — cyan on, dim off */
+.type-toggles{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.type-toggle{
+  padding:10px 4px;border-radius:10px;
+  border:2px solid rgba(255,255,255,.15);
+  background:rgba(255,255,255,.03);color:rgba(255,255,255,.4);
+  font-family:'Fredoka','Noto Sans JP',sans-serif;
+  font-weight:700;font-size:12px;letter-spacing:.02em;
+  cursor:pointer;touch-action:manipulation;
+}
+.type-toggle.on{
+  border-color:var(--cyan);
+  background:rgba(0,217,255,.15);color:var(--white);
+  text-shadow:0 0 8px var(--cyan);
+  box-shadow:0 0 10px rgba(0,217,255,.4);
+}
+.type-toggle:disabled{opacity:.5;cursor:not-allowed}
+
+/* Freeplay mode badge — pinned chip while in freeplay mode */
+.mode-badge{
+  position:fixed;top:12px;left:60px;z-index:30;
+  padding:3px 10px;border-radius:999px;
+  background:rgba(255,79,163,.22);
+  border:1px solid var(--pink);
+  color:var(--white);text-shadow:0 0 8px var(--pink);
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:10px;letter-spacing:.15em;
+  display:none;
+}
+body[data-mode="freeplay"] .mode-badge{display:block}
+
+/* Floating cyan corner button — bottom-right on the setup screen only */
+.freeplay-corner{
+  position:fixed;bottom:44px;right:14px;z-index:30;
+  padding:8px 14px;border-radius:999px;
+  background:linear-gradient(180deg,var(--cyan),#0090c0);
+  color:#001a24;font-family:'Orbitron',sans-serif;
+  font-weight:900;font-size:12px;letter-spacing:.12em;
+  border:2px solid rgba(255,255,255,.55);
+  box-shadow:0 0 16px rgba(0,217,255,.6);
+  cursor:pointer;touch-action:manipulation;
+  display:none;
+}
+.freeplay-corner:active{transform:scale(.94)}
+body[data-screen="setup"] .freeplay-corner{display:block}
+
+/* Freeplay-specific result buttons on success screen */
+.fp-result-btns{display:none;gap:8px;justify-content:center;flex-wrap:wrap}
+body[data-mode="freeplay"] .fp-result-btns{display:flex}
+body[data-mode="freeplay"] #successReset{display:none}
+
+/* Hide the escalate-in timer during freeplay — no wake window applies */
+body[data-mode="freeplay"] #escalateIn{display:none}
 </style>
 </head>
 <body>
@@ -842,6 +973,10 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
     </div>
     <div class="gap"></div>
     <button class="btn cyan small" id="successReset">もう一度セット</button>
+    <div class="fp-result-btns" id="fpResultBtns">
+      <button class="btn small" id="fpPlayAgain">もう一度</button>
+      <button class="btn ghost small" id="fpSongSelect">曲選択へ</button>
+    </div>
   </div>
 </section>
 
@@ -860,6 +995,43 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
     <button class="btn ghost small" id="failedReset">リセット</button>
   </div>
 </section>
+
+<!-- FREE PLAY / SONG SELECT -->
+<section id="freeplayScreen" class="screen">
+  <div class="fp-card">
+    <div class="fp-header">
+      <button class="btn ghost small" id="fpBack">戻る</button>
+      <div class="fp-title">
+        <div class="fp-name">フリープレイ</div>
+        <div class="subtitle" style="margin:0">FREE PLAY</div>
+      </div>
+      <div class="fp-spacer"></div>
+    </div>
+    <div class="fp-section-lbl">曲選択 · SONG SELECT</div>
+    <div class="song-list" id="songList"></div>
+    <div class="fp-section-lbl">難易度</div>
+    <div class="diff-buttons" id="diffButtons">
+      <button class="diff-btn basic" data-diff="1">BASIC</button>
+      <button class="diff-btn adv"   data-diff="2">ADVANCED</button>
+      <button class="diff-btn exp"   data-diff="3">EXPERT</button>
+      <button class="diff-btn mst"   data-diff="4">MASTER</button>
+    </div>
+    <div class="fp-section-lbl">ノーツ設定</div>
+    <div class="type-toggles" id="typeToggles">
+      <button class="type-toggle on" data-type="tap">タップ</button>
+      <button class="type-toggle on" data-type="hold">ホールド</button>
+      <button class="type-toggle on" data-type="slide">スライド</button>
+      <button class="type-toggle on" data-type="break">ブレイク</button>
+    </div>
+    <button class="btn big" id="fpStart">START</button>
+  </div>
+</section>
+
+<!-- Mode badge — small "フリープレイ" chip during freeplay gameplay -->
+<div class="mode-badge" id="modeBadge">フリープレイ</div>
+
+<!-- Free-play corner button — only visible on the setup screen -->
+<button class="freeplay-corner" id="freeplayBtn" aria-label="フリープレイへ">フリープレイ ▶</button>
 
 <!-- HELP / TUTORIAL OVERLAY -->
 <div class="help-overlay" id="helpOverlay">
@@ -998,8 +1170,15 @@ const STYLE_KEYS   = ['BASIC','STREAM','SYNC','CHAOS'];
 /* ============ STATE ============ */
 const state = {
   screen:'setup',
+  mode:'alarm',       // 'alarm' | 'freeplay' — drives whether wake-window /
+                      // escalation / notifications apply during gameplay.
   firstTime:'08:00', intervalMin:30, maxAlarms:4, testMode:false,
   noteSpeed:1.5, chartStyle:'BASIC', beatPreset:'morning',
+  freeplay:{
+    beat:'morning',
+    difficulty:1,     // 1..4 → BASIC / ADVANCED / EXPERT / MASTER
+    types:{tap:true, hold:true, slide:true, break:true},
+  },
   scheduleMs:[], currentAlarmIndex:-1, alarmRingingSince:null,
 };
 
@@ -1034,6 +1213,7 @@ function saveSettings(){
       firstTime:state.firstTime, intervalMin:state.intervalMin, maxAlarms:state.maxAlarms,
       testMode:state.testMode, noteSpeed:state.noteSpeed, chartStyle:state.chartStyle,
       beatPreset:state.beatPreset,
+      freeplay:state.freeplay,
     }));
   }catch(e){}
 }
@@ -1048,6 +1228,17 @@ function loadSettings(){
     if(typeof s.noteSpeed === 'number' && s.noteSpeed > 0) state.noteSpeed = s.noteSpeed;
     if(typeof s.chartStyle === 'string' && STYLE_KEYS.includes(s.chartStyle)) state.chartStyle = s.chartStyle;
     if(typeof s.beatPreset === 'string' && BEAT_PRESETS[s.beatPreset]) state.beatPreset = s.beatPreset;
+    if(s.freeplay && typeof s.freeplay === 'object'){
+      if(BEAT_PRESETS[s.freeplay.beat])                       state.freeplay.beat = s.freeplay.beat;
+      if(s.freeplay.difficulty >= 1 && s.freeplay.difficulty <= 4) state.freeplay.difficulty = s.freeplay.difficulty;
+      if(s.freeplay.types && typeof s.freeplay.types === 'object'){
+        for(const k of ['tap','hold','slide','break']){
+          if(typeof s.freeplay.types[k] === 'boolean') state.freeplay.types[k] = s.freeplay.types[k];
+        }
+        // enforce "at least one on" invariant on load
+        if(!Object.values(state.freeplay.types).some(Boolean)) state.freeplay.types.tap = true;
+      }
+    }
   }catch(e){}
 }
 function loadStats(){
@@ -1112,7 +1303,7 @@ function tick(){
       if(now.getTime() >= state.scheduleMs[i] && i > state.currentAlarmIndex){ startAlarm(i); break; }
     }
   }
-  if(state.screen === 'alarm'){
+  if(state.screen === 'alarm' && state.mode !== 'freeplay'){
     const startedAt = state.alarmRingingSince;
     const escalateAt = startedAt + wakeWindowMs();
     const remain = escalateAt - now.getTime();
@@ -1184,8 +1375,13 @@ function finishAlarm(){
   // capture breakdown snapshot before we tear down
   const bd = JSON.parse(JSON.stringify(rhythm.types));
 
+  const wasFreeplay = state.mode === 'freeplay';
   stopCurrentAlarm();
-  recordSession({alarm:level, score:finalScore, maxCombo:finalMax, accuracy:accPct, dxScore:dx, dxMax});
+  // Free-play sessions don't affect the wake streak or leaderboards — the
+  // player didn't oversleep, they chose to play.
+  if(!wasFreeplay){
+    recordSession({alarm:level, score:finalScore, maxCombo:finalMax, accuracy:accPct, dxScore:dx, dxMax});
+  }
 
   document.getElementById('successGrade').textContent = computeRank(accPct, dxAcc, level);
   document.getElementById('successCombo').textContent = misses === 0 ? 'フルコンボ' : 'クリア';
@@ -1496,7 +1692,8 @@ function playNoiseDrum(when, vol){
 // is a sixteenth note, `beatSec` a quarter — 110 BPM everywhere.
 const BEAT_PRESETS = {
   morning: {
-    name:'朝の光',
+    name:'朝の光', en:'Morning Light',
+    desc:'柔らかいキックとチルなアルペジオ、暖かいパッド',
     schedule(barMod, t, stepSec, beatSec){
       // soft kick on 1 & 3
       playKick(t + 0*stepSec, 0.55);
@@ -1514,7 +1711,8 @@ const BEAT_PRESETS = {
     },
   },
   genki: {
-    name:'元気アラーム',
+    name:'元気アラーム', en:'Genki Alarm',
+    desc:'アップテンポな4つ打ちと弾むメロディー',
     schedule(barMod, t, stepSec, beatSec){
       // four-on-the-floor
       for(const s of [0,4,8,12]) playKick(t + s*stepSec, 0.75);
@@ -1529,7 +1727,8 @@ const BEAT_PRESETS = {
     },
   },
   cyber: {
-    name:'サイバー',
+    name:'サイバー', en:'Cyber',
+    desc:'シンセウェーブ、歩くベース、キラキラメロディー',
     schedule(barMod, t, stepSec, beatSec){
       // punchy syncopated kick
       for(const s of [0,4,6,8,12]) playKick(t + s*stepSec, 0.7);
@@ -1547,7 +1746,8 @@ const BEAT_PRESETS = {
     },
   },
   wafu: {
-    name:'和風',
+    name:'和風', en:'Wafu',
+    desc:'太鼓のキックとペンタトニックスケール、静かで印象的',
     schedule(barMod, t, stepSec, beatSec){
       // taiko: deep long kick on 1 & 3, accent on 4& in odd bars
       playKick(t + 0*stepSec, 0.9);
@@ -1567,7 +1767,8 @@ const BEAT_PRESETS = {
     },
   },
   berserk: {
-    name:'バーサク',
+    name:'バーサク', en:'Berserk',
+    desc:'激しいダブルキックと歪んだ音、限界起床',
     schedule(barMod, t, stepSec, beatSec){
       // fast double kick — every eighth
       for(const s of [0,2,4,6,8,10,12,14]) playKick(t + s*stepSec, 0.75);
@@ -1583,7 +1784,8 @@ const BEAT_PRESETS = {
     },
   },
   chiptune: {
-    name:'8ビット',
+    name:'8ビット', en:'Chiptune',
+    desc:'レトロなNESスタイルの目覚めチューン',
     schedule(barMod, t, stepSec, beatSec){
       // NES-style kick pattern
       for(const s of [0, 8]) playKick(t + s*stepSec, 0.65);
@@ -2039,7 +2241,8 @@ function resolveMiss(live, label){
   spawnJudgment(live, 'miss', 0, noteType, label);
   cleanupNoteElements(live);
   updateScoreDisplay();
-  if(rhythm.misses > MAX_MISSES){ setTimeout(escalate, 400); }
+  // Free-play never escalates and never fails — miss counter just tallies.
+  if(state.mode !== 'freeplay' && rhythm.misses > MAX_MISSES){ setTimeout(escalate, 400); }
 }
 function cleanupNoteElements(live){
   if(live.elem) live.elem.remove();
@@ -2113,18 +2316,24 @@ function updateScoreDisplay(){
   document.getElementById('spMax').textContent   = rhythm.maxCombo;
   document.getElementById('spDx').textContent    = `${rhythm.dxScore}/${rhythm.dxMax}`;
   document.getElementById('spNotes').textContent = `${rhythm.resolvedCount} / ${rhythm.totalNotes}`;
-  document.getElementById('spMiss').textContent  = `${rhythm.misses} / ${MAX_MISSES}`;
+  // No miss ceiling in freeplay — just the tally.
+  document.getElementById('spMiss').textContent =
+    state.mode === 'freeplay' ? `${rhythm.misses}` : `${rhythm.misses} / ${MAX_MISSES}`;
   document.getElementById('spStyle').textContent = STYLE_LABELS[state.chartStyle] || state.chartStyle;
-  const preset = BEAT_PRESETS[state.beatPreset];
+  const beatKey = state.mode === 'freeplay' ? state.freeplay.beat : state.beatPreset;
+  const preset = BEAT_PRESETS[beatKey];
   document.getElementById('spBeat').textContent = preset ? preset.name : '';
 }
 
 /* ============ RHYTHM: SESSION LIFECYCLE ============ */
-function initRhythmSession(level){
+function initRhythmSession(level, typeMask){
   const field = document.getElementById('alarmField');
   for(const el of field.querySelectorAll('.tap-note,.slide-marker,.slide-line,.hit-zone,.burst,.judg-popup,.spark')) el.remove();
 
   rhythm.chart = generateChart(level, state.chartStyle);
+  // Free-play uses the same chart generator but then filters note types
+  // down to whatever the player enabled on the freeplay screen.
+  if(typeMask) applyTypeMask(rhythm.chart, typeMask);
   rhythm.totalNotes = rhythm.chart.length;
   rhythm.dxMax = rhythm.totalNotes * DX_POINTS.critical;
   rhythm.started = false;
@@ -2156,7 +2365,9 @@ function startRhythmSession(){
   if(rhythm.live[0]) rhythm.live[0].arrivalAudioT = rhythm.startAudioT;
   // Kick off the selected preset as the gameplay backing music
   // (kick + hi-hat + melody + optional pad, looped every 4 bars).
-  trackStart(state.beatPreset, 'gameplay');
+  // Free-play uses its own beat selection, alarm mode uses the global one.
+  const beatKey = state.mode === 'freeplay' ? state.freeplay.beat : state.beatPreset;
+  trackStart(beatKey, 'gameplay');
 }
 function stopRhythmSession(){
   trackStop();
@@ -2172,15 +2383,24 @@ function stopRhythmSession(){
 /* ============ SCREENS ============ */
 function showScreen(name){
   state.screen = name;
-  // Body attribute drives the .help-btn visibility rule (setup + armed only).
+  // Body attribute drives the .help-btn visibility rule (setup + armed only)
+  // as well as freeplay-mode CSS overrides.
   document.body.setAttribute('data-screen', name);
   for(const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === name + 'Screen');
-  const statusMap = {setup:'セットアップ', armed:'セット済み', alarm:'！！アラーム！！', success:'クリア', failed:'失敗', stats:'プロファイル'};
+  const statusMap = {setup:'セットアップ', armed:'セット済み', alarm:'！！アラーム！！', success:'クリア', failed:'失敗', stats:'プロファイル', freeplay:'フリープレイ'};
   document.getElementById('hudStatus').textContent = statusMap[name] || name;
   document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
-  // Kill any preview loop when navigating away from the setup screen.
-  if(name !== 'setup' && currentTrack.mode === 'preview') trackStop();
-  if(name === 'stats') renderStatsScreen();
+  // Preview loops are hosted on both setup and freeplay screens; kill the
+  // preview whenever we move to any OTHER screen.
+  if(name !== 'setup' && name !== 'freeplay' && currentTrack.mode === 'preview') trackStop();
+  // Returning to setup, freeplay, or stats always drops back to alarm mode
+  // (freeplay only lives from its start-of-play through its results screen).
+  if(name === 'setup' || name === 'freeplay' || name === 'stats'){
+    state.mode = 'alarm';
+    document.body.setAttribute('data-mode', 'alarm');
+  }
+  if(name === 'stats')    renderStatsScreen();
+  if(name === 'freeplay') renderFreeplayScreen();
 }
 function armAlarm(){
   state.firstTime   = document.getElementById('firstTime').value || '08:00';
@@ -2203,6 +2423,123 @@ function disarm(){
   state.scheduleMs = []; state.currentAlarmIndex = -1;
   releaseWakeLock();
   showScreen('setup');
+}
+
+/* ============ FREE PLAY ============ */
+const DIFF_LABELS = {1:'BASIC', 2:'ADVANCED', 3:'EXPERT', 4:'MASTER'};
+const DIFF_CLASSES = {1:'basic', 2:'adv', 3:'exp', 4:'mst'};
+
+function renderFreeplayScreen(){
+  renderSongList();
+  renderDiffButtons();
+  renderTypeToggles();
+}
+function renderSongList(){
+  const list = document.getElementById('songList');
+  list.innerHTML = '';
+  for(const key of BEAT_KEYS){
+    const p = BEAT_PRESETS[key];
+    const selected = state.freeplay.beat === key;
+    const card = document.createElement('div');
+    card.className = 'song-card' + (selected ? ' selected' : '');
+    card.dataset.key = key;
+    card.innerHTML =
+      `<div class="sc-name-row">` +
+        `<span class="sc-name">${p.name}</span>` +
+        `<span class="sc-en">${p.en || ''}</span>` +
+      `</div>` +
+      `<div class="sc-desc">${p.desc || ''}</div>`;
+    card.addEventListener('click', () => selectFreeplayBeat(key));
+    list.appendChild(card);
+  }
+}
+function renderDiffButtons(){
+  for(let d = 1; d <= 4; d++){
+    const btn = document.querySelector(`.diff-btn[data-diff="${d}"]`);
+    if(btn) btn.classList.toggle('selected', state.freeplay.difficulty === d);
+  }
+}
+function renderTypeToggles(){
+  const enabledCount = Object.values(state.freeplay.types).filter(Boolean).length;
+  for(const t of ['tap','hold','slide','break']){
+    const btn = document.querySelector(`.type-toggle[data-type="${t}"]`);
+    if(!btn) continue;
+    const on = !!state.freeplay.types[t];
+    btn.classList.toggle('on', on);
+    // Prevent turning off the last remaining enabled type.
+    btn.disabled = (enabledCount === 1 && on);
+  }
+}
+function selectFreeplayBeat(key){
+  state.freeplay.beat = key;
+  saveSettings();
+  renderSongList();
+  // Preview the selected beat — user gesture, so audio unlocks.
+  trackStart(key, 'preview');
+}
+function selectFreeplayDifficulty(d){
+  state.freeplay.difficulty = d;
+  saveSettings();
+  renderDiffButtons();
+}
+function toggleFreeplayType(t){
+  const cur = state.freeplay.types;
+  if(cur[t]){
+    // trying to turn off — block if this would leave zero enabled
+    const others = ['tap','hold','slide','break'].filter(x => x !== t && cur[x]);
+    if(!others.length) return;
+    cur[t] = false;
+  } else {
+    cur[t] = true;
+  }
+  saveSettings();
+  renderTypeToggles();
+}
+
+/* applyTypeMask — post-process a generated chart so that only the
+   allowed note types survive. Disabled types get remapped to a random
+   allowed base type. chart[0] (the frozen tap-to-start) is left alone
+   so the "TAP TO START" cue always makes visual sense. */
+function applyTypeMask(chart, mask){
+  const bases = [];
+  if(mask.tap)   bases.push('tap');
+  if(mask.hold)  bases.push('hold');
+  if(mask.slide) bases.push('slide');
+  // Break is a flag, not a base type — if user picks "break only" we still
+  // need tap as a vehicle for it.
+  if(!bases.length) bases.push('tap');
+  for(let i = 1; i < chart.length; i++){
+    const n = chart[i];
+    if(!mask.break) n.isBreak = false;
+    // A base-type that's not allowed needs to be swapped for one that is.
+    const baseAllowed = mask[n.type];
+    if(!baseAllowed){
+      const alt = bases[Math.floor(Math.random() * bases.length)];
+      n.type = alt;
+      if(alt === 'hold'){
+        if(!n.holdBeats) n.holdBeats = 1 + Math.floor(Math.random() * 2);
+      } else {
+        n.holdBeats = 0;
+      }
+      if(alt === 'slide' && !n.endPos) n.endPos = pickSlideEnd(n.pos);
+      if(alt !== 'slide') n.endPos = undefined;
+    }
+  }
+  return chart;
+}
+
+function startFreeplay(){
+  state.mode = 'freeplay';
+  document.body.setAttribute('data-mode', 'freeplay');
+  const level = state.freeplay.difficulty;
+  const preset = BEAT_PRESETS[state.freeplay.beat];
+  document.body.setAttribute('data-level', String(level));
+  document.body.setAttribute('data-in-alarm', '1');  // reuses gameplay CSS
+  document.getElementById('alarmCount').textContent = DIFF_LABELS[level] || 'BASIC';
+  document.getElementById('alarmLabel').textContent = preset ? preset.name : 'FREE PLAY';
+  initRhythmSession(level, state.freeplay.types);
+  showScreen('alarm');
+  // No siren, no lockscreen notification — this is voluntary play, not a wake.
 }
 
 function renderStatsScreen(){
@@ -2397,6 +2734,21 @@ document.getElementById('successReset').addEventListener('click', () => showScre
 document.getElementById('failedReset').addEventListener('click', () => showScreen('setup'));
 document.getElementById('statsBtn').addEventListener('click', () => showScreen('stats'));
 document.getElementById('statsBack').addEventListener('click', () => showScreen('setup'));
+document.getElementById('freeplayBtn').addEventListener('click', () => showScreen('freeplay'));
+document.getElementById('fpBack').addEventListener('click', () => showScreen('setup'));
+document.getElementById('fpStart').addEventListener('click', startFreeplay);
+document.getElementById('fpPlayAgain').addEventListener('click', startFreeplay);
+document.getElementById('fpSongSelect').addEventListener('click', () => showScreen('freeplay'));
+// Difficulty + type toggle rows use event delegation so their handlers
+// don't have to be re-attached on every re-render.
+document.getElementById('diffButtons').addEventListener('click', (e) => {
+  const btn = e.target.closest('.diff-btn'); if(!btn) return;
+  selectFreeplayDifficulty(parseInt(btn.dataset.diff, 10));
+});
+document.getElementById('typeToggles').addEventListener('click', (e) => {
+  const btn = e.target.closest('.type-toggle'); if(!btn || btn.disabled) return;
+  toggleFreeplayType(btn.dataset.type);
+});
 document.getElementById('helpBtn').addEventListener('click', () => document.getElementById('helpOverlay').classList.add('on'));
 document.getElementById('helpClose').addEventListener('click', () => document.getElementById('helpOverlay').classList.remove('on'));
 document.getElementById('helpOverlay').addEventListener('click', (e) => {
@@ -2447,6 +2799,8 @@ document.getElementById('chartStyle').value = state.chartStyle;
 updateBeatPickerUI();
 decorateFields();
 document.body.setAttribute('data-screen', 'setup');
+document.body.setAttribute('data-mode', 'alarm');
+renderFreeplayScreen();  // pre-render so the freeplay UI is ready on first open
 registerServiceWorker();
 tick();
 </script>
