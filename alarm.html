@@ -189,6 +189,12 @@ h1.title{
 .row select option{background:var(--bg-1);color:var(--white)}
 .toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:4px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--yellow)}
 .toggle input{width:18px;height:18px;accent-color:var(--yellow)}
+.notif-hint{
+  font-size:11px;color:rgba(0,217,255,.85);
+  text-align:center;letter-spacing:.02em;line-height:1.4;
+  margin-top:2px;padding:0 8px;
+  font-family:'Fredoka','Noto Sans JP',sans-serif;
+}
 .btn{
   cursor:pointer;font-family:'Orbitron',sans-serif;font-weight:900;
   letter-spacing:.18em;text-transform:uppercase;border:none;outline:none;color:var(--white);
@@ -754,6 +760,7 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
         </div>
       </div>
       <div class="toggle"><input type="checkbox" id="testMode" /><label for="testMode">テストモード (15秒起床 / 30秒エスカレート)</label></div>
+      <div class="notif-hint">通知を許可するとロック画面にアラームが表示されます</div>
       <button class="btn big" id="armBtn">アラームセット</button>
       <div class="setup-actions">
         <button class="btn ghost small" id="statsBtn">スタッツ</button>
@@ -1138,6 +1145,8 @@ function startAlarm(idx){
   initRhythmSession(level);
   showScreen('alarm');
   playAlarm(level);
+  // Fire the lockscreen/system notification for THIS alarm level.
+  showAlarmNotification(level, state.maxAlarms);
 }
 function stopCurrentAlarm(){
   stopAlarm();
@@ -1145,6 +1154,9 @@ function stopCurrentAlarm(){
   state.alarmRingingSince = null;
   document.body.removeAttribute('data-level');
   document.body.removeAttribute('data-in-alarm');
+  // Any pending notification for this level goes away when the level ends
+  // (cleared, escalated, or user disarmed).
+  dismissAlarmNotification();
 }
 function escalate(){
   const nextIdx = state.currentAlarmIndex + 1;
@@ -2109,6 +2121,9 @@ function armAlarm(){
   state.testMode    = document.getElementById('testMode').checked;
   saveSettings();
   ensureAudio(); requestWakeLock();
+  // Prompt for notification permission on this same user gesture.
+  // Denied / unsupported is fine — the app runs without notifications.
+  requestNotifPermission();
   state.scheduleMs = buildSchedule();
   state.currentAlarmIndex = -1;
   showScreen('armed');
@@ -2228,6 +2243,53 @@ function playHitSound(isHold, isBreak){
   o2.connect(g); o2.start(t); o2.stop(t + 0.15);
 }
 
+/* ============ NOTIFICATIONS (via service worker so lockscreen works) ==========
+   All calls are best-effort — permission denied or an unsupported browser
+   just means no notification, never a thrown error, so the app is
+   unaffected. Vibration only fires when we go through the SW registration
+   (plain `new Notification()` ignores the vibrate option on most browsers). */
+const NOTIF_TAG = 'maimai-alarm';
+let swRegistration = null;
+
+async function registerServiceWorker(){
+  if(!('serviceWorker' in navigator)) return;
+  try{ swRegistration = await navigator.serviceWorker.register('sw.js'); }
+  catch(e){ /* ignore — notifications will fall back to plain Notification */ }
+}
+async function requestNotifPermission(){
+  if(!('Notification' in window)) return 'unsupported';
+  if(Notification.permission === 'granted' || Notification.permission === 'denied') return Notification.permission;
+  try{ return await Notification.requestPermission(); }catch(e){ return 'denied'; }
+}
+async function showAlarmNotification(level, max){
+  if(!('Notification' in window) || Notification.permission !== 'granted') return;
+  const title = '早く起きろまい！';
+  const body  = `アラーム ${level}/${max} — タップして起きる`;
+  const options = {
+    body, icon:'mascot.png', badge:'mascot.png',
+    tag: NOTIF_TAG,
+    renotify: true,
+    requireInteraction: true,
+    vibrate: [200, 100, 200, 100, 400],
+    silent: false,
+  };
+  try{
+    // Prefer the SW so vibration + lockscreen behave correctly on mobile.
+    const reg = swRegistration || (('serviceWorker' in navigator) ? await navigator.serviceWorker.ready : null);
+    if(reg){ await reg.showNotification(title, options); }
+    else if(typeof Notification === 'function'){ new Notification(title, options); }
+  }catch(e){ /* swallow */ }
+}
+async function dismissAlarmNotification(){
+  try{
+    const reg = swRegistration || (('serviceWorker' in navigator) ? await navigator.serviceWorker.ready : null);
+    if(reg){
+      const notifs = await reg.getNotifications({ tag: NOTIF_TAG });
+      for(const n of notifs) n.close();
+    }
+  }catch(e){}
+}
+
 /* ============ WAKE LOCK ============ */
 let wakeLock = null;
 async function requestWakeLock(){
@@ -2315,6 +2377,7 @@ document.getElementById('chartStyle').value = state.chartStyle;
 updateBeatPickerUI();
 decorateFields();
 document.body.setAttribute('data-screen', 'setup');
+registerServiceWorker();
 tick();
 </script>
 </body>
