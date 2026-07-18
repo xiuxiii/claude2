@@ -55,7 +55,13 @@ body::after{content:"";position:fixed;inset:0;background:linear-gradient(transpa
   display:flex;justify-content:space-between;align-items:center;
   z-index:5;font-family:'Orbitron',sans-serif;font-weight:700;
   letter-spacing:.08em;font-size:14px;text-shadow:0 0 8px rgba(0,217,255,.6);
+  /* HUD is decorative — do not intercept clicks on screen content that
+     lands under it. Interactive HUD children re-enable pointer events. */
+  pointer-events:none;
 }
+.hud-top > *,.hud-bottom > *{pointer-events:auto}
+.hud-top,.hud-bottom{pointer-events:none}
+.help-btn{pointer-events:auto}
 .hud-top{top:0}
 .hud-bottom{bottom:0;opacity:.75;font-size:12px}
 .brand{color:var(--pink);text-shadow:0 0 12px var(--pink)}
@@ -897,6 +903,218 @@ body[data-screen="setup"] .freeplay-corner{display:block}
   transition:opacity .18s ease;
 }
 
+/* ============ FOCUS TIMER — SETUP ============ */
+.timer-corner{
+  position:fixed;bottom:44px;left:14px;z-index:30;
+  padding:8px 14px;border-radius:999px;
+  background:linear-gradient(180deg,#a24bff,#5a1e9e);
+  color:#fff;font-family:'Orbitron',sans-serif;
+  font-weight:900;font-size:12px;letter-spacing:.12em;
+  border:2px solid rgba(255,255,255,.5);
+  box-shadow:0 0 16px rgba(162,75,255,.6);
+  cursor:pointer;touch-action:manipulation;display:none;
+}
+.timer-corner:active{transform:scale(.94)}
+body[data-screen="setup"] .timer-corner{display:block}
+
+.timer-length{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tl-btn{
+  padding:10px 4px;border-radius:10px;
+  border:2px solid rgba(0,217,255,.4);
+  background:rgba(255,255,255,.03);color:rgba(255,255,255,.75);
+  font-family:'Orbitron',sans-serif;font-weight:900;font-size:11px;
+  letter-spacing:.05em;cursor:pointer;touch-action:manipulation;
+}
+.tl-btn.selected{
+  background:rgba(0,217,255,.2);color:var(--white);
+  border-color:var(--cyan);
+  box-shadow:0 0 12px rgba(0,217,255,.55);
+  text-shadow:0 0 8px var(--cyan);
+}
+.timer-custom{
+  display:flex;justify-content:space-between;align-items:center;
+  background:rgba(255,255,255,.05);border:1px solid rgba(0,217,255,.35);
+  border-radius:14px;padding:8px 12px;box-shadow:inset 0 0 12px rgba(0,217,255,.1);
+}
+.timer-custom label{font-size:12px;letter-spacing:.1em;color:var(--cyan)}
+.timer-custom input{
+  background:transparent;color:var(--white);
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:16px;
+  border:none;outline:none;text-align:right;min-width:90px;
+}
+
+/* ============ FOCUS TIMER — COUNTDOWN ============ */
+#timerCountdownScreen{
+  background:radial-gradient(1200px 800px at 50% 50%,#140a34 0%,var(--bg-0) 65%,#05030f 100%);
+  flex-direction:column;
+  z-index:10;   /* above the fixed .hud-top / .hud-bottom bars */
+}
+/* Hide the HUD chrome during the timer's fullscreen mascot experience. */
+body[data-screen="timerCountdown"] .hud-top,
+body[data-screen="timerCountdown"] .hud-bottom,
+body[data-screen="timerCountdown"] .help-btn,
+body[data-screen="timerCountdown"] .freeplay-corner,
+body[data-screen="timerCountdown"] .timer-corner{display:none}
+.tc-flash{
+  position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,42,42,.35) 0%,transparent 65%);
+  opacity:0;transition:opacity .5s ease;
+  animation:tcRedPulse 1.6s ease-in-out infinite paused;
+}
+body[data-timer-phase="last10"] .tc-flash{opacity:1;animation-play-state:running}
+@keyframes tcRedPulse{0%,100%{opacity:.4}50%{opacity:.9}}
+.tc-mascot{
+  position:absolute;left:50%;top:50%;
+  transform:translate(-50%,-50%);
+  height:65vh;width:auto;max-width:80vw;
+  filter:drop-shadow(0 0 30px rgba(0,217,255,.4));
+  animation:tcBreathe 3.4s ease-in-out infinite;
+  will-change:transform,filter;
+  transition:filter .4s;
+  z-index:2;
+}
+@keyframes tcBreathe{
+  0%,100%{transform:translate(-50%,-50%) scale(1)}
+  50%    {transform:translate(-50%,-50%) scale(1.03)}
+}
+body[data-timer-phase="last10"] .tc-mascot{
+  filter:drop-shadow(0 0 40px rgba(255,42,42,.9)) hue-rotate(-30deg) saturate(1.4);
+}
+/* Idle animations — assigned by JS via body[data-idle="run|spin|bounce|yawn"]. */
+body[data-idle="run"] .tc-mascot   { animation: tcIdleRun 6s linear;    }
+body[data-idle="spin"] .tc-mascot  { animation: tcIdleSpin 5s ease-out; }
+body[data-idle="bounce"] .tc-mascot{ animation: tcIdleBounce 7s linear; }
+body[data-idle="yawn"] .tc-mascot  { animation: tcIdleYawn 5s ease-in-out; }
+@keyframes tcIdleRun{
+  0%   {transform:translate(-120vw,-50%) scale(.22)}
+  50%  {transform:translate(-50%,-50%) scale(.22)}
+  85%  {transform:translate(120vw,-50%) scale(.22)}
+  100% {transform:translate(-50%,-50%) scale(1)}
+}
+@keyframes tcIdleSpin{
+  0%,88%{transform:translate(-32vw,32vh) scale(.22) rotate(0deg)}
+  40%   {transform:translate(-32vw,32vh) scale(.22) rotate(720deg)}
+  100%  {transform:translate(-50%,-50%) scale(1) rotate(0)}
+}
+@keyframes tcIdleBounce{
+  0%   {transform:translate(-32vw,-32vh) scale(.22)}
+  20%  {transform:translate( 32vw,-30vh) scale(.22)}
+  40%  {transform:translate( 30vw, 32vh) scale(.22)}
+  60%  {transform:translate(-30vw, 30vh) scale(.22)}
+  80%  {transform:translate(-32vw,-32vh) scale(.22)}
+  100% {transform:translate(-50%,-50%) scale(1)}
+}
+@keyframes tcIdleYawn{
+  0%,100%{transform:translate(-50%,-50%) scale(1,1)}
+  30%    {transform:translate(-50%,-50%) scale(1.2,.85)}
+  60%    {transform:translate(-50%,-52%) scale(.95,1.15)}
+}
+
+/* Mascot "jump at the camera" at the end of the timer */
+body[data-timer-phase="jump"] .tc-mascot{
+  animation:tcJump .55s cubic-bezier(.25,1.4,.5,1) forwards;
+}
+@keyframes tcJump{
+  0%  {transform:translate(-50%,-50%) scale(1)}
+  50% {transform:translate(-50%,-50%) scale(1.6)}
+  100%{transform:translate(-50%,-50%) scale(4);filter:drop-shadow(0 0 60px var(--pink))}
+}
+
+.tc-time{
+  position:relative;z-index:4;
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(48px,14vmin,110px);
+  letter-spacing:.06em;color:var(--white);
+  text-shadow:0 0 20px var(--cyan),0 0 50px rgba(0,217,255,.5);
+  animation:tcTimePulse 2s ease-in-out infinite;
+  align-self:flex-end;margin-bottom:8vh;
+  background:rgba(10,6,32,.45);padding:6px 22px;border-radius:14px;
+  border:1px solid rgba(0,217,255,.35);
+}
+@keyframes tcTimePulse{0%,100%{opacity:1}50%{opacity:.9}}
+body[data-timer-phase="last60"] .tc-time{animation-duration:.7s}
+body[data-timer-phase="last10"] .tc-time{
+  color:#ffdada;
+  text-shadow:0 0 20px var(--danger),0 0 40px rgba(255,42,42,.7);
+  animation-duration:.35s;
+}
+.tc-pause{
+  position:fixed;top:14px;right:14px;z-index:20;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(10,6,32,.6);
+  border:1px solid rgba(0,217,255,.5);
+  color:var(--white);font-size:18px;line-height:1;
+  cursor:pointer;touch-action:manipulation;
+}
+.tc-paused-overlay{
+  position:fixed;inset:0;z-index:25;
+  background:rgba(0,0,0,.75);
+  display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:16px;
+}
+.tc-paused-overlay.on{display:flex}
+.tc-paused-text{
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:clamp(28px,6vmin,48px);
+  color:var(--white);letter-spacing:.2em;
+  text-shadow:0 0 20px var(--pink);
+}
+
+/* ============ FREE PLAY — ENDLESS TOGGLE + STOP ============ */
+.fp-endless-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 12px;border:1px solid rgba(162,75,255,.4);border-radius:12px;
+  background:rgba(162,75,255,.08);
+  box-shadow:inset 0 0 12px rgba(162,75,255,.1);
+}
+.fp-endless-lbl{
+  font-family:'Fredoka','Noto Sans JP',sans-serif;
+  font-weight:700;font-size:13px;color:#c58bff;letter-spacing:.05em;
+  text-shadow:0 0 6px rgba(162,75,255,.6);
+}
+.fp-endless-tog{position:relative;display:inline-block;width:52px;height:28px;cursor:pointer}
+.fp-endless-tog input{opacity:0;width:0;height:0}
+.fp-endless-slot{
+  position:absolute;inset:0;border-radius:14px;
+  background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);
+  transition:background .2s,border-color .2s;
+}
+.fp-endless-knob{
+  position:absolute;top:2px;left:2px;width:22px;height:22px;
+  border-radius:50%;background:var(--white);
+  box-shadow:0 0 8px rgba(255,255,255,.4);
+  transition:transform .2s;
+}
+.fp-endless-tog input:checked ~ .fp-endless-slot{
+  background:rgba(162,75,255,.4);border-color:#a24bff;
+  box-shadow:0 0 10px rgba(162,75,255,.6);
+}
+.fp-endless-tog input:checked ~ .fp-endless-slot .fp-endless-knob,
+.fp-endless-tog input:checked + .fp-endless-slot .fp-endless-knob{ transform:translateX(24px); }
+
+.endless-stop{
+  position:absolute;top:calc(4% + 62px);right:6%;z-index:25;
+  padding:6px 12px;border-radius:999px;
+  background:linear-gradient(180deg,#ff4a4a,#a30000);
+  border:2px solid var(--white);color:var(--white);
+  font-family:'Orbitron',sans-serif;font-weight:900;
+  font-size:11px;letter-spacing:.12em;
+  box-shadow:0 0 14px rgba(255,74,74,.6);
+  cursor:pointer;touch-action:manipulation;display:none;
+}
+body[data-endless="1"] .endless-stop{display:block}
+
+body[data-mode="timer"] #successReset,
+body[data-mode="timer"] .fp-result-btns#fpResultBtns{display:none}
+.fp-result-btns#timerResultBtns{display:none}
+body[data-mode="timer"] .fp-result-btns#timerResultBtns{display:flex;flex-direction:column;gap:6px}
+.timer-result-note{
+  font-family:'Orbitron',sans-serif;font-weight:700;font-size:12px;
+  letter-spacing:.1em;color:var(--cyan);
+  text-shadow:0 0 8px rgba(0,217,255,.5);
+  text-align:center;
+}
+
 /* Freeplay-specific result buttons on success screen */
 .fp-result-btns{display:none;gap:8px;justify-content:center;flex-wrap:wrap}
 body[data-mode="freeplay"] .fp-result-btns{display:flex}
@@ -1029,6 +1247,28 @@ body[data-mode="freeplay"] #escalateIn{display:none}
       <div class="alarm-count" id="alarmCount">アラーム 1 / 4</div>
       <div class="escalate-in" id="escalateIn">エスカレートまで --:--</div>
     </div>
+    <!-- STOP button — only shown in freeplay endless mode -->
+    <button class="endless-stop" id="endlessStop" aria-label="STOP">STOP</button>
+  </div>
+</section>
+
+<!-- ENDLESS RESULTS — shown after tapping STOP in endless mode -->
+<section id="endlessResultScreen" class="screen">
+  <div class="field results">
+    <img class="mascot success" src="mascot.png" alt="" onerror="this.style.display='none'">
+    <div class="subtitle">エンドレス完了</div>
+    <div class="grade" id="endlessGrade">A</div>
+    <div class="combo">TOTAL RUN</div>
+    <div class="stats">
+      <div>スコア <span id="endlessScore">0</span></div>
+      <div>ノーツ <span id="endlessNotes">0</span></div>
+      <div>最高コンボ <span id="endlessCombo">0</span></div>
+      <div>正確度 <span id="endlessAcc">0%</span></div>
+      <div>ループ <span id="endlessLoops">0</span></div>
+      <div>時間 <span id="endlessDuration">0:00</span></div>
+    </div>
+    <div class="gap"></div>
+    <button class="btn cyan small" id="endlessBack">曲選択へ</button>
   </div>
 </section>
 
@@ -1060,6 +1300,11 @@ body[data-mode="freeplay"] #escalateIn{display:none}
     <div class="fp-result-btns" id="fpResultBtns">
       <button class="btn small" id="fpPlayAgain">もう一度</button>
       <button class="btn ghost small" id="fpSongSelect">曲選択へ</button>
+    </div>
+    <div class="fp-result-btns" id="timerResultBtns">
+      <div class="timer-result-note" id="timerResultNote">集中時間: 25分 完了</div>
+      <button class="btn small" id="timerPlayAgain">もう一回</button>
+      <button class="btn ghost small" id="timerBackToSetup">セットアップに戻る</button>
     </div>
   </div>
 </section>
@@ -1094,6 +1339,13 @@ body[data-mode="freeplay"] #escalateIn{display:none}
     <div class="fp-section-lbl">曲選択 · SONG SELECT</div>
     <div class="song-list" id="songList"></div>
     <div class="fp-section-lbl">難易度</div>
+    <div class="fp-endless-row">
+      <label class="fp-endless-lbl">エンドレスモード</label>
+      <label class="fp-endless-tog">
+        <input type="checkbox" id="fpEndless" />
+        <span class="fp-endless-slot"><span class="fp-endless-knob"></span></span>
+      </label>
+    </div>
     <div class="diff-buttons" id="diffButtons">
       <button class="diff-btn basic" data-diff="1">BASIC</button>
       <button class="diff-btn adv"   data-diff="2">ADVANCED</button>
@@ -1114,8 +1366,67 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <!-- Mode badge — small "フリープレイ" chip during freeplay gameplay -->
 <div class="mode-badge" id="modeBadge">フリープレイ</div>
 
-<!-- Free-play corner button — only visible on the setup screen -->
+<!-- Setup-only floating mode entries. Kept out of the form so the fixed
+     .hud-bottom can't overlap them; visibility gated by body[data-screen]. -->
 <button class="freeplay-corner" id="freeplayBtn" aria-label="フリープレイへ">フリープレイ ▶</button>
+<button class="timer-corner"    id="timerBtn"    aria-label="タイマーモードへ">◐ タイマー</button>
+
+<!-- FOCUS TIMER — SETUP -->
+<section id="timerScreen" class="screen">
+  <div class="fp-card">
+    <div class="fp-header">
+      <button class="btn ghost small" id="timerBack">戻る</button>
+      <div class="fp-title">
+        <div class="fp-name">タイマーモード</div>
+        <div class="subtitle" style="margin:0">FOCUS TIMER</div>
+      </div>
+      <div class="fp-spacer"></div>
+    </div>
+    <div class="fp-section-lbl">タイマー長</div>
+    <div class="timer-length" id="timerLength">
+      <button class="tl-btn" data-min="15">15分</button>
+      <button class="tl-btn" data-min="20">20分</button>
+      <button class="tl-btn" data-min="30">30分</button>
+      <button class="tl-btn" data-min="45">45分</button>
+      <button class="tl-btn" data-min="60">60分</button>
+    </div>
+    <div class="timer-custom">
+      <label for="timerCustom">カスタム（分）</label>
+      <input type="number" id="timerCustom" min="1" max="180" step="1" value="25" />
+    </div>
+    <div class="fp-section-lbl">曲選択 · SONG SELECT</div>
+    <div class="song-list" id="timerSongList"></div>
+    <div class="fp-section-lbl">難易度</div>
+    <div class="diff-buttons" id="timerDiffButtons">
+      <button class="diff-btn basic" data-diff="1">BASIC</button>
+      <button class="diff-btn adv"   data-diff="2">ADVANCED</button>
+      <button class="diff-btn exp"   data-diff="3">EXPERT</button>
+      <button class="diff-btn mst"   data-diff="4">MASTER</button>
+    </div>
+    <div class="fp-section-lbl">ノーツ設定</div>
+    <div class="type-toggles" id="timerTypeToggles">
+      <button class="type-toggle on" data-type="tap">タップ</button>
+      <button class="type-toggle on" data-type="hold">ホールド</button>
+      <button class="type-toggle on" data-type="slide">スライド</button>
+      <button class="type-toggle on" data-type="break">ブレイク</button>
+    </div>
+    <div class="toggle" style="margin-top:2px"><input type="checkbox" id="timerTestMode" /><label for="timerTestMode">テストモード</label></div>
+    <button class="btn big" id="timerStart">START FOCUS</button>
+  </div>
+</section>
+
+<!-- FOCUS TIMER — COUNTDOWN (fullscreen mascot + big clock) -->
+<section id="timerCountdownScreen" class="screen">
+  <div class="tc-flash"></div>
+  <img class="tc-mascot" id="tcMascot" src="mascot.png" alt="" onerror="this.style.display='none'">
+  <div class="tc-time" id="tcTime">--:--</div>
+  <button class="tc-pause" id="tcPause" aria-label="一時停止">⏸</button>
+  <div class="tc-paused-overlay" id="tcPausedOverlay">
+    <div class="tc-paused-text">一時停止中</div>
+    <button class="btn small" id="tcResume">再開</button>
+    <button class="btn ghost small" id="tcAbort">中止</button>
+  </div>
+</section>
 
 <!-- HELP / TUTORIAL OVERLAY -->
 <div class="help-overlay" id="helpOverlay">
@@ -1309,17 +1620,35 @@ const STYLE_KEYS   = ['BASIC','STREAM','SYNC','CHAOS'];
 /* ============ STATE ============ */
 const state = {
   screen:'setup',
-  mode:'alarm',       // 'alarm' | 'freeplay' — drives whether wake-window /
-                      // escalation / notifications apply during gameplay.
+  mode:'alarm',       // 'alarm' | 'freeplay' | 'timer' — drives whether
+                      // wake-window / escalation / notifications apply
+                      // during gameplay + which results-screen buttons show.
   firstTime:'08:00', intervalMin:30, maxAlarms:4, testMode:false,
   noteSpeed:1.5, chartStyle:'BASIC', beatPreset:'morning',
   freeplay:{
     beat:'morning',
     difficulty:1,     // 1..4 → BASIC / ADVANCED / EXPERT / MASTER
     types:{tap:true, hold:true, slide:true, break:true},
+    endless:false,    // toggle on song-select screen; regenerates chart on
+                      // completion and keeps score running until STOP tap
+  },
+  timer:{
+    duration:25,      // minutes
+    difficulty:1,
+    beat:'morning',
+    types:{tap:true, hold:true, slide:true, break:true},
   },
   scheduleMs:[], currentAlarmIndex:-1, alarmRingingSince:null,
 };
+
+// Runtime for the focus-timer countdown screen — kept off `state` so it
+// doesn't get persisted.
+const timerRun = {
+  remainingMs:0, running:false, paused:false, startedAt:0, pausedAt:0,
+  idleTimer:null, endedDuration:0,
+};
+// Endless-mode runtime — number of chart loops completed so far.
+const endlessRun = { loops:0, startedAt:0 };
 
 // Rhythm session — reset per alarm fire.
 const rhythm = {
@@ -1353,6 +1682,7 @@ function saveSettings(){
       testMode:state.testMode, noteSpeed:state.noteSpeed, chartStyle:state.chartStyle,
       beatPreset:state.beatPreset,
       freeplay:state.freeplay,
+      timer:state.timer,
     }));
   }catch(e){}
 }
@@ -1370,12 +1700,24 @@ function loadSettings(){
     if(s.freeplay && typeof s.freeplay === 'object'){
       if(BEAT_PRESETS[s.freeplay.beat])                       state.freeplay.beat = s.freeplay.beat;
       if(s.freeplay.difficulty >= 1 && s.freeplay.difficulty <= 4) state.freeplay.difficulty = s.freeplay.difficulty;
+      if(typeof s.freeplay.endless === 'boolean') state.freeplay.endless = s.freeplay.endless;
       if(s.freeplay.types && typeof s.freeplay.types === 'object'){
         for(const k of ['tap','hold','slide','break']){
           if(typeof s.freeplay.types[k] === 'boolean') state.freeplay.types[k] = s.freeplay.types[k];
         }
         // enforce "at least one on" invariant on load
         if(!Object.values(state.freeplay.types).some(Boolean)) state.freeplay.types.tap = true;
+      }
+    }
+    if(s.timer && typeof s.timer === 'object'){
+      if(BEAT_PRESETS[s.timer.beat])                             state.timer.beat = s.timer.beat;
+      if(s.timer.difficulty >= 1 && s.timer.difficulty <= 4)     state.timer.difficulty = s.timer.difficulty;
+      if(typeof s.timer.duration === 'number' && s.timer.duration > 0) state.timer.duration = s.timer.duration;
+      if(s.timer.types && typeof s.timer.types === 'object'){
+        for(const k of ['tap','hold','slide','break']){
+          if(typeof s.timer.types[k] === 'boolean') state.timer.types[k] = s.timer.types[k];
+        }
+        if(!Object.values(state.timer.types).some(Boolean)) state.timer.types.tap = true;
       }
     }
   }catch(e){}
@@ -1442,7 +1784,9 @@ function tick(){
       if(now.getTime() >= state.scheduleMs[i] && i > state.currentAlarmIndex){ startAlarm(i); break; }
     }
   }
-  if(state.screen === 'alarm' && state.mode !== 'freeplay'){
+  // Wake-window countdown / escalate() branch is ONLY for real alarm mode.
+  // Freeplay and timer both drive the alarm screen but must never escalate.
+  if(state.screen === 'alarm' && state.mode === 'alarm'){
     const startedAt = state.alarmRingingSince;
     const escalateAt = startedAt + wakeWindowMs();
     const remain = escalateAt - now.getTime();
@@ -1524,6 +1868,10 @@ function finishAlarm(){
 
   document.getElementById('successGrade').textContent = computeRank(accPct, dxAcc, level);
   document.getElementById('successCombo').textContent = misses === 0 ? 'フルコンボ' : 'クリア';
+  // Timer-mode result note — shows how long a focus session the player just cleared.
+  if(state.mode === 'timer'){
+    document.getElementById('timerResultNote').textContent = `集中時間: ${timerRun.endedDuration}分 完了`;
+  }
   document.getElementById('finalScore').textContent = finalScore.toLocaleString();
   document.getElementById('finalDx').textContent = `${dx} / ${dxMax}`;
   document.getElementById('finalDxPct').textContent = `(${dxAcc.toFixed(1)}%)`;
@@ -2063,8 +2411,16 @@ function rhythmLoop(){
     }
     rhythm.live = rhythm.live.filter(l => !l.resolved);
     if(rhythm.resolvedCount >= rhythm.totalNotes){
-      rhythm.animFrame = null;
-      setTimeout(finishAlarm, 400); return;
+      // In freeplay endless mode, the chart never really ends — instead
+      // we splice a fresh chart on the end and keep spawning. Player
+      // ends the session by tapping the STOP button, which calls
+      // stopEndless() directly.
+      if(state.mode === 'freeplay' && state.freeplay.endless){
+        continueEndlessChart();
+      } else {
+        rhythm.animFrame = null;
+        setTimeout(finishAlarm, 400); return;
+      }
     }
   }
   rhythm.animFrame = requestAnimationFrame(rhythmLoop);
@@ -2380,8 +2736,9 @@ function resolveMiss(live, label){
   spawnJudgment(live, 'miss', 0, noteType, label);
   cleanupNoteElements(live);
   updateScoreDisplay();
-  // Free-play never escalates and never fails — miss counter just tallies.
-  if(state.mode !== 'freeplay' && rhythm.misses > MAX_MISSES){ setTimeout(escalate, 400); }
+  // Only the real alarm loop escalates on too many misses — freeplay and
+  // timer never fail out.
+  if(state.mode === 'alarm' && rhythm.misses > MAX_MISSES){ setTimeout(escalate, 400); }
 }
 function cleanupNoteElements(live){
   if(live.elem) live.elem.remove();
@@ -2459,7 +2816,9 @@ function updateScoreDisplay(){
   document.getElementById('spMiss').textContent =
     state.mode === 'freeplay' ? `${rhythm.misses}` : `${rhythm.misses} / ${MAX_MISSES}`;
   document.getElementById('spStyle').textContent = STYLE_LABELS[state.chartStyle] || state.chartStyle;
-  const beatKey = state.mode === 'freeplay' ? state.freeplay.beat : state.beatPreset;
+  const beatKey = state.mode === 'timer'    ? state.timer.beat
+                : state.mode === 'freeplay' ? state.freeplay.beat
+                :                             state.beatPreset;
   const preset = BEAT_PRESETS[beatKey];
   document.getElementById('spBeat').textContent = preset ? preset.name : '';
 }
@@ -2504,8 +2863,11 @@ function startRhythmSession(){
   if(rhythm.live[0]) rhythm.live[0].arrivalAudioT = rhythm.startAudioT;
   // Kick off the selected preset as the gameplay backing music
   // (kick + hi-hat + melody + optional pad, looped every 4 bars).
-  // Free-play uses its own beat selection, alarm mode uses the global one.
-  const beatKey = state.mode === 'freeplay' ? state.freeplay.beat : state.beatPreset;
+  // Free-play uses its own beat, timer uses its own beat, alarm mode uses
+  // the setup screen's beat.
+  const beatKey = state.mode === 'timer'    ? state.timer.beat
+                : state.mode === 'freeplay' ? state.freeplay.beat
+                :                             state.beatPreset;
   trackStart(beatKey, 'gameplay');
 }
 function stopRhythmSession(){
@@ -2526,20 +2888,21 @@ function showScreen(name){
   // as well as freeplay-mode CSS overrides.
   document.body.setAttribute('data-screen', name);
   for(const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === name + 'Screen');
-  const statusMap = {setup:'セットアップ', armed:'セット済み', alarm:'！！アラーム！！', success:'クリア', failed:'失敗', stats:'プロファイル', freeplay:'フリープレイ'};
+  const statusMap = {setup:'セットアップ', armed:'セット済み', alarm:'！！アラーム！！', success:'クリア', failed:'失敗', stats:'プロファイル', freeplay:'フリープレイ', timer:'タイマー', timerCountdown:'集中中', endlessResult:'エンドレス完了'};
   document.getElementById('hudStatus').textContent = statusMap[name] || name;
   document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
-  // Preview loops are hosted on both setup and freeplay screens; kill the
-  // preview whenever we move to any OTHER screen.
-  if(name !== 'setup' && name !== 'freeplay' && currentTrack.mode === 'preview') trackStop();
-  // Returning to setup, freeplay, or stats always drops back to alarm mode
-  // (freeplay only lives from its start-of-play through its results screen).
-  if(name === 'setup' || name === 'freeplay' || name === 'stats'){
+  // Preview loops are hosted on setup, freeplay, and timer setup screens;
+  // kill the preview whenever we move to any OTHER screen.
+  if(name !== 'setup' && name !== 'freeplay' && name !== 'timer' && currentTrack.mode === 'preview') trackStop();
+  // Returning to any setup / picker / stats screen drops back to alarm mode.
+  if(name === 'setup' || name === 'freeplay' || name === 'stats' || name === 'timer'){
     state.mode = 'alarm';
     document.body.setAttribute('data-mode', 'alarm');
+    document.body.removeAttribute('data-endless');
   }
   if(name === 'stats')    renderStatsScreen();
   if(name === 'freeplay') renderFreeplayScreen();
+  if(name === 'timer')    renderTimerScreen();
 }
 function armAlarm(){
   state.firstTime   = document.getElementById('firstTime').value || '08:00';
@@ -2572,6 +2935,7 @@ function renderFreeplayScreen(){
   renderSongList();
   renderDiffButtons();
   renderTypeToggles();
+  document.getElementById('fpEndless').checked = !!state.freeplay.endless;
 }
 function renderSongList(){
   const list = document.getElementById('songList');
@@ -2670,6 +3034,9 @@ function applyTypeMask(chart, mask){
 function startFreeplay(){
   state.mode = 'freeplay';
   document.body.setAttribute('data-mode', 'freeplay');
+  document.body.setAttribute('data-endless', state.freeplay.endless ? '1' : '0');
+  endlessRun.loops = 0;
+  endlessRun.startedAt = Date.now();
   const level = state.freeplay.difficulty;
   const preset = BEAT_PRESETS[state.freeplay.beat];
   document.body.setAttribute('data-level', String(level));
@@ -2679,6 +3046,203 @@ function startFreeplay(){
   initRhythmSession(level, state.freeplay.types);
   showScreen('alarm');
   // No siren, no lockscreen notification — this is voluntary play, not a wake.
+}
+
+/* ============ FOCUS TIMER MODE ============ */
+function renderTimerScreen(){
+  renderTimerSongList();
+  renderTimerDiffButtons();
+  renderTimerTypeToggles();
+  renderTimerLengthButtons();
+  document.getElementById('timerCustom').value = state.timer.duration;
+  document.getElementById('timerTestMode').checked = state.testMode;
+}
+function renderTimerSongList(){
+  const list = document.getElementById('timerSongList');
+  list.innerHTML = '';
+  for(const key of BEAT_KEYS){
+    const p = BEAT_PRESETS[key];
+    const card = document.createElement('div');
+    card.className = 'song-card' + (state.timer.beat === key ? ' selected' : '');
+    card.dataset.key = key;
+    card.innerHTML =
+      `<div class="sc-name-row">` +
+        `<span class="sc-name">${p.name}</span>` +
+        `<span class="sc-en">${p.en || ''}</span>` +
+      `</div>` +
+      `<div class="sc-desc">${p.desc || ''}</div>`;
+    card.addEventListener('click', () => {
+      state.timer.beat = key;
+      saveSettings();
+      renderTimerSongList();
+      trackStart(key, 'preview');
+    });
+    list.appendChild(card);
+  }
+}
+function renderTimerDiffButtons(){
+  for(let d = 1; d <= 4; d++){
+    const btn = document.querySelector(`#timerDiffButtons .diff-btn[data-diff="${d}"]`);
+    if(btn) btn.classList.toggle('selected', state.timer.difficulty === d);
+  }
+}
+function renderTimerTypeToggles(){
+  const enabled = Object.values(state.timer.types).filter(Boolean).length;
+  for(const t of ['tap','hold','slide','break']){
+    const btn = document.querySelector(`#timerTypeToggles .type-toggle[data-type="${t}"]`);
+    if(!btn) continue;
+    const on = !!state.timer.types[t];
+    btn.classList.toggle('on', on);
+    btn.disabled = (enabled === 1 && on);
+  }
+}
+function renderTimerLengthButtons(){
+  for(const btn of document.querySelectorAll('#timerLength .tl-btn')){
+    btn.classList.toggle('selected', parseInt(btn.dataset.min, 10) === state.timer.duration);
+  }
+}
+
+// Kick off the timer countdown screen — a fullscreen mascot + big clock.
+// When the clock hits 0, the mascot "jumps" then we transition directly to
+// gameplay with the timer's saved settings.
+function startTimer(){
+  const custom = parseInt(document.getElementById('timerCustom').value, 10);
+  if(custom > 0) state.timer.duration = Math.min(180, custom);
+  state.testMode = document.getElementById('timerTestMode').checked;
+  saveSettings();
+  state.mode = 'timer';
+  document.body.setAttribute('data-mode', 'timer');
+  const durationMs = (state.testMode ? 5 : state.timer.duration * 60) * 1000;
+  timerRun.remainingMs = durationMs;
+  timerRun.running = true;
+  timerRun.paused = false;
+  timerRun.startedAt = performance.now();
+  timerRun.endedDuration = state.timer.duration;
+  document.body.setAttribute('data-timer-phase', 'normal');
+  document.getElementById('tcPausedOverlay').classList.remove('on');
+  showScreen('timerCountdown');
+  updateTimerDisplay();
+  scheduleTimerIdle();
+}
+function updateTimerDisplay(){
+  const s = Math.max(0, Math.ceil(timerRun.remainingMs / 1000));
+  const mm = Math.floor(s / 60), ss = s % 60;
+  document.getElementById('tcTime').textContent = `${pad(mm)}:${pad(ss)}`;
+  // phase transitions for visual intensity
+  const phase = s <= 10 ? 'last10' : s <= 60 ? 'last60' : 'normal';
+  if(document.body.getAttribute('data-timer-phase') !== phase){
+    document.body.setAttribute('data-timer-phase', phase);
+  }
+}
+function tickTimer(){
+  if(!timerRun.running || timerRun.paused) return;
+  const now = performance.now();
+  const dt = now - timerRun.startedAt;
+  timerRun.startedAt = now;
+  timerRun.remainingMs -= dt;
+  updateTimerDisplay();
+  if(timerRun.remainingMs <= 0){
+    endTimer();
+  }
+}
+function pauseTimer(){
+  if(!timerRun.running || timerRun.paused) return;
+  timerRun.paused = true;
+  timerRun.pausedAt = performance.now();
+  document.getElementById('tcPausedOverlay').classList.add('on');
+}
+function resumeTimer(){
+  if(!timerRun.paused) return;
+  timerRun.paused = false;
+  timerRun.startedAt = performance.now();  // reset drift point
+  document.getElementById('tcPausedOverlay').classList.remove('on');
+}
+function abortTimer(){
+  timerRun.running = false;
+  if(timerRun.idleTimer){ clearTimeout(timerRun.idleTimer); timerRun.idleTimer = null; }
+  document.body.removeAttribute('data-timer-phase');
+  document.body.removeAttribute('data-idle');
+  state.mode = 'alarm';
+  document.body.setAttribute('data-mode', 'alarm');
+  showScreen('setup');
+}
+// Idle animations trigger randomly every 2-4 min for 5-8 s each.
+const IDLE_KINDS = ['run', 'spin', 'bounce', 'yawn'];
+function scheduleTimerIdle(){
+  if(timerRun.idleTimer) clearTimeout(timerRun.idleTimer);
+  // in test mode use short intervals so animations are actually visible
+  const gapMs = state.testMode
+    ? (600 + Math.random() * 600)
+    : (120000 + Math.random() * 120000);
+  timerRun.idleTimer = setTimeout(() => {
+    if(!timerRun.running || timerRun.paused){ scheduleTimerIdle(); return; }
+    const kind = IDLE_KINDS[Math.floor(Math.random() * IDLE_KINDS.length)];
+    document.body.setAttribute('data-idle', kind);
+    setTimeout(() => {
+      document.body.removeAttribute('data-idle');
+      scheduleTimerIdle();
+    }, 5000 + Math.random() * 3000);
+  }, gapMs);
+}
+function endTimer(){
+  timerRun.running = false;
+  if(timerRun.idleTimer){ clearTimeout(timerRun.idleTimer); timerRun.idleTimer = null; }
+  document.body.setAttribute('data-timer-phase', 'jump');
+  // brief "jump at the camera" animation before dropping into gameplay
+  setTimeout(() => {
+    document.body.removeAttribute('data-timer-phase');
+    document.body.removeAttribute('data-idle');
+    // Enter gameplay in timer mode using the timer's saved beat/style/types.
+    const level = state.timer.difficulty;
+    const preset = BEAT_PRESETS[state.timer.beat];
+    document.body.setAttribute('data-level', String(level));
+    document.body.setAttribute('data-in-alarm', '1');
+    document.getElementById('alarmCount').textContent = DIFF_LABELS[level] || 'BASIC';
+    document.getElementById('alarmLabel').textContent = preset ? preset.name : 'FOCUS';
+    // Route the backing track through the timer beat by temporarily using
+    // it as the freeplay beat (startRhythmSession picks that path when
+    // state.mode !== 'alarm').
+    state.freeplay.beat = state.timer.beat;
+    initRhythmSession(level, state.timer.types);
+    showScreen('alarm');
+  }, 700);
+}
+setInterval(() => {
+  if(state.screen === 'timerCountdown') tickTimer();
+}, 250);
+
+/* ============ ENDLESS MODE — chart continuation ============ */
+function continueEndlessChart(){
+  endlessRun.loops++;
+  const newChart = generateChart(state.freeplay.difficulty, state.chartStyle);
+  applyTypeMask(newChart, state.freeplay.types);
+  const nowBeat = (audioCtx.currentTime - rhythm.startAudioT) / rhythm.beatSec;
+  // Anchor the new chart 2 beats after "now" (or after the last resolved
+  // note's beat, whichever is later) so notes flow seamlessly.
+  const lastBeat = rhythm.chart.length ? rhythm.chart[rhythm.chart.length - 1].beat : 0;
+  const shift = Math.max(nowBeat + 2, lastBeat + 2) - (newChart[0].beat || 0);
+  for(const n of newChart) n.beat += shift;
+  // Append; the render loop's nextSpawnIdx keeps advancing into the new
+  // segment automatically.
+  rhythm.chart = rhythm.chart.concat(newChart);
+  rhythm.totalNotes = rhythm.chart.length;
+  updateScoreDisplay();
+}
+function stopEndless(){
+  const secs = Math.floor((Date.now() - endlessRun.startedAt) / 1000);
+  const total = rhythm.resolvedCount || 1;
+  const acc = total ? (rhythm.hits / total) * 100 : 0;
+  const rank = computeRank(acc, rhythm.dxMax ? (rhythm.dxScore / rhythm.dxMax) * 100 : 0, state.freeplay.difficulty);
+  stopCurrentAlarm();
+  document.getElementById('endlessGrade').textContent = rank;
+  document.getElementById('endlessScore').textContent = rhythm.score.toLocaleString();
+  document.getElementById('endlessNotes').textContent = rhythm.hits;
+  document.getElementById('endlessCombo').textContent = rhythm.maxCombo;
+  document.getElementById('endlessAcc').textContent = acc.toFixed(1) + '%';
+  document.getElementById('endlessLoops').textContent = endlessRun.loops;
+  document.getElementById('endlessDuration').textContent = `${Math.floor(secs/60)}:${pad(secs%60)}`;
+  document.body.setAttribute('data-endless', '0');
+  showScreen('endlessResult');
 }
 
 function renderStatsScreen(){
@@ -2888,6 +3452,57 @@ document.getElementById('typeToggles').addEventListener('click', (e) => {
   const btn = e.target.closest('.type-toggle'); if(!btn || btn.disabled) return;
   toggleFreeplayType(btn.dataset.type);
 });
+document.getElementById('fpEndless').addEventListener('change', (e) => {
+  state.freeplay.endless = e.target.checked; saveSettings();
+});
+
+// Timer mode
+document.getElementById('timerBtn').addEventListener('click', () => showScreen('timer'));
+document.getElementById('timerBack').addEventListener('click', () => showScreen('setup'));
+document.getElementById('timerStart').addEventListener('click', startTimer);
+document.getElementById('tcPause').addEventListener('click', pauseTimer);
+document.getElementById('tcResume').addEventListener('click', resumeTimer);
+document.getElementById('tcAbort').addEventListener('click', abortTimer);
+document.getElementById('timerPlayAgain').addEventListener('click', () => showScreen('timer'));
+document.getElementById('timerBackToSetup').addEventListener('click', () => showScreen('setup'));
+document.getElementById('timerLength').addEventListener('click', (e) => {
+  const btn = e.target.closest('.tl-btn'); if(!btn) return;
+  const m = parseInt(btn.dataset.min, 10);
+  state.timer.duration = m;
+  document.getElementById('timerCustom').value = m;
+  saveSettings(); renderTimerLengthButtons();
+});
+document.getElementById('timerCustom').addEventListener('change', (e) => {
+  const v = Math.max(1, Math.min(180, parseInt(e.target.value, 10) || 25));
+  state.timer.duration = v;
+  saveSettings(); renderTimerLengthButtons();
+});
+document.getElementById('timerTestMode').addEventListener('change', (e) => {
+  state.testMode = e.target.checked;
+  document.getElementById('testMode').checked = state.testMode;
+  saveSettings();
+  document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
+});
+document.getElementById('timerDiffButtons').addEventListener('click', (e) => {
+  const btn = e.target.closest('.diff-btn'); if(!btn) return;
+  state.timer.difficulty = parseInt(btn.dataset.diff, 10);
+  saveSettings(); renderTimerDiffButtons();
+});
+document.getElementById('timerTypeToggles').addEventListener('click', (e) => {
+  const btn = e.target.closest('.type-toggle'); if(!btn || btn.disabled) return;
+  const t = btn.dataset.type;
+  const cur = state.timer.types;
+  if(cur[t]){
+    const others = ['tap','hold','slide','break'].filter(x => x !== t && cur[x]);
+    if(!others.length) return;
+    cur[t] = false;
+  } else cur[t] = true;
+  saveSettings(); renderTimerTypeToggles();
+});
+
+// Endless mode
+document.getElementById('endlessStop').addEventListener('click', stopEndless);
+document.getElementById('endlessBack').addEventListener('click', () => showScreen('freeplay'));
 document.getElementById('helpBtn').addEventListener('click', () => document.getElementById('helpOverlay').classList.add('on'));
 document.getElementById('helpClose').addEventListener('click', () => document.getElementById('helpOverlay').classList.remove('on'));
 document.getElementById('helpOverlay').addEventListener('click', (e) => {
@@ -2940,6 +3555,7 @@ decorateFields();
 document.body.setAttribute('data-screen', 'setup');
 document.body.setAttribute('data-mode', 'alarm');
 renderFreeplayScreen();  // pre-render so the freeplay UI is ready on first open
+renderTimerScreen();     // same for the timer setup screen
 registerServiceWorker();
 tick();
 </script>
