@@ -1115,6 +1115,21 @@ body[data-mode="timer"] .fp-result-btns#timerResultBtns{display:flex;flex-direct
   text-align:center;
 }
 
+/* ============ LANGUAGE TOGGLE ============ */
+.lang-toggle{
+  position:fixed;bottom:8px;left:10px;z-index:200;
+  padding:4px 10px 4px 8px;border-radius:999px;
+  background:rgba(10,6,32,.75);
+  border:1px solid rgba(0,217,255,.55);
+  color:var(--white);
+  font-family:'Orbitron','Noto Sans JP',sans-serif;
+  font-weight:900;font-size:11px;letter-spacing:.08em;
+  text-shadow:0 0 6px rgba(0,217,255,.55);
+  box-shadow:0 0 10px rgba(0,217,255,.35);
+  cursor:pointer;touch-action:manipulation;
+}
+.lang-toggle:active{transform:scale(.94)}
+
 /* Freeplay-specific result buttons on success screen */
 .fp-result-btns{display:none;gap:8px;justify-content:center;flex-wrap:wrap}
 body[data-mode="freeplay"] .fp-result-btns{display:flex}
@@ -1139,12 +1154,12 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <div class="hud-top">
   <div class="hud-left">
     <button class="help-btn" id="helpBtn" aria-label="ヘルプ">？</button>
-    <div class="brand">◆ maimai アラーム</div>
+    <div class="brand" data-i18n="brand">◆ maimai アラーム</div>
   </div>
-  <div class="now">現在時刻: <span id="hudClock">--:--:--</span></div>
+  <div class="now"><span data-i18n="now">現在時刻:</span> <span id="hudClock">--:--:--</span></div>
 </div>
 <div class="hud-bottom">
-  <div>ステータス: <span id="hudStatus">セットアップ</span></div>
+  <div><span data-i18n="status">ステータス:</span> <span id="hudStatus">セットアップ</span></div>
   <div id="hudMode"></div>
 </div>
 
@@ -1152,23 +1167,23 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <section id="setupScreen" class="screen active">
   <div class="field">
     <img class="mascot setup" src="mascot.png" alt="" onerror="this.style.display='none'">
-    <h1 class="title">起きろ！</h1>
-    <div class="subtitle">エスカレートアラーム</div>
+    <h1 class="title" data-i18n="title_wake">起きろ！</h1>
+    <div class="subtitle" data-i18n="subtitle_escalating">エスカレートアラーム</div>
     <div class="form">
-      <div class="row"><label for="firstTime">最初のアラーム</label><input type="time" id="firstTime" value="08:00" /></div>
-      <div class="row"><label for="interval">エスカレート間隔</label>
+      <div class="row"><label for="firstTime" data-i18n="first_alarm">最初のアラーム</label><input type="time" id="firstTime" value="08:00" /></div>
+      <div class="row"><label for="interval" data-i18n="escalate_every">エスカレート間隔</label>
         <select id="interval">
-          <option value="15">15 分</option><option value="30" selected>30 分</option>
-          <option value="45">45 分</option><option value="60">60 分</option>
+          <option value="15" data-i18n="min_15">15 分</option><option value="30" selected data-i18n="min_30">30 分</option>
+          <option value="45" data-i18n="min_45">45 分</option><option value="60" data-i18n="min_60">60 分</option>
         </select>
       </div>
-      <div class="row"><label for="maxAlarms">最大アラーム数</label>
+      <div class="row"><label for="maxAlarms" data-i18n="max_alarms">最大アラーム数</label>
         <select id="maxAlarms">
           <option value="2">2</option><option value="3">3</option>
           <option value="4" selected>4</option><option value="5">5</option><option value="6">6</option>
         </select>
       </div>
-      <div class="row"><label for="noteSpeed">ノートスピード</label>
+      <div class="row"><label for="noteSpeed" data-i18n="note_speed">ノートスピード</label>
         <select id="noteSpeed">
           <option value="1">1×</option>
           <option value="1.5" selected>1.5×</option>
@@ -1177,26 +1192,26 @@ body[data-mode="freeplay"] #escalateIn{display:none}
           <option value="3">3×</option>
         </select>
       </div>
-      <div class="row"><label for="chartStyle">チャートスタイル</label>
+      <div class="row"><label for="chartStyle" data-i18n="chart_style">チャートスタイル</label>
         <select id="chartStyle">
-          <option value="BASIC" selected>ベーシック</option>
-          <option value="STREAM">ストリーム</option>
-          <option value="SYNC">シンク</option>
-          <option value="CHAOS">カオス</option>
+          <option value="BASIC" selected data-i18n="style_BASIC">ベーシック</option>
+          <option value="STREAM" data-i18n="style_STREAM">ストリーム</option>
+          <option value="SYNC" data-i18n="style_SYNC">シンク</option>
+          <option value="CHAOS" data-i18n="style_CHAOS">カオス</option>
         </select>
       </div>
-      <div class="row"><label>ビートパターン</label>
+      <div class="row"><label data-i18n="beat_pattern">ビートパターン</label>
         <div class="beat-picker">
           <button class="beat-nav" id="beatPrev" aria-label="前のビート">◀</button>
           <span class="beat-name" id="beatName">朝の光</span>
           <button class="beat-nav" id="beatNext" aria-label="次のビート">▶</button>
         </div>
       </div>
-      <div class="toggle"><input type="checkbox" id="testMode" /><label for="testMode">テストモード (15秒起床 / 30秒エスカレート)</label></div>
-      <div class="notif-hint">通知を許可するとロック画面にアラームが表示されます</div>
-      <button class="btn big" id="armBtn">アラームセット</button>
+      <div class="toggle"><input type="checkbox" id="testMode" /><label for="testMode" data-i18n="test_mode_desc">テストモード (15秒起床 / 30秒エスカレート)</label></div>
+      <div class="notif-hint" data-i18n="notif_hint">通知を許可するとロック画面にアラームが表示されます</div>
+      <button class="btn big" id="armBtn" data-i18n="arm_alarm">アラームセット</button>
       <div class="setup-actions">
-        <button class="btn ghost small" id="statsBtn">スタッツ</button>
+        <button class="btn ghost small" id="statsBtn" data-i18n="stats">スタッツ</button>
       </div>
     </div>
   </div>
@@ -1205,7 +1220,7 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <!-- ARMED -->
 <section id="armedScreen" class="screen">
   <div class="field">
-    <div class="subtitle">セット済み</div>
+    <div class="subtitle" data-i18n="armed">セット済み</div>
     <div class="mascot-row">
       <img class="mascot armed" src="mascot.png" alt="" onerror="this.style.display='none'">
       <span class="zzz">z</span>
@@ -1213,12 +1228,12 @@ body[data-mode="freeplay"] #escalateIn{display:none}
       <span class="zzz" style="animation-delay:1.2s;font-size:24px">z</span>
     </div>
     <div class="clock" id="bigClock">--:--:--</div>
-    <div class="next-label">次のアラーム</div>
+    <div class="next-label" data-i18n="next_alarm">次のアラーム</div>
     <div class="next-time" id="nextTime">--:--</div>
     <div class="countdown" id="armedCountdown">あと --:--:--</div>
-    <div class="warning">このタブを開いたままにしてください。パソコンをスリープさせないでください。スクリーンウェイクロックで画面を保持します。</div>
+    <div class="warning" data-i18n="warn_keep_open">このタブを開いたままにしてください。パソコンをスリープさせないでください。スクリーンウェイクロックで画面を保持します。</div>
   </div>
-  <div class="corner"><button class="btn ghost small" id="disarmBtn">解除</button></div>
+  <div class="corner"><button class="btn ghost small" id="disarmBtn" data-i18n="disarm">解除</button></div>
 </section>
 
 <!-- ALARM -->
@@ -1228,15 +1243,15 @@ body[data-mode="freeplay"] #escalateIn{display:none}
     <div class="beat-pulse-ring" id="beatPulseRing"></div>
     <div class="alarm-score-bar" id="scorePanel">
       <div class="sp-r1">
-        <div class="sp-item"><span class="sp-lbl">スコア</span><span class="sp-val" id="spScore">0</span></div>
-        <div class="sp-item"><span class="sp-lbl">コンボ</span><span class="sp-val" id="spCombo">0</span></div>
-        <div class="sp-item"><span class="sp-lbl">最大</span><span class="sp-val" id="spMax">0</span></div>
-        <div class="sp-item"><span class="sp-lbl">DX</span><span class="sp-val" id="spDx">0/0</span></div>
+        <div class="sp-item"><span class="sp-lbl" data-i18n="sp_score">スコア</span><span class="sp-val" id="spScore">0</span></div>
+        <div class="sp-item"><span class="sp-lbl" data-i18n="sp_combo">コンボ</span><span class="sp-val" id="spCombo">0</span></div>
+        <div class="sp-item"><span class="sp-lbl" data-i18n="sp_max">最大</span><span class="sp-val" id="spMax">0</span></div>
+        <div class="sp-item"><span class="sp-lbl" data-i18n="sp_dx">DX</span><span class="sp-val" id="spDx">0/0</span></div>
       </div>
       <div class="sp-r2">
-        <div class="sp-item"><span class="sp-lbl">ノーツ</span><span class="sp-val" id="spNotes">0 / 20</span></div>
-        <div class="sp-item"><span class="sp-lbl">ミス</span><span class="sp-val" id="spMiss">0 / 6</span></div>
-        <div class="sp-item"><span class="sp-lbl">スタイル</span><span class="sp-val" id="spStyle">BASIC</span></div>
+        <div class="sp-item"><span class="sp-lbl" data-i18n="sp_notes">ノーツ</span><span class="sp-val" id="spNotes">0 / 20</span></div>
+        <div class="sp-item"><span class="sp-lbl" data-i18n="sp_miss">ミス</span><span class="sp-val" id="spMiss">0 / 6</span></div>
+        <div class="sp-item"><span class="sp-lbl" data-i18n="sp_style">スタイル</span><span class="sp-val" id="spStyle">BASIC</span></div>
       </div>
       <div class="sp-beat">♪ <span id="spBeat">朝の光</span></div>
     </div>
@@ -1256,19 +1271,19 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <section id="endlessResultScreen" class="screen">
   <div class="field results">
     <img class="mascot success" src="mascot.png" alt="" onerror="this.style.display='none'">
-    <div class="subtitle">エンドレス完了</div>
+    <div class="subtitle" data-i18n="endless_complete">エンドレス完了</div>
     <div class="grade" id="endlessGrade">A</div>
-    <div class="combo">TOTAL RUN</div>
+    <div class="combo" data-i18n="total_run">TOTAL RUN</div>
     <div class="stats">
-      <div>スコア <span id="endlessScore">0</span></div>
-      <div>ノーツ <span id="endlessNotes">0</span></div>
-      <div>最高コンボ <span id="endlessCombo">0</span></div>
-      <div>正確度 <span id="endlessAcc">0%</span></div>
-      <div>ループ <span id="endlessLoops">0</span></div>
-      <div>時間 <span id="endlessDuration">0:00</span></div>
+      <div><span data-i18n="sp_score">スコア</span> <span id="endlessScore">0</span></div>
+      <div><span data-i18n="endless_notes">ノーツ</span> <span id="endlessNotes">0</span></div>
+      <div><span data-i18n="best_combo">最高コンボ</span> <span id="endlessCombo">0</span></div>
+      <div><span data-i18n="accuracy">正確度</span> <span id="endlessAcc">0%</span></div>
+      <div><span data-i18n="endless_loops">ループ</span> <span id="endlessLoops">0</span></div>
+      <div><span data-i18n="endless_time">時間</span> <span id="endlessDuration">0:00</span></div>
     </div>
     <div class="gap"></div>
-    <button class="btn cyan small" id="endlessBack">曲選択へ</button>
+    <button class="btn cyan small" id="endlessBack" data-i18n="song_select_back">曲選択へ</button>
   </div>
 </section>
 
@@ -1276,35 +1291,35 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <section id="successScreen" class="screen">
   <div class="field results">
     <img class="mascot success" src="mascot.png" alt="" onerror="this.style.display='none'">
-    <div class="subtitle">クリア！</div>
+    <div class="subtitle" data-i18n="clear_excl">クリア！</div>
     <div class="grade" id="successGrade">SSS</div>
     <div class="combo" id="successCombo">フルコンボ</div>
     <div class="stats">
-      <div>スコア <span id="finalScore">0</span></div>
-      <div>DXスコア <span id="finalDx">0/0</span> <span id="finalDxPct">(0%)</span></div>
-      <div>最大コンボ <span id="finalMaxCombo">0</span></div>
-      <div>正確度 <span id="finalAcc">0%</span></div>
+      <div><span data-i18n="sp_score">スコア</span> <span id="finalScore">0</span></div>
+      <div><span data-i18n="dx_score">DXスコア</span> <span id="finalDx">0/0</span> <span id="finalDxPct">(0%)</span></div>
+      <div><span data-i18n="max_combo">最大コンボ</span> <span id="finalMaxCombo">0</span></div>
+      <div><span data-i18n="accuracy">正確度</span> <span id="finalAcc">0%</span></div>
     </div>
     <div class="breakdown" id="breakdown">
-      <div class="bd-row"><span class="bd-lbl">タップ</span><span class="bd-bar" id="bdBarTap"></span><span class="bd-val" id="bdValTap">0/0</span></div>
-      <div class="bd-row"><span class="bd-lbl">ホールド</span><span class="bd-bar" id="bdBarHold"></span><span class="bd-val" id="bdValHold">0/0</span></div>
-      <div class="bd-row"><span class="bd-lbl">スライド</span><span class="bd-bar" id="bdBarSlide"></span><span class="bd-val" id="bdValSlide">0/0</span></div>
-      <div class="bd-row"><span class="bd-lbl">ブレイク</span><span class="bd-bar" id="bdBarBreak"></span><span class="bd-val" id="bdValBreak">0/0</span></div>
+      <div class="bd-row"><span class="bd-lbl" data-i18n="breakdown_tap">タップ</span><span class="bd-bar" id="bdBarTap"></span><span class="bd-val" id="bdValTap">0/0</span></div>
+      <div class="bd-row"><span class="bd-lbl" data-i18n="breakdown_hold">ホールド</span><span class="bd-bar" id="bdBarHold"></span><span class="bd-val" id="bdValHold">0/0</span></div>
+      <div class="bd-row"><span class="bd-lbl" data-i18n="breakdown_slide">スライド</span><span class="bd-bar" id="bdBarSlide"></span><span class="bd-val" id="bdValSlide">0/0</span></div>
+      <div class="bd-row"><span class="bd-lbl" data-i18n="breakdown_break">ブレイク</span><span class="bd-bar" id="bdBarBreak"></span><span class="bd-val" id="bdValBreak">0/0</span></div>
     </div>
     <div class="stats">
-      <div>起床時刻 <span id="wokeAt">--:--:--</span></div>
-      <div>アラーム <span id="wokeOn">1</span> / <span id="wokeMax">4</span></div>
+      <div><span data-i18n="woke_at">起床時刻</span> <span id="wokeAt">--:--:--</span></div>
+      <div><span data-i18n="alarm_label">アラーム</span> <span id="wokeOn">1</span> / <span id="wokeMax">4</span></div>
     </div>
     <div class="gap"></div>
-    <button class="btn cyan small" id="successReset">もう一度セット</button>
+    <button class="btn cyan small" id="successReset" data-i18n="set_again">もう一度セット</button>
     <div class="fp-result-btns" id="fpResultBtns">
-      <button class="btn small" id="fpPlayAgain">もう一度</button>
-      <button class="btn ghost small" id="fpSongSelect">曲選択へ</button>
+      <button class="btn small" id="fpPlayAgain" data-i18n="play_again">もう一度</button>
+      <button class="btn ghost small" id="fpSongSelect" data-i18n="song_select_back">曲選択へ</button>
     </div>
     <div class="fp-result-btns" id="timerResultBtns">
       <div class="timer-result-note" id="timerResultNote">集中時間: 25分 完了</div>
-      <button class="btn small" id="timerPlayAgain">もう一回</button>
-      <button class="btn ghost small" id="timerBackToSetup">セットアップに戻る</button>
+      <button class="btn small" id="timerPlayAgain" data-i18n="play_again">もう一回</button>
+      <button class="btn ghost small" id="timerBackToSetup" data-i18n="back_to_setup">セットアップに戻る</button>
     </div>
   </div>
 </section>
@@ -1313,15 +1328,15 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <section id="failedScreen" class="screen gameover">
   <div class="field results">
     <img class="mascot failed" src="mascot.png" alt="" onerror="this.style.display='none'">
-    <div class="subtitle" style="color:#ff6666;text-shadow:0 0 10px #ff2a2a">失敗</div>
-    <div class="grade">ゲームオーバー</div>
-    <div class="combo" style="color:#ff9090;text-shadow:0 0 20px #ff2a2a">全アラーム失敗</div>
+    <div class="subtitle" style="color:#ff6666;text-shadow:0 0 10px #ff2a2a" data-i18n="failed">失敗</div>
+    <div class="grade" data-i18n="game_over">ゲームオーバー</div>
+    <div class="combo" style="color:#ff9090;text-shadow:0 0 20px #ff2a2a" data-i18n="missed_all">全アラーム失敗</div>
     <div class="stats">
-      <div>全 <span id="failedMax">4</span> アラーム無視</div>
-      <div>最終アラーム時刻 <span id="failedLast">--:--</span></div>
+      <div id="failedIgnoredRow">全 <span id="failedMax">4</span> アラーム無視</div>
+      <div><span data-i18n="last_alarm_at">最終アラーム時刻</span> <span id="failedLast">--:--</span></div>
     </div>
     <div class="gap"></div>
-    <button class="btn ghost small" id="failedReset">リセット</button>
+    <button class="btn ghost small" id="failedReset" data-i18n="reset">リセット</button>
   </div>
 </section>
 
@@ -1329,18 +1344,18 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <section id="freeplayScreen" class="screen">
   <div class="fp-card">
     <div class="fp-header">
-      <button class="btn ghost small" id="fpBack">戻る</button>
+      <button class="btn ghost small" id="fpBack" data-i18n="back">戻る</button>
       <div class="fp-title">
-        <div class="fp-name">フリープレイ</div>
-        <div class="subtitle" style="margin:0">FREE PLAY</div>
+        <div class="fp-name" data-i18n="freeplay_title_top">フリープレイ</div>
+        <div class="subtitle" style="margin:0" data-i18n="freeplay_en">FREE PLAY</div>
       </div>
       <div class="fp-spacer"></div>
     </div>
-    <div class="fp-section-lbl">曲選択 · SONG SELECT</div>
+    <div class="fp-section-lbl" data-i18n="song_select">曲選択 · SONG SELECT</div>
     <div class="song-list" id="songList"></div>
-    <div class="fp-section-lbl">難易度</div>
+    <div class="fp-section-lbl" data-i18n="difficulty">難易度</div>
     <div class="fp-endless-row">
-      <label class="fp-endless-lbl">エンドレスモード</label>
+      <label class="fp-endless-lbl" data-i18n="endless_mode">エンドレスモード</label>
       <label class="fp-endless-tog">
         <input type="checkbox" id="fpEndless" />
         <span class="fp-endless-slot"><span class="fp-endless-knob"></span></span>
@@ -1352,66 +1367,69 @@ body[data-mode="freeplay"] #escalateIn{display:none}
       <button class="diff-btn exp"   data-diff="3">EXPERT</button>
       <button class="diff-btn mst"   data-diff="4">MASTER</button>
     </div>
-    <div class="fp-section-lbl">ノーツ設定</div>
+    <div class="fp-section-lbl" data-i18n="note_types_config">ノーツ設定</div>
     <div class="type-toggles" id="typeToggles">
-      <button class="type-toggle on" data-type="tap">タップ</button>
-      <button class="type-toggle on" data-type="hold">ホールド</button>
-      <button class="type-toggle on" data-type="slide">スライド</button>
-      <button class="type-toggle on" data-type="break">ブレイク</button>
+      <button class="type-toggle on" data-type="tap" data-i18n="type_tap">タップ</button>
+      <button class="type-toggle on" data-type="hold" data-i18n="type_hold">ホールド</button>
+      <button class="type-toggle on" data-type="slide" data-i18n="type_slide">スライド</button>
+      <button class="type-toggle on" data-type="break" data-i18n="type_break">ブレイク</button>
     </div>
-    <button class="btn big" id="fpStart">START</button>
+    <button class="btn big" id="fpStart" data-i18n="start">START</button>
   </div>
 </section>
 
 <!-- Mode badge — small "フリープレイ" chip during freeplay gameplay -->
 <div class="mode-badge" id="modeBadge">フリープレイ</div>
 
+<!-- Language toggle — pinned to the bottom-left of every screen. -->
+<button class="lang-toggle" id="langToggle" aria-label="Language / 言語">🌐 EN</button>
+
 <!-- Setup-only floating mode entries. Kept out of the form so the fixed
      .hud-bottom can't overlap them; visibility gated by body[data-screen]. -->
-<button class="freeplay-corner" id="freeplayBtn" aria-label="フリープレイへ">フリープレイ ▶</button>
-<button class="timer-corner"    id="timerBtn"    aria-label="タイマーモードへ">◐ タイマー</button>
+<button class="freeplay-corner" id="freeplayBtn" aria-label="フリープレイ / FREE PLAY" data-i18n="freeplay_entry">フリープレイ ▶</button>
+<button class="timer-corner"    id="timerBtn"    aria-label="タイマー / TIMER"        data-i18n="timer_entry">◐ タイマー</button>
 
 <!-- FOCUS TIMER — SETUP -->
 <section id="timerScreen" class="screen">
   <div class="fp-card">
     <div class="fp-header">
-      <button class="btn ghost small" id="timerBack">戻る</button>
+      <button class="btn ghost small" id="timerBack" data-i18n="back">戻る</button>
       <div class="fp-title">
-        <div class="fp-name">タイマーモード</div>
-        <div class="subtitle" style="margin:0">FOCUS TIMER</div>
+        <div class="fp-name" data-i18n="focus_mode">タイマーモード</div>
+        <div class="subtitle" style="margin:0" data-i18n="focus_timer_en">FOCUS TIMER</div>
       </div>
       <div class="fp-spacer"></div>
     </div>
-    <div class="fp-section-lbl">タイマー長</div>
+    <div class="fp-section-lbl" data-i18n="timer_length">タイマー長</div>
     <div class="timer-length" id="timerLength">
-      <button class="tl-btn" data-min="15">15分</button>
-      <button class="tl-btn" data-min="20">20分</button>
-      <button class="tl-btn" data-min="30">30分</button>
-      <button class="tl-btn" data-min="45">45分</button>
-      <button class="tl-btn" data-min="60">60分</button>
+      <button class="tl-btn" data-min="15" data-i18n="tl_15">15分</button>
+      <button class="tl-btn" data-min="20" data-i18n="tl_20">20分</button>
+      <button class="tl-btn" data-min="30" data-i18n="tl_30">30分</button>
+      <button class="tl-btn" data-min="45" data-i18n="tl_45">45分</button>
+      <button class="tl-btn" data-min="60" data-i18n="tl_60">60分</button>
     </div>
     <div class="timer-custom">
-      <label for="timerCustom">カスタム（分）</label>
+      <label for="timerCustom" data-i18n="custom_min">カスタム（分）</label>
       <input type="number" id="timerCustom" min="1" max="180" step="1" value="25" />
     </div>
-    <div class="fp-section-lbl">曲選択 · SONG SELECT</div>
+    <div class="fp-section-lbl" data-i18n="song_select">曲選択 · SONG SELECT</div>
     <div class="song-list" id="timerSongList"></div>
-    <div class="fp-section-lbl">難易度</div>
+    <div class="fp-section-lbl" data-i18n="difficulty">難易度</div>
     <div class="diff-buttons" id="timerDiffButtons">
       <button class="diff-btn basic" data-diff="1">BASIC</button>
       <button class="diff-btn adv"   data-diff="2">ADVANCED</button>
       <button class="diff-btn exp"   data-diff="3">EXPERT</button>
       <button class="diff-btn mst"   data-diff="4">MASTER</button>
     </div>
-    <div class="fp-section-lbl">ノーツ設定</div>
+    <div class="fp-section-lbl" data-i18n="note_types_config">ノーツ設定</div>
     <div class="type-toggles" id="timerTypeToggles">
-      <button class="type-toggle on" data-type="tap">タップ</button>
-      <button class="type-toggle on" data-type="hold">ホールド</button>
-      <button class="type-toggle on" data-type="slide">スライド</button>
-      <button class="type-toggle on" data-type="break">ブレイク</button>
+      <button class="type-toggle on" data-type="tap" data-i18n="type_tap">タップ</button>
+      <button class="type-toggle on" data-type="hold" data-i18n="type_hold">ホールド</button>
+      <button class="type-toggle on" data-type="slide" data-i18n="type_slide">スライド</button>
+      <button class="type-toggle on" data-type="break" data-i18n="type_break">ブレイク</button>
     </div>
-    <div class="toggle" style="margin-top:2px"><input type="checkbox" id="timerTestMode" /><label for="timerTestMode">テストモード</label></div>
-    <button class="btn big" id="timerStart">START FOCUS</button>
+    <div class="toggle" style="margin-top:2px"><input type="checkbox" id="timerTestMode" /><label for="timerTestMode" data-i18n="test_mode">テストモード</label></div>
+    <button class="btn big" id="timerStart" data-i18n="start_focus">START FOCUS</button>
   </div>
 </section>
 
@@ -1422,9 +1440,9 @@ body[data-mode="freeplay"] #escalateIn{display:none}
   <div class="tc-time" id="tcTime">--:--</div>
   <button class="tc-pause" id="tcPause" aria-label="一時停止">⏸</button>
   <div class="tc-paused-overlay" id="tcPausedOverlay">
-    <div class="tc-paused-text">一時停止中</div>
-    <button class="btn small" id="tcResume">再開</button>
-    <button class="btn ghost small" id="tcAbort">中止</button>
+    <div class="tc-paused-text" data-i18n="paused">一時停止中</div>
+    <button class="btn small" id="tcResume" data-i18n="resume">再開</button>
+    <button class="btn ghost small" id="tcAbort" data-i18n="cancel_action">中止</button>
   </div>
 </section>
 
@@ -1434,20 +1452,20 @@ body[data-mode="freeplay"] #escalateIn{display:none}
     <div class="help-header">
       <img class="mascot help-mascot" src="mascot.png" alt="" onerror="this.style.display='none'">
       <div class="help-title">
-        <div class="help-name">遊び方</div>
-        <div class="subtitle" style="margin:0">HOW TO PLAY</div>
+        <div class="help-name" data-i18n="how_to_play">遊び方</div>
+        <div class="subtitle" style="margin:0" data-i18n="how_to_play_en">HOW TO PLAY</div>
       </div>
     </div>
 
-    <div class="help-section-lbl">ノーツの種類</div>
+    <div class="help-section-lbl" data-i18n="note_types">ノーツの種類</div>
     <div class="help-notes">
       <div class="help-note-row">
         <div class="help-note-visual">
           <div class="tap-note preview"><div class="hold-arc"></div><div class="note-body"></div></div>
         </div>
         <div>
-          <div class="hn-name">タップノーツ</div>
-          <div class="hn-desc">リングエッジに到着したらタップ。</div>
+          <div class="hn-name" data-i18n="tap_note">タップノーツ</div>
+          <div class="hn-desc" data-i18n="tap_note_desc">リングエッジに到着したらタップ。</div>
         </div>
       </div>
 
@@ -1456,8 +1474,8 @@ body[data-mode="freeplay"] #escalateIn{display:none}
           <div class="tap-note hold preview" style="--arc:.55"><div class="hold-arc"></div><div class="note-body"></div></div>
         </div>
         <div>
-          <div class="hn-name">ホールドノーツ</div>
-          <div class="hn-desc">アークが尽きるまで押し続ける。</div>
+          <div class="hn-name" data-i18n="hold_note">ホールドノーツ</div>
+          <div class="hn-desc" data-i18n="hold_note_desc">アークが尽きるまで押し続ける。</div>
         </div>
       </div>
 
@@ -1470,8 +1488,8 @@ body[data-mode="freeplay"] #escalateIn{display:none}
           </div>
         </div>
         <div>
-          <div class="hn-name">スライドノーツ</div>
-          <div class="hn-desc">スタートをタッチし、アローに沿ってエンドまでドラッグ。</div>
+          <div class="hn-name" data-i18n="slide_note">スライドノーツ</div>
+          <div class="hn-desc" data-i18n="slide_note_desc">スタートをタッチし、アローに沿ってエンドまでドラッグ。</div>
         </div>
       </div>
 
@@ -1480,23 +1498,23 @@ body[data-mode="freeplay"] #escalateIn{display:none}
           <div class="tap-note break preview"><div class="hold-arc"></div><div class="note-body"></div></div>
         </div>
         <div>
-          <div class="hn-name">ブレイクノーツ</div>
-          <div class="hn-desc">高得点タップ。満点にはより厳しいタイミングが必要。</div>
+          <div class="hn-name" data-i18n="break_note">ブレイクノーツ</div>
+          <div class="hn-desc" data-i18n="break_note_desc">高得点タップ。満点にはより厳しいタイミングが必要。</div>
         </div>
       </div>
     </div>
 
-    <div class="help-section-lbl">ジャッジメント</div>
+    <div class="help-section-lbl" data-i18n="judgment">ジャッジメント</div>
     <div class="help-judg">
-      <div class="hj-row critical"><span class="hj-name">CRITICAL PERFECT</span><span class="hj-desc">±30ms 完璧</span></div>
-      <div class="hj-row perfect"><span class="hj-name">PERFECT</span><span class="hj-desc">±70ms 高得点</span></div>
-      <div class="hj-row great"><span class="hj-name">GREAT</span><span class="hj-desc">±120ms 良好</span></div>
-      <div class="hj-row good"><span class="hj-name">GOOD</span><span class="hj-desc">±180ms コンボ継続</span></div>
-      <div class="hj-row miss"><span class="hj-name">MISS</span><span class="hj-desc">±180ms 超 コンボ切断</span></div>
+      <div class="hj-row critical"><span class="hj-name">CRITICAL PERFECT</span><span class="hj-desc" data-i18n="critical_desc">±30ms 完璧</span></div>
+      <div class="hj-row perfect"><span class="hj-name">PERFECT</span><span class="hj-desc" data-i18n="perfect_desc">±70ms 高得点</span></div>
+      <div class="hj-row great"><span class="hj-name">GREAT</span><span class="hj-desc" data-i18n="great_desc">±120ms 良好</span></div>
+      <div class="hj-row good"><span class="hj-name">GOOD</span><span class="hj-desc" data-i18n="good_desc">±180ms コンボ継続</span></div>
+      <div class="hj-row miss"><span class="hj-name">MISS</span><span class="hj-desc" data-i18n="miss_desc">±180ms 超 コンボ切断</span></div>
     </div>
 
     <div class="help-footer">
-      <button class="btn ghost small" id="helpClose">閉じる</button>
+      <button class="btn ghost small" id="helpClose" data-i18n="close">閉じる</button>
     </div>
   </div>
 </div>
@@ -1507,23 +1525,240 @@ body[data-mode="freeplay"] #escalateIn{display:none}
     <div class="pc-header">
       <img class="mascot pc-mascot" src="mascot.png" alt="" onerror="this.style.display='none'">
       <div class="pc-title">
-        <div class="pc-name">プレイヤープロファイル</div>
-        <div class="subtitle" style="margin:0">maimai アラーム</div>
+        <div class="pc-name" data-i18n="player_profile">プレイヤープロファイル</div>
+        <div class="subtitle" style="margin:0" data-i18n="brand" >maimai アラーム</div>
       </div>
     </div>
     <div class="pc-tiles">
-      <div class="pc-tile streak"><div class="pc-lbl">起床連続</div><div class="pc-val" id="statStreak">0</div><div class="pc-sub">アラーム1日数</div></div>
-      <div class="pc-tile score"><div class="pc-lbl">最高スコア</div><div class="pc-val" id="statBestScore">0</div><div class="pc-sub">累計</div></div>
-      <div class="pc-tile combo"><div class="pc-lbl">最高コンボ</div><div class="pc-val" id="statBestCombo">0</div><div class="pc-sub">最大チェイン</div></div>
-      <div class="pc-tile dx"><div class="pc-lbl">最高DX</div><div class="pc-val" id="statBestDx">0</div><div class="pc-sub">DXスコア</div></div>
+      <div class="pc-tile streak"><div class="pc-lbl" data-i18n="streak">起床連続</div><div class="pc-val" id="statStreak">0</div><div class="pc-sub" data-i18n="days_on_alarm1">アラーム1日数</div></div>
+      <div class="pc-tile score"><div class="pc-lbl" data-i18n="best_score">最高スコア</div><div class="pc-val" id="statBestScore">0</div><div class="pc-sub" data-i18n="all_time">累計</div></div>
+      <div class="pc-tile combo"><div class="pc-lbl" data-i18n="best_combo">最高コンボ</div><div class="pc-val" id="statBestCombo">0</div><div class="pc-sub" data-i18n="max_chain">最大チェイン</div></div>
+      <div class="pc-tile dx"><div class="pc-lbl" data-i18n="best_dx">最高DX</div><div class="pc-val" id="statBestDx">0</div><div class="pc-sub" data-i18n="dx_score">DXスコア</div></div>
     </div>
-    <div class="pc-history-lbl">最近のセッション</div>
+    <div class="pc-history-lbl" data-i18n="recent_sessions">最近のセッション</div>
     <div class="pc-history" id="statHistory"></div>
-    <div class="pc-footer"><button class="btn ghost small" id="statsBack">戻る</button></div>
+    <div class="pc-footer"><button class="btn ghost small" id="statsBack" data-i18n="back">戻る</button></div>
   </div>
 </section>
 
 <script>
+/* ============ I18N ============
+   Two complete text maps — every user-visible string in the app lives
+   here. `t(key, params)` swaps in the current language and interpolates
+   {tokens}. Static HTML strings carry a `data-i18n="key"` attribute and
+   are updated by applyLanguage(); dynamic strings (set by JS) use t()
+   directly. Boot messages are translated too — the language preference
+   loads from localStorage BEFORE the boot sequence runs. */
+const LANG_KEY = 'maimai-lang';
+const I18N = {
+  ja: {
+    now:'現在時刻:', status:'ステータス:', brand:'◆ maimai アラーム',
+    title_wake:'起きろ！', subtitle_escalating:'エスカレートアラーム',
+    first_alarm:'最初のアラーム', escalate_every:'エスカレート間隔',
+    max_alarms:'最大アラーム数', note_speed:'ノートスピード',
+    chart_style:'チャートスタイル', beat_pattern:'ビートパターン',
+    test_mode:'テストモード', test_mode_desc:'テストモード (15秒起床 / 30秒エスカレート)',
+    notif_hint:'通知を許可するとロック画面にアラームが表示されます',
+    arm_alarm:'アラームセット', stats:'スタッツ',
+    freeplay_entry:'フリープレイ ▶', timer_entry:'◐ タイマー',
+    armed:'セット済み', next_alarm:'次のアラーム',
+    remaining_prefix:'あと', disarm:'解除',
+    warn_keep_open:'このタブを開いたままにしてください。パソコンをスリープさせないでください。スクリーンウェイクロックで画面を保持します。',
+    wake_up1:'起きろ！', wake_up2:'起きろ！！', wake_up3:'今すぐ起きろ！！！',
+    sp_score:'スコア', sp_combo:'コンボ', sp_max:'最大', sp_dx:'DX',
+    sp_notes:'ノーツ', sp_miss:'ミス', sp_style:'スタイル',
+    escalate_in:'エスカレートまで', escalating:'エスカレート中...',
+    alarm_label:'アラーム',
+    critical:'クリティカル', perfect:'パーフェクト！', great:'グレート！',
+    good:'グッド', miss:'ミス', break_hit:'ブレイク！', break_miss:'ブレイク！',
+    tap_to_start:'タップしてスタート',
+    clear_excl:'クリア！', full_combo:'フルコンボ', clear:'クリア',
+    dx_score:'DXスコア', max_combo:'最大コンボ', accuracy:'正確度',
+    woke_at:'起床時刻', set_again:'もう一度セット',
+    play_again:'もう一回', back_to_setup:'セットアップに戻る',
+    focus_time_completed:'集中時間: {n}分 完了',
+    failed:'失敗', game_over:'ゲームオーバー', missed_all:'全アラーム失敗',
+    all_ignored:'全 {n} アラーム無視', last_alarm_at:'最終アラーム時刻',
+    reset:'リセット',
+    player_profile:'プレイヤープロファイル', streak:'起床連続',
+    days_on_alarm1:'アラーム1日数', best_score:'最高スコア', all_time:'累計',
+    best_combo:'最高コンボ', max_chain:'最大チェイン', best_dx:'最高DX',
+    recent_sessions:'最近のセッション', back:'戻る',
+    empty_history:'セッション履歴なし — 最初のアラームをセットして履歴を作成してください。',
+    how_to_play:'遊び方', how_to_play_en:'HOW TO PLAY',
+    note_types:'ノーツの種類',
+    tap_note:'タップノーツ', tap_note_desc:'リングエッジに到着したらタップ。',
+    hold_note:'ホールドノーツ', hold_note_desc:'アークが尽きるまで押し続ける。',
+    slide_note:'スライドノーツ', slide_note_desc:'スタートをタッチし、アローに沿ってエンドまでドラッグ。',
+    break_note:'ブレイクノーツ', break_note_desc:'高得点タップ。満点にはより厳しいタイミングが必要。',
+    judgment:'ジャッジメント',
+    critical_desc:'±30ms 完璧', perfect_desc:'±70ms 高得点',
+    great_desc:'±120ms 良好', good_desc:'±180ms コンボ継続',
+    miss_desc:'±180ms 超 コンボ切断',
+    close:'閉じる',
+    freeplay_title:'フリープレイ', freeplay_en:'FREE PLAY',
+    song_select:'曲選択 · SONG SELECT', difficulty:'難易度',
+    endless_mode:'エンドレスモード', note_types_config:'ノーツ設定',
+    type_tap:'タップ', type_hold:'ホールド', type_slide:'スライド', type_break:'ブレイク',
+    start:'START', song_select_back:'曲選択へ',
+    focus_mode:'タイマーモード', focus_timer_en:'FOCUS TIMER',
+    timer_length:'タイマー長', custom_min:'カスタム（分）',
+    start_focus:'START FOCUS', paused:'一時停止中',
+    resume:'再開', cancel_action:'中止',
+    endless_complete:'エンドレス完了', total_run:'TOTAL RUN',
+    endless_notes:'ノーツ', endless_loops:'ループ', endless_time:'時間',
+    boot1:'アラームを準備中...', boot2:'ノーツをロード中...',
+    boot3:'マスコットを起こし中...', boot4:'もうすぐだよ...',
+    notif_title:'早く起きろまい！', notif_body:'アラーム {n}/{m} — タップして起きる',
+    confirm_disarm:'アラームを解除しますか？',
+    style_BASIC:'ベーシック', style_STREAM:'ストリーム', style_SYNC:'シンク', style_CHAOS:'カオス',
+    status_setup:'セットアップ', status_armed:'セット済み',
+    status_alarm:'！！アラーム！！', status_clear:'クリア',
+    status_failed:'失敗', status_profile:'プロファイル',
+    status_freeplay:'フリープレイ', status_timer:'タイマー',
+    status_focusing:'集中中', status_endless:'エンドレス完了',
+    test_mode_indicator:'テストモード',
+    breakdown_tap:'タップ', breakdown_hold:'ホールド',
+    breakdown_slide:'スライド', breakdown_break:'ブレイク',
+    min_15:'15 分', min_30:'30 分', min_45:'45 分', min_60:'60 分',
+    tl_15:'15分', tl_20:'20分', tl_30:'30分', tl_45:'45分', tl_60:'60分',
+    freeplay_title_top:'フリープレイ',
+    lang_toggle_label:'🌐 EN',
+  },
+  en: {
+    now:'NOW:', status:'STATUS:', brand:'◆ maimai ALARM',
+    title_wake:'WAKE UP!', subtitle_escalating:'ESCALATING ALARM',
+    first_alarm:'FIRST ALARM', escalate_every:'ESCALATE EVERY',
+    max_alarms:'MAX ALARMS', note_speed:'NOTE SPEED',
+    chart_style:'CHART STYLE', beat_pattern:'BEAT PATTERN',
+    test_mode:'TEST MODE', test_mode_desc:'TEST MODE (15s wake / 30s escalate)',
+    notif_hint:'Enable notifications to see alarms on the lock screen',
+    arm_alarm:'ARM ALARM', stats:'STATS',
+    freeplay_entry:'FREE PLAY ▶', timer_entry:'◐ TIMER',
+    armed:'ARMED', next_alarm:'NEXT ALARM',
+    remaining_prefix:'in', disarm:'DISARM',
+    warn_keep_open:'Keep this tab open. Do not let your computer sleep. Screen wake lock will keep the display on.',
+    wake_up1:'WAKE UP!', wake_up2:'WAKE UP!!', wake_up3:'GET UP NOW!!!',
+    sp_score:'SCORE', sp_combo:'COMBO', sp_max:'MAX', sp_dx:'DX',
+    sp_notes:'NOTES', sp_miss:'MISS', sp_style:'STYLE',
+    escalate_in:'ESCALATES IN', escalating:'ESCALATING...',
+    alarm_label:'ALARM',
+    critical:'CRITICAL', perfect:'PERFECT!', great:'GREAT!',
+    good:'GOOD', miss:'MISS', break_hit:'BREAK!', break_miss:'BREAK!',
+    tap_to_start:'TAP TO START',
+    clear_excl:'CLEAR!', full_combo:'FULL COMBO', clear:'CLEAR',
+    dx_score:'DX SCORE', max_combo:'MAX COMBO', accuracy:'ACCURACY',
+    woke_at:'WOKE AT', set_again:'SET AGAIN',
+    play_again:'PLAY AGAIN', back_to_setup:'BACK TO SETUP',
+    focus_time_completed:'Focus time: {n}m completed',
+    failed:'FAILED', game_over:'GAME OVER', missed_all:'MISSED ALL ALARMS',
+    all_ignored:'ALL {n} ALARMS IGNORED', last_alarm_at:'LAST ALARM AT',
+    reset:'RESET',
+    player_profile:'PLAYER PROFILE', streak:'STREAK',
+    days_on_alarm1:'DAYS ON ALARM 1', best_score:'BEST SCORE', all_time:'ALL-TIME',
+    best_combo:'BEST COMBO', max_chain:'MAX CHAIN', best_dx:'BEST DX',
+    recent_sessions:'RECENT SESSIONS', back:'BACK',
+    empty_history:'No sessions yet — arm your first alarm to build history.',
+    how_to_play:'HOW TO PLAY', how_to_play_en:'HOW TO PLAY',
+    note_types:'NOTE TYPES',
+    tap_note:'TAP NOTE', tap_note_desc:'Tap it when it arrives at the ring edge.',
+    hold_note:'HOLD NOTE', hold_note_desc:'Hold until the arc empties.',
+    slide_note:'SLIDE NOTE', slide_note_desc:'Touch the start and drag to the end along the arrow.',
+    break_note:'BREAK NOTE', break_note_desc:'High-value tap. Tighter timing for full score.',
+    judgment:'JUDGMENT',
+    critical_desc:'±30ms perfect', perfect_desc:'±70ms high score',
+    great_desc:'±120ms good', good_desc:'±180ms combo continues',
+    miss_desc:'beyond ±180ms combo breaks',
+    close:'CLOSE',
+    freeplay_title:'FREE PLAY', freeplay_en:'FREE PLAY',
+    song_select:'SONG SELECT', difficulty:'DIFFICULTY',
+    endless_mode:'ENDLESS MODE', note_types_config:'NOTE TYPES',
+    type_tap:'TAP', type_hold:'HOLD', type_slide:'SLIDE', type_break:'BREAK',
+    start:'START', song_select_back:'SONG SELECT',
+    focus_mode:'FOCUS MODE', focus_timer_en:'FOCUS TIMER',
+    timer_length:'TIMER LENGTH', custom_min:'CUSTOM (min)',
+    start_focus:'START FOCUS', paused:'PAUSED',
+    resume:'RESUME', cancel_action:'CANCEL',
+    endless_complete:'ENDLESS COMPLETE', total_run:'TOTAL RUN',
+    endless_notes:'NOTES', endless_loops:'LOOPS', endless_time:'TIME',
+    boot1:'Loading alarm...', boot2:'Loading notes...',
+    boot3:'Waking up mascot...', boot4:'Almost ready...',
+    notif_title:'WAKE UP NOW!', notif_body:'Alarm {n}/{m} — tap to wake up',
+    confirm_disarm:'Disarm the alarm?',
+    style_BASIC:'BASIC', style_STREAM:'STREAM', style_SYNC:'SYNC', style_CHAOS:'CHAOS',
+    status_setup:'SETUP', status_armed:'ARMED',
+    status_alarm:'!! ALARM !!', status_clear:'CLEAR',
+    status_failed:'FAILED', status_profile:'PROFILE',
+    status_freeplay:'FREE PLAY', status_timer:'TIMER',
+    status_focusing:'FOCUSING', status_endless:'ENDLESS',
+    test_mode_indicator:'TEST MODE',
+    breakdown_tap:'TAP', breakdown_hold:'HOLD',
+    breakdown_slide:'SLIDE', breakdown_break:'BREAK',
+    min_15:'15 min', min_30:'30 min', min_45:'45 min', min_60:'60 min',
+    tl_15:'15m', tl_20:'20m', tl_30:'30m', tl_45:'45m', tl_60:'60m',
+    freeplay_title_top:'FREE PLAY',
+    lang_toggle_label:'🌐 JP',
+  },
+};
+let curLang = (function(){
+  try{ const v = localStorage.getItem(LANG_KEY); if(v === 'ja' || v === 'en') return v; }catch(e){}
+  return 'ja';
+})();
+function t(key, params){
+  const map = I18N[curLang] || I18N.ja;
+  let s = map[key];
+  if(s == null) s = I18N.ja[key] || key;
+  if(params){
+    for(const k in params) s = s.replace('{' + k + '}', params[k]);
+  }
+  return s;
+}
+function applyLanguage(){
+  // Static translations — walk every element carrying a data-i18n key.
+  for(const el of document.querySelectorAll('[data-i18n]')){
+    el.textContent = t(el.dataset.i18n);
+  }
+  // Also translate boot messages array + refresh the language toggle chip.
+  const lt = document.getElementById('langToggle');
+  if(lt) lt.textContent = t('lang_toggle_label');
+  document.documentElement.lang = curLang;
+  // Dynamic pieces that JS composes from data.
+  try{
+    // HUD status label — re-derive from current screen name.
+    const statusMap = {setup:'status_setup',armed:'status_armed',alarm:'status_alarm',success:'status_clear',failed:'status_failed',stats:'status_profile',freeplay:'status_freeplay',timer:'status_timer',timerCountdown:'status_focusing',endlessResult:'status_endless'};
+    const el = document.getElementById('hudStatus');
+    if(el) el.textContent = t(statusMap[state.screen] || 'status_setup');
+    // Test-mode indicator.
+    document.getElementById('hudMode').textContent = state.testMode ? t('test_mode_indicator') : '';
+    // Screens that render into lists (freeplay/timer/stats) — re-render.
+    if(typeof renderFreeplayScreen === 'function') renderFreeplayScreen();
+    if(typeof renderTimerScreen === 'function')    renderTimerScreen();
+    if(typeof renderStatsScreen === 'function')    renderStatsScreen();
+    if(typeof updateScoreDisplay === 'function')   updateScoreDisplay();
+    if(typeof updateBeatPickerUI === 'function')   updateBeatPickerUI();
+    // Countdown-screen labels use dynamic templates — update if visible.
+    const ec = document.getElementById('escalateIn');
+    if(ec && state.screen === 'alarm'){ /* re-derives from tick */ }
+    // Alarm label uses wake_up{1,2,3} depending on level — refresh.
+    const lvl = state.currentAlarmIndex + 1;
+    const al = document.getElementById('alarmLabel');
+    if(al && state.screen === 'alarm' && state.mode === 'alarm'){
+      al.textContent = t(lvl >= 4 ? 'wake_up3' : lvl >= 3 ? 'wake_up2' : 'wake_up1');
+    }
+    // Alarm count text.
+    const ac = document.getElementById('alarmCount');
+    if(ac && state.screen === 'alarm' && state.mode === 'alarm'){
+      ac.textContent = `${t('alarm_label')} ${lvl} / ${state.maxAlarms}`;
+    }
+  }catch(e){}
+}
+function setLanguage(lang){
+  if(lang !== 'ja' && lang !== 'en') return;
+  curLang = lang;
+  try{ localStorage.setItem(LANG_KEY, lang); }catch(e){}
+  applyLanguage();
+}
+
 /* ============ BOOT / LOADING SCREEN ============
    Runs immediately when the script parses so the loading bar starts
    filling and the message reel rotates from the moment the page is
@@ -1542,14 +1777,15 @@ body[data-mode="freeplay"] #escalateIn{display:none}
   const boot     = document.getElementById('bootScreen');
   if(!boot || !bootFill || !bootMsg) return;
 
-  // Rotating status messages, one every 500ms.
-  const messages = ['アラームを準備中...', 'ノーツをロード中...', 'マスコットを起こし中...', 'もうすぐだよ...'];
+  // Set the very first message and cycle through the four keys every 500ms.
+  bootMsg.textContent = t('boot1');
+  const keys = ['boot1', 'boot2', 'boot3', 'boot4'];
   let msgIdx = 0;
   const msgTimer = setInterval(() => {
-    msgIdx = (msgIdx + 1) % messages.length;
+    msgIdx = (msgIdx + 1) % keys.length;
     // fade briefly on swap for a softer feel
     bootMsg.style.opacity = '0';
-    setTimeout(() => { bootMsg.textContent = messages[msgIdx]; bootMsg.style.opacity = '.95'; }, 120);
+    setTimeout(() => { bootMsg.textContent = t(keys[msgIdx]); bootMsg.style.opacity = '.95'; }, 120);
   }, 500);
 
   // Fill loop: linear ramp to 95% by MIN_MS if assets not ready, hold
@@ -1614,7 +1850,9 @@ const DX_POINTS = {critical:3, perfect:2, great:1, good:0, miss:0};
 // Base travel time (in beats at 1× speed). Higher speed shrinks this.
 const BASE_TRAVEL_BEATS = 3.0;
 
-const STYLE_LABELS = {BASIC:'ベーシック', STREAM:'ストリーム', SYNC:'シンク', CHAOS:'カオス'};
+// Style labels come from the i18n table (style_BASIC / style_STREAM / …)
+// so they follow whatever language the user is on.
+function styleLabel(key){ return t('style_' + key); }
 const STYLE_KEYS   = ['BASIC','STREAM','SYNC','CHAOS'];
 
 /* ============ STATE ============ */
@@ -1778,7 +2016,7 @@ function tick(){
     if(nextIdx !== -1){
       const nextT = state.scheduleMs[nextIdx];
       document.getElementById('nextTime').textContent = fmtHM(new Date(nextT));
-      document.getElementById('armedCountdown').textContent = 'あと ' + fmtDurationMs(nextT - now.getTime());
+      document.getElementById('armedCountdown').textContent = t('remaining_prefix') + ' ' + fmtDurationMs(nextT - now.getTime());
     }
     for(let i = 0; i < state.scheduleMs.length; i++){
       if(now.getTime() >= state.scheduleMs[i] && i > state.currentAlarmIndex){ startAlarm(i); break; }
@@ -1791,7 +2029,7 @@ function tick(){
     const escalateAt = startedAt + wakeWindowMs();
     const remain = escalateAt - now.getTime();
     document.getElementById('escalateIn').textContent =
-      remain > 0 ? `エスカレートまで ${fmtDurationMs(remain)}` : `エスカレート中...`;
+      remain > 0 ? `${t('escalate_in')} ${fmtDurationMs(remain)}` : t('escalating');
     if(remain <= 0){ escalate(); }
   }
 }
@@ -1814,9 +2052,9 @@ function startAlarm(idx){
   const level = idx + 1;
   document.body.setAttribute('data-level', String(level));
   document.body.setAttribute('data-in-alarm', '1');
-  document.getElementById('alarmCount').textContent = `アラーム ${level} / ${state.maxAlarms}`;
+  document.getElementById('alarmCount').textContent = `${t('alarm_label')} ${level} / ${state.maxAlarms}`;
   document.getElementById('alarmLabel').textContent =
-    level >= 4 ? '今すぐ起きろ！！！' : level >= 3 ? '起きろ！！' : '起きろ！';
+    level >= 4 ? t('wake_up3') : level >= 3 ? t('wake_up2') : t('wake_up1');
   initRhythmSession(level);
   showScreen('alarm');
   playAlarm(level);
@@ -1839,6 +2077,7 @@ function escalate(){
   if(nextIdx >= state.maxAlarms){
     recordFailure();
     document.getElementById('failedMax').textContent = state.maxAlarms;
+    document.getElementById('failedIgnoredRow').textContent = t('all_ignored', {n: state.maxAlarms});
     const lastT = state.scheduleMs[state.scheduleMs.length - 1];
     document.getElementById('failedLast').textContent = fmtHM(new Date(lastT));
     showScreen('failed');
@@ -1867,10 +2106,10 @@ function finishAlarm(){
   }
 
   document.getElementById('successGrade').textContent = computeRank(accPct, dxAcc, level);
-  document.getElementById('successCombo').textContent = misses === 0 ? 'フルコンボ' : 'クリア';
+  document.getElementById('successCombo').textContent = misses === 0 ? t('full_combo') : t('clear');
   // Timer-mode result note — shows how long a focus session the player just cleared.
   if(state.mode === 'timer'){
-    document.getElementById('timerResultNote').textContent = `集中時間: ${timerRun.endedDuration}分 完了`;
+    document.getElementById('timerResultNote').textContent = t('focus_time_completed', {n: timerRun.endedDuration});
   }
   document.getElementById('finalScore').textContent = finalScore.toLocaleString();
   document.getElementById('finalDx').textContent = `${dx} / ${dxMax}`;
@@ -2401,11 +2640,11 @@ function rhythmLoop(){
       const deltaMs = (nowAT - live.arrivalAudioT) * 1000;
       if(!live.holding){
         if(live.type === 'slide'){
-          if(deltaMs > SLIDE_GREAT_MS){ resolveMiss(live, 'ミス'); continue; }
+          if(deltaMs > SLIDE_GREAT_MS){ resolveMiss(live, t('miss')); continue; }
         } else if(live.isBreak){
-          if(deltaMs > JW_BREAK.great){ resolveMiss(live, 'ミス'); continue; }
+          if(deltaMs > JW_BREAK.great){ resolveMiss(live, t('miss')); continue; }
         } else {
-          if(deltaMs > JW.good){ resolveMiss(live, 'ミス'); continue; }
+          if(deltaMs > JW.good){ resolveMiss(live, t('miss')); continue; }
         }
       }
     }
@@ -2463,7 +2702,7 @@ function spawnFrozenFirst(){
   el.style.setProperty('--ty', dest.y.toFixed(1) + 'px');
   el.style.setProperty('--sc', '1');
   const hint = document.createElement('div'); hint.className = 'tap-hint-text';
-  hint.textContent = 'タップしてスタート'; el.appendChild(hint);
+  hint.textContent = t('tap_to_start'); el.appendChild(hint);
   const live = {
     chartIdx:0, elem:el, type:'tap', isBreak:false,
     posDeg:first.pos, destPx:dest,
@@ -2607,7 +2846,7 @@ function attachNoteHandlers(el, live){
       // judge the initial press timing first
       const deltaMs = (audioCtx.currentTime - live.arrivalAudioT) * 1000;
       const judg = judgeTap(deltaMs, live.isBreak);
-      if(judg === 'miss'){ resolveMiss(live, 'ミス'); return; }
+      if(judg === 'miss'){ resolveMiss(live, t('miss')); return; }
       live.holding = true;
       live.holdStartAudioT = audioCtx.currentTime;
       live.pointerId = e.pointerId;
@@ -2616,7 +2855,7 @@ function attachNoteHandlers(el, live){
     } else {
       const deltaMs = (audioCtx.currentTime - live.arrivalAudioT) * 1000;
       const judg = judgeTap(deltaMs, live.isBreak);
-      if(judg === 'miss'){ resolveMiss(live, 'ミス'); return; }
+      if(judg === 'miss'){ resolveMiss(live, t('miss')); return; }
       resolveHit(live, judg, deltaMs);
     }
   };
@@ -2630,7 +2869,7 @@ function attachNoteHandlers(el, live){
       resolveHoldComplete(live);
     } else {
       live.holding = false;
-      resolveMiss(live, 'ブレイク！');
+      resolveMiss(live, t('break_miss'));
     }
   };
   el.addEventListener('pointerdown', onDown);
@@ -2659,7 +2898,7 @@ function attachSlideHandlers(live){
   const onUp = (e) => {
     if(live.resolved) return;
     if(e.pointerId !== live.pointerId) return;
-    if(!live.reachedEnd){ resolveMiss(live, 'ミス'); }
+    if(!live.reachedEnd){ resolveMiss(live, t('miss')); }
   };
   startEl.addEventListener('pointerdown', onStartDown);
   startEl.addEventListener('pointermove', onMove);
@@ -2673,7 +2912,7 @@ function judgeSlideNow(live){
   let tier;
   if(abs <= SLIDE_PERF_MS) tier = 'perfect';
   else if(abs <= SLIDE_GREAT_MS) tier = 'great';
-  else { resolveMiss(live, 'ミス'); return; }
+  else { resolveMiss(live, t('miss')); return; }
   resolveHit(live, tier, deltaMs);
 }
 function judgeTap(deltaMs, isBreak){
@@ -2750,14 +2989,11 @@ function tierBurstClass(tier, isBreak){
   if(isBreak) return 'break';
   return tier; // 'critical'|'perfect'|'great'|'good'|'miss'
 }
-const JUDG_LABELS = {
-  critical:'クリティカル', perfect:'パーフェクト', great:'グレート',
-  good:'グッド', miss:'ミス', break:'ブレイク！',
-};
+const JUDG_KEYS = {critical:'critical', perfect:'perfect', great:'great', good:'good', miss:'miss'};
 function spawnJudgment(live, tier, deltaMs, noteType, overrideLabel){
   const p = document.createElement('div');
   p.className = 'judg-popup ' + (live.isBreak && tier !== 'miss' ? 'break' : tier);
-  const lbl = overrideLabel || (live.isBreak && tier !== 'miss' ? 'ブレイク！' : JUDG_LABELS[tier]);
+  const lbl = overrideLabel || (live.isBreak && tier !== 'miss' ? t('break_hit') : t(JUDG_KEYS[tier]));
   const showEL = tier !== 'critical' && tier !== 'miss' && noteType !== 'slide';
   const el = (showEL && deltaMs !== 0) ? (deltaMs < 0 ? 'EARLY' : 'LATE') : '';
   p.innerHTML = `<span class="jlbl">${lbl}</span>` + (el ? `<span class="jsub">${el}</span>` : '');
@@ -2815,7 +3051,7 @@ function updateScoreDisplay(){
   // No miss ceiling in freeplay — just the tally.
   document.getElementById('spMiss').textContent =
     state.mode === 'freeplay' ? `${rhythm.misses}` : `${rhythm.misses} / ${MAX_MISSES}`;
-  document.getElementById('spStyle').textContent = STYLE_LABELS[state.chartStyle] || state.chartStyle;
+  document.getElementById('spStyle').textContent = styleLabel(state.chartStyle) || state.chartStyle;
   const beatKey = state.mode === 'timer'    ? state.timer.beat
                 : state.mode === 'freeplay' ? state.freeplay.beat
                 :                             state.beatPreset;
@@ -2888,9 +3124,9 @@ function showScreen(name){
   // as well as freeplay-mode CSS overrides.
   document.body.setAttribute('data-screen', name);
   for(const s of document.querySelectorAll('.screen')) s.classList.toggle('active', s.id === name + 'Screen');
-  const statusMap = {setup:'セットアップ', armed:'セット済み', alarm:'！！アラーム！！', success:'クリア', failed:'失敗', stats:'プロファイル', freeplay:'フリープレイ', timer:'タイマー', timerCountdown:'集中中', endlessResult:'エンドレス完了'};
-  document.getElementById('hudStatus').textContent = statusMap[name] || name;
-  document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
+  const statusKeys = {setup:'status_setup', armed:'status_armed', alarm:'status_alarm', success:'status_clear', failed:'status_failed', stats:'status_profile', freeplay:'status_freeplay', timer:'status_timer', timerCountdown:'status_focusing', endlessResult:'status_endless'};
+  document.getElementById('hudStatus').textContent = t(statusKeys[name] || 'status_setup');
+  document.getElementById('hudMode').textContent = state.testMode ? t('test_mode_indicator') : '';
   // Preview loops are hosted on setup, freeplay, and timer setup screens;
   // kill the preview whenever we move to any OTHER screen.
   if(name !== 'setup' && name !== 'freeplay' && name !== 'timer' && currentTrack.mode === 'preview') trackStop();
@@ -3254,12 +3490,15 @@ function renderStatsScreen(){
   list.innerHTML = '';
   if(!stats.history.length){
     const empty = document.createElement('div'); empty.className = 'pc-empty';
-    empty.textContent = 'セッション履歴なし — 最初のアラームをセットして履歴を作成してください。';
+    empty.textContent = t('empty_history');
     list.appendChild(empty); return;
   }
   for(const h of stats.history){
     const d = new Date(h.date);
-    const dateStr = `${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    // MMM DD in EN, N月N日 in JA — both use the same numeric time suffix.
+    const dateStr = curLang === 'en'
+      ? `${d.toLocaleString('en-US',{month:'short',day:'numeric'})} ${pad(d.getHours())}:${pad(d.getMinutes())}`
+      : `${d.getMonth()+1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())}`;
     const row = document.createElement('div'); row.className = 'pc-row';
     const alarmClass = 'a' + Math.min(Math.max(h.alarm,1), 6);
     row.innerHTML =
@@ -3373,8 +3612,8 @@ async function requestNotifPermission(){
 }
 async function showAlarmNotification(level, max){
   if(!('Notification' in window) || Notification.permission !== 'granted') return;
-  const title = '早く起きろまい！';
-  const body  = `アラーム ${level}/${max} — タップして起きる`;
+  const title = t('notif_title');
+  const body  = t('notif_body', {n: level, m: max});
   const options = {
     body, icon:'mascot.png', badge:'mascot.png',
     tag: NOTIF_TAG,
@@ -3432,7 +3671,7 @@ function decorateFields(){
   }
 }
 document.getElementById('armBtn').addEventListener('click', armAlarm);
-document.getElementById('disarmBtn').addEventListener('click', () => { if(confirm('アラームを解除しますか？')) disarm(); });
+document.getElementById('disarmBtn').addEventListener('click', () => { if(confirm(t('confirm_disarm'))) disarm(); });
 document.getElementById('successReset').addEventListener('click', () => showScreen('setup'));
 document.getElementById('failedReset').addEventListener('click', () => showScreen('setup'));
 document.getElementById('statsBtn').addEventListener('click', () => showScreen('stats'));
@@ -3481,7 +3720,7 @@ document.getElementById('timerTestMode').addEventListener('change', (e) => {
   state.testMode = e.target.checked;
   document.getElementById('testMode').checked = state.testMode;
   saveSettings();
-  document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
+  document.getElementById('hudMode').textContent = state.testMode ? t('test_mode_indicator') : '';
 });
 document.getElementById('timerDiffButtons').addEventListener('click', (e) => {
   const btn = e.target.closest('.diff-btn'); if(!btn) return;
@@ -3503,6 +3742,11 @@ document.getElementById('timerTypeToggles').addEventListener('click', (e) => {
 // Endless mode
 document.getElementById('endlessStop').addEventListener('click', stopEndless);
 document.getElementById('endlessBack').addEventListener('click', () => showScreen('freeplay'));
+
+// Language toggle — flips between ja / en, persists, re-labels every string.
+document.getElementById('langToggle').addEventListener('click', () => {
+  setLanguage(curLang === 'ja' ? 'en' : 'ja');
+});
 document.getElementById('helpBtn').addEventListener('click', () => document.getElementById('helpOverlay').classList.add('on'));
 document.getElementById('helpClose').addEventListener('click', () => document.getElementById('helpOverlay').classList.remove('on'));
 document.getElementById('helpOverlay').addEventListener('click', (e) => {
@@ -3556,6 +3800,7 @@ document.body.setAttribute('data-screen', 'setup');
 document.body.setAttribute('data-mode', 'alarm');
 renderFreeplayScreen();  // pre-render so the freeplay UI is ready on first open
 renderTimerScreen();     // same for the timer setup screen
+applyLanguage();         // apply the (possibly localStorage-loaded) language
 registerServiceWorker();
 tick();
 </script>
