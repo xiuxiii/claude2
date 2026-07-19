@@ -1911,6 +1911,13 @@ const stats = {streak:0, lastAlarm1Date:null, bestScore:0, bestMaxCombo:0, bestD
 function wakeWindowMs(){ return state.testMode ? 15000 : 300000; }
 function escalateStepMs(){ return state.testMode ? 30000 : state.intervalMin * 60000; }
 function travelBeats(){ return BASE_TRAVEL_BEATS / state.noteSpeed; }
+// The "level" that drives chart difficulty, spawn gating and the results
+// rank depends on which mode is currently playing.
+function currentDifficulty(){
+  if(state.mode === 'freeplay') return state.freeplay.difficulty;
+  if(state.mode === 'timer')    return state.timer.difficulty;
+  return state.currentAlarmIndex + 1;
+}
 
 /* ============ PERSISTENCE ============ */
 function saveSettings(){
@@ -2087,7 +2094,9 @@ function escalate(){
 }
 function finishAlarm(){
   const now = new Date();
-  const level = state.currentAlarmIndex + 1;
+  // level for rank / display comes from the currently-playing mode, not
+  // the alarm schedule (which is meaningless in freeplay + timer).
+  const level = currentDifficulty();
   const finalScore = rhythm.score, finalMax = rhythm.maxCombo;
   const hits = rhythm.hits, total = rhythm.totalNotes, misses = rhythm.misses;
   const accPct = total ? (hits/total)*100 : 0;
@@ -2097,11 +2106,11 @@ function finishAlarm(){
   // capture breakdown snapshot before we tear down
   const bd = JSON.parse(JSON.stringify(rhythm.types));
 
-  const wasFreeplay = state.mode === 'freeplay';
+  const skipRecord = state.mode === 'freeplay' || state.mode === 'timer';
   stopCurrentAlarm();
-  // Free-play sessions don't affect the wake streak or leaderboards — the
-  // player didn't oversleep, they chose to play.
-  if(!wasFreeplay){
+  // Only real alarm-mode wakes count toward the streak / stats — freeplay
+  // and focus-timer are voluntary play sessions.
+  if(!skipRecord){
     recordSession({alarm:level, score:finalScore, maxCombo:finalMax, accuracy:accPct, dxScore:dx, dxMax});
   }
 
@@ -2611,7 +2620,10 @@ function rhythmLoop(){
     // A blocked note is not lost — it simply waits until the previous
     // one resolves; spawnNote() bumps arrivalBeat forward so the delayed
     // note still gets a real travel window instead of teleporting home.
-    const level = state.currentAlarmIndex + 1;
+    // Level comes from the mode-appropriate difficulty so freeplay/timer
+    // SYNC pairs at EXPERT/MASTER actually get to spawn together instead
+    // of being serialized by the alarm-mode gate.
+    const level = currentDifficulty();
     while(rhythm.nextSpawnIdx < rhythm.chart.length &&
           rhythm.chart[rhythm.nextSpawnIdx].beat - nowBeat <= travelBeats()){
       const nextNote = rhythm.chart[rhythm.nextSpawnIdx];
@@ -3435,10 +3447,8 @@ function endTimer(){
     document.body.setAttribute('data-in-alarm', '1');
     document.getElementById('alarmCount').textContent = DIFF_LABELS[level] || 'BASIC';
     document.getElementById('alarmLabel').textContent = preset ? preset.name : 'FOCUS';
-    // Route the backing track through the timer beat by temporarily using
-    // it as the freeplay beat (startRhythmSession picks that path when
-    // state.mode !== 'alarm').
-    state.freeplay.beat = state.timer.beat;
+    // startRhythmSession picks state.timer.beat directly when state.mode
+    // is 'timer' — no need to clobber state.freeplay.beat here.
     initRhythmSession(level, state.timer.types);
     showScreen('alarm');
   }, 700);
@@ -3462,6 +3472,16 @@ function continueEndlessChart(){
   // segment automatically.
   rhythm.chart = rhythm.chart.concat(newChart);
   rhythm.totalNotes = rhythm.chart.length;
+  // Grow the DX cap AND the per-type "total" counters so the score panel
+  // reads correctly ("DX 47 / 84" instead of "47 / 42") and the breakdown
+  // in the endless-results screen adds up.
+  rhythm.dxMax += newChart.length * DX_POINTS.critical;
+  for(const n of newChart){
+    const k = (n.isBreak && n.type === 'tap') ? 'break'
+            : n.type === 'hold' ? 'hold'
+            : n.type === 'slide' ? 'slide' : 'tap';
+    rhythm.types[k].t++;
+  }
   updateScoreDisplay();
 }
 function stopEndless(){
@@ -3515,13 +3535,20 @@ function renderStatsScreen(){
 let audioCtx = null, masterGain = null;
 let alarmTimers = [], alarmOscillators = [];
 function ensureAudio(){
-  if(audioCtx) return;
-  const AC = window.AudioContext || window.webkitAudioContext;
-  audioCtx = new AC();
-  masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.001;
-  masterGain.connect(audioCtx.destination);
-  if(audioCtx.state === 'suspended') audioCtx.resume();
+  if(!audioCtx){
+    const AC = window.AudioContext || window.webkitAudioContext;
+    audioCtx = new AC();
+    masterGain = audioCtx.createGain();
+    masterGain.gain.value = 0.001;
+    masterGain.connect(audioCtx.destination);
+  }
+  // Resume on EVERY call — an existing context can slip back to
+  // 'suspended' (Android backgrounding) or 'interrupted' (iOS phone
+  // call, screen off) between gestures, and every subsequent audio
+  // schedule would silently drop until we call resume().
+  if(audioCtx.state === 'suspended' || audioCtx.state === 'interrupted'){
+    try{ audioCtx.resume(); }catch(_){}
+  }
 }
 function note(freq, when, dur, type, vol){
   const osc = audioCtx.createOscillator(); const gain = audioCtx.createGain();
@@ -3650,7 +3677,14 @@ async function requestWakeLock(){
 }
 function releaseWakeLock(){ if(wakeLock){ try{ wakeLock.release(); }catch(e){} wakeLock = null; } }
 document.addEventListener('visibilitychange', () => {
-  if(document.visibilityState === 'visible' && state.screen !== 'setup' && !wakeLock){ requestWakeLock(); }
+  if(document.visibilityState !== 'visible') return;
+  // Re-arm wake lock (mobile drops it when the tab is hidden) and kick
+  // the audio context back to running — otherwise coming back from
+  // background leaves the metronome silent and note-hit sounds dropped.
+  if(state.screen !== 'setup' && !wakeLock){ requestWakeLock(); }
+  if(audioCtx && (audioCtx.state === 'suspended' || audioCtx.state === 'interrupted')){
+    try{ audioCtx.resume(); }catch(_){}
+  }
 });
 
 /* ============ EVENT WIRING + FIELD DECORATION ============ */
@@ -3782,7 +3816,10 @@ for(const id of ['firstTime','interval','maxAlarms','testMode','noteSpeed','char
     state.noteSpeed   = parseFloat(document.getElementById('noteSpeed').value);
     state.chartStyle  = document.getElementById('chartStyle').value;
     saveSettings();
-    document.getElementById('hudMode').textContent = state.testMode ? 'テストモード' : '';
+    // Keep the timer screen's test-mode checkbox in sync so all three modes
+    // share the same setting; also refresh the (localized) HUD indicator.
+    const tm = document.getElementById('timerTestMode'); if(tm) tm.checked = state.testMode;
+    document.getElementById('hudMode').textContent = state.testMode ? t('test_mode_indicator') : '';
   });
 }
 
