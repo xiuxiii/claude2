@@ -67,18 +67,21 @@ body::after{content:"";position:fixed;inset:0;background:linear-gradient(transpa
 .brand{color:var(--pink);text-shadow:0 0 12px var(--pink)}
 .now{color:var(--cyan)}
 .hud-left{display:flex;align-items:center;gap:10px;min-width:0}
+.hud-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
 .help-btn{
   display:none;align-items:center;justify-content:center;
-  width:36px;height:36px;border-radius:50%;
-  background:linear-gradient(180deg,var(--cyan),#0090c0);
-  color:#001a24;font-family:'Orbitron',sans-serif;font-weight:900;
-  font-size:20px;line-height:1;
-  border:2px solid rgba(255,255,255,.5);
-  box-shadow:0 0 12px rgba(0,217,255,.6);
+  width:40px;height:40px;border-radius:50%;
+  background:transparent;
+  color:var(--pink);font-family:'Orbitron','Noto Sans JP',sans-serif;font-weight:900;
+  font-size:18px;line-height:1;
+  border:1.5px solid var(--pink);
+  box-shadow:0 0 10px rgba(255,79,163,.3);
   cursor:pointer;touch-action:manipulation;
   padding:0;
+  flex-shrink:0; /* .hud-left is flex — don't let the brand text squash the circle */
 }
-.help-btn:active{transform:scale(.94)}
+.help-btn.pulse{animation:helpPulse .2s ease-out}
+@keyframes helpPulse{0%{transform:scale(1)}50%{transform:scale(1.15)}100%{transform:scale(1)}}
 /* Only visible while the user is choosing settings or waiting for the
    alarm — the button hides itself once gameplay is live so it can't
    be tapped by accident mid-chart. */
@@ -147,7 +150,7 @@ body[data-screen="armed"] .help-btn{display:flex}
 
 /* ============ mascot ============ */
 .mascot{display:block;filter:drop-shadow(0 6px 16px rgba(0,217,255,.35));pointer-events:none;will-change:transform}
-.mascot.setup{width:120px;height:auto;margin-bottom:6px;animation:mascotBob 3s ease-in-out infinite}
+.mascot.setup{width:120px;height:auto;margin-bottom:12px;animation:mascotBob 3s ease-in-out infinite}
 .mascot.armed{width:80px;height:auto;margin-bottom:8px;animation:mascotSleep 3.5s ease-in-out infinite}
 .mascot.success{width:140px;height:auto;margin-bottom:4px;animation:mascotHappy 1s ease-in-out infinite}
 .mascot.failed{width:130px;height:auto;margin-bottom:6px;filter:grayscale(1) brightness(.55) drop-shadow(0 6px 12px rgba(255,40,40,.3));transform:rotate(-14deg)}
@@ -182,21 +185,69 @@ h1.title{
   50%{text-shadow:0 0 12px var(--pink),0 0 30px var(--pink-2),0 0 60px rgba(255,79,163,.4)}
 }
 .subtitle{font-size:clamp(12px,1.6vmin,16px);letter-spacing:.3em;color:var(--cyan);text-transform:uppercase;text-shadow:0 0 10px var(--cyan);margin-bottom:14px}
-.form{display:grid;gap:10px;width:100%;max-width:340px}
+/* Setup-screen title block sits tighter: 12px mascot→title gap, minimal
+   title→subtitle gap so the circle's vertical space goes to settings. */
+#setupScreen h1.title{margin-bottom:2px}
+#setupScreen .subtitle{margin-bottom:10px;letter-spacing:.24em}
+.form{display:grid;gap:14px;width:100%;max-width:340px;padding:0 24px}
+/* Settings rows — pill capsule with a cyan→pink gradient border painted
+   via the two-layer background trick (border-image can't round corners).
+   All glows static — no per-frame animation cost. */
 .row{
   display:flex;justify-content:space-between;align-items:center;
-  background:rgba(255,255,255,.05);border:1px solid rgba(0,217,255,.35);
-  border-radius:14px;padding:8px 12px;box-shadow:inset 0 0 12px rgba(0,217,255,.1);
+  height:56px;padding:0 20px;
+  border-radius:999px;
+  border:1.5px solid transparent;
+  background:
+    linear-gradient(180deg,rgba(20,10,52,.85) 0%,rgba(10,6,32,.85) 100%) padding-box,
+    linear-gradient(90deg,#00d9ff 0%,#ff4fa3 100%) border-box;
+  box-shadow:0 0 12px rgba(255,79,163,.15);
 }
-.row label{font-size:12px;letter-spacing:.1em;color:var(--cyan)}
-.row input,.row select{background:transparent;color:var(--white);font-family:'Orbitron',sans-serif;font-weight:700;font-size:16px;border:none;outline:none;text-align:right;min-width:110px}
-.row input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(1) drop-shadow(0 0 4px var(--cyan));cursor:pointer}
+.row label{font-size:13px;letter-spacing:.15em;color:var(--cyan);text-transform:uppercase;white-space:nowrap}
+.row input,.row select{
+  background:transparent;color:var(--white);
+  font-family:'Orbitron','Noto Sans JP',sans-serif;font-weight:700;font-size:20px;
+  border:none;outline:none;text-align:right;min-width:100px;
+  text-shadow:0 0 8px rgba(255,255,255,.4);
+}
+.row input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(48%) sepia(89%) saturate(2381%) hue-rotate(157deg) brightness(108%);cursor:pointer}
 .row select{appearance:none;padding-right:4px;cursor:pointer}
-.row select option{background:var(--bg-1);color:var(--white)}
+.row select option{background:var(--bg-1);color:var(--white);font-size:16px}
+
+/* One-time entrance stagger — each row fades in + rises 8px, 50ms apart.
+   `backwards` fill keeps rows invisible until their delay elapses.
+   Replays only when the setup screen itself is (re)entered, never on
+   list re-renders (those don't touch these nodes). */
+#setupScreen.active .form .row{animation:rowIn .25s ease-out backwards}
+#setupScreen.active .form .row:nth-child(1){animation-delay:0ms}
+#setupScreen.active .form .row:nth-child(2){animation-delay:50ms}
+#setupScreen.active .form .row:nth-child(3){animation-delay:100ms}
+#setupScreen.active .form .row:nth-child(4){animation-delay:150ms}
+#setupScreen.active .form .row:nth-child(5){animation-delay:200ms}
+#setupScreen.active .form .row:nth-child(6){animation-delay:250ms}
+@keyframes rowIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+
 .toggle{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:4px;font-size:11px;letter-spacing:.15em;text-transform:uppercase;color:var(--yellow)}
-.toggle input{width:18px;height:18px;accent-color:var(--yellow)}
+/* Custom checkbox — 22px rounded square, yellow border, SVG ✓ when
+   checked (pseudo-elements don't render on <input>, so the glyph is a
+   background image), quick scale pop on toggle. */
+.toggle input{
+  appearance:none;-webkit-appearance:none;
+  width:22px;height:22px;flex-shrink:0;
+  border-radius:6px;
+  border:1.5px solid var(--yellow);
+  background:transparent center/14px no-repeat;
+  cursor:pointer;
+  transition:box-shadow .15s ease;
+}
+.toggle input:checked{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M2 8.5 6 12.5 14 3.5' fill='none' stroke='%23ffe14a' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  box-shadow:0 0 8px rgba(255,225,74,.5);
+  animation:checkPop .15s ease;
+}
+@keyframes checkPop{0%{transform:scale(.85)}60%{transform:scale(1.12)}100%{transform:scale(1)}}
 .notif-hint{
-  font-size:11px;color:rgba(0,217,255,.85);
+  font-size:11px;color:var(--cyan);opacity:.6;
   text-align:center;letter-spacing:.02em;line-height:1.4;
   margin-top:2px;padding:0 8px;
   font-family:'Fredoka','Noto Sans JP',sans-serif;
@@ -215,7 +266,50 @@ h1.title{
 .btn.ghost{background:transparent;color:var(--white);border:2px solid rgba(255,255,255,.35);box-shadow:none;padding:10px 18px;font-size:12px}
 .btn.small{padding:10px 18px;font-size:13px}
 .btn.big{font-size:clamp(18px,3vmin,26px);padding:20px 36px;margin-top:6px}
-.setup-actions{display:flex;gap:8px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:2px}
+/* Sheen sweep on the ARM button — a skewed light streak crosses once
+   every 4s. transform-only, so it stays composited. */
+#armBtn{position:relative;overflow:hidden}
+#armBtn::after{
+  content:"";position:absolute;top:-60%;bottom:-60%;left:0;width:36%;
+  background:linear-gradient(105deg,transparent 0%,rgba(255,255,255,.35) 50%,transparent 100%);
+  transform:translateX(-160%) skewX(-16deg);
+  animation:armSheen 4s linear infinite;
+  pointer-events:none;
+}
+@keyframes armSheen{
+  0%  {transform:translateX(-160%) skewX(-16deg)}
+  18% {transform:translateX(420%) skewX(-16deg)}
+  100%{transform:translateX(420%) skewX(-16deg)}
+}
+#armBtn:active{transform:translateY(1px) scale(.97);box-shadow:0 0 46px rgba(255,79,163,.95),inset 0 -4px 0 rgba(0,0,0,.25),inset 0 2px 0 rgba(255,255,255,.35)}
+
+/* Unified bottom action bar — スタッツ / タイマー / フリープレイ as three
+   equal pills, color-coded, transparent bg with static glows. */
+.setup-actions{display:flex;gap:10px;width:100%;margin-top:20px;margin-bottom:16px}
+.action-pill{
+  flex:1;height:44px;min-width:0;
+  display:flex;align-items:center;justify-content:center;gap:6px;
+  border-radius:999px;background:transparent;
+  border:1.5px solid;
+  font-family:'Orbitron','Noto Sans JP',sans-serif;font-weight:700;
+  font-size:14px;letter-spacing:.04em;white-space:nowrap;
+  cursor:pointer;touch-action:manipulation;padding:0 6px;
+  transition:transform .1s ease,background-color .1s ease;
+}
+.action-pill:active{transform:scale(.96)}
+.ap-stats{border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 10px rgba(255,225,74,.2)}
+.ap-timer{border-color:#b44aff;color:#b44aff;box-shadow:0 0 10px rgba(180,74,255,.2)}
+.ap-free {border-color:var(--cyan);color:var(--cyan);box-shadow:0 0 10px rgba(0,217,255,.2)}
+.ap-stats:active{background:rgba(255,225,74,.15)}
+.ap-timer:active{background:rgba(180,74,255,.15)}
+.ap-free:active {background:rgba(0,217,255,.15)}
+.ap-icon{font-size:12px;line-height:1;flex-shrink:0}
+/* CSS-drawn stat bars icon (no emoji) */
+.ap-icon.bars{display:flex;align-items:flex-end;gap:2px;height:12px}
+.ap-icon.bars i{width:3px;background:currentColor;border-radius:1px}
+.ap-icon.bars i:nth-child(1){height:6px}
+.ap-icon.bars i:nth-child(2){height:12px}
+.ap-icon.bars i:nth-child(3){height:9px}
 
 /* armed */
 .clock{font-family:'Orbitron',sans-serif;font-weight:900;font-size:clamp(48px,10vmin,110px);letter-spacing:.06em;color:var(--white);text-shadow:0 0 20px var(--cyan),0 0 50px rgba(0,217,255,.5);line-height:1}
@@ -302,15 +396,16 @@ body[data-level="4"] .mascot.alarm-inline{width:108px;animation-duration:.1s;fil
   min-width:150px;justify-content:flex-end;
 }
 .beat-nav{
-  width:32px;height:32px;border-radius:8px;
-  background:rgba(0,217,255,.18);
-  border:1px solid rgba(0,217,255,.55);
-  color:var(--white);font-family:'Orbitron',sans-serif;font-weight:900;
+  width:36px;height:36px;border-radius:50%;
+  background:transparent;
+  border:1.5px solid var(--cyan);
+  color:var(--cyan);font-family:'Orbitron',sans-serif;font-weight:900;
   font-size:13px;line-height:1;cursor:pointer;padding:0;
   touch-action:manipulation;
-  box-shadow:0 0 8px rgba(0,217,255,.35);
+  box-shadow:0 0 8px rgba(0,217,255,.25);
+  transition:transform .1s ease,box-shadow .1s ease;
 }
-.beat-nav:active{transform:scale(.94)}
+.beat-nav:active{transform:scale(.92);box-shadow:0 0 16px rgba(0,217,255,.7)}
 .beat-name{
   min-width:88px;text-align:center;
   font-family:'Fredoka','Noto Sans JP',sans-serif;
@@ -814,21 +909,6 @@ body[data-level="4"] #alarmScreen{animation:shake .12s linear infinite}
 }
 body[data-mode="freeplay"] .mode-badge{display:block}
 
-/* Floating cyan corner button — bottom-right on the setup screen only */
-.freeplay-corner{
-  position:fixed;bottom:44px;right:14px;z-index:30;
-  padding:8px 14px;border-radius:999px;
-  background:linear-gradient(180deg,var(--cyan),#0090c0);
-  color:#001a24;font-family:'Orbitron',sans-serif;
-  font-weight:900;font-size:12px;letter-spacing:.12em;
-  border:2px solid rgba(255,255,255,.55);
-  box-shadow:0 0 16px rgba(0,217,255,.6);
-  cursor:pointer;touch-action:manipulation;
-  display:none;
-}
-.freeplay-corner:active{transform:scale(.94)}
-body[data-screen="setup"] .freeplay-corner{display:block}
-
 /* ============ BOOT / LOADING SCREEN ============ */
 .boot-screen{
   position:fixed;inset:0;z-index:1000;
@@ -904,19 +984,6 @@ body[data-screen="setup"] .freeplay-corner{display:block}
 }
 
 /* ============ FOCUS TIMER — SETUP ============ */
-.timer-corner{
-  position:fixed;bottom:44px;left:14px;z-index:30;
-  padding:8px 14px;border-radius:999px;
-  background:linear-gradient(180deg,#a24bff,#5a1e9e);
-  color:#fff;font-family:'Orbitron',sans-serif;
-  font-weight:900;font-size:12px;letter-spacing:.12em;
-  border:2px solid rgba(255,255,255,.5);
-  box-shadow:0 0 16px rgba(162,75,255,.6);
-  cursor:pointer;touch-action:manipulation;display:none;
-}
-.timer-corner:active{transform:scale(.94)}
-body[data-screen="setup"] .timer-corner{display:block}
-
 .timer-length{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
 .tl-btn{
   padding:10px 4px;border-radius:10px;
@@ -952,9 +1019,7 @@ body[data-screen="setup"] .timer-corner{display:block}
 /* Hide the HUD chrome during the timer's fullscreen mascot experience. */
 body[data-screen="timerCountdown"] .hud-top,
 body[data-screen="timerCountdown"] .hud-bottom,
-body[data-screen="timerCountdown"] .help-btn,
-body[data-screen="timerCountdown"] .freeplay-corner,
-body[data-screen="timerCountdown"] .timer-corner{display:none}
+body[data-screen="timerCountdown"] .help-btn{display:none}
 .tc-flash{
   position:absolute;inset:0;pointer-events:none;
   background:radial-gradient(circle,rgba(255,42,42,.35) 0%,transparent 65%);
@@ -1115,20 +1180,36 @@ body[data-mode="timer"] .fp-result-btns#timerResultBtns{display:flex;flex-direct
   text-align:center;
 }
 
-/* ============ LANGUAGE TOGGLE ============ */
+/* ============ LANGUAGE TOGGLE — inline in the top HUD ============ */
 .lang-toggle{
-  position:fixed;bottom:8px;left:10px;z-index:200;
-  padding:4px 10px 4px 8px;border-radius:999px;
-  background:rgba(10,6,32,.75);
-  border:1px solid rgba(0,217,255,.55);
+  height:32px;padding:0 10px;border-radius:999px;
+  display:flex;align-items:center;gap:4px;
+  background:transparent;
+  border:1px solid var(--cyan);
   color:var(--white);
   font-family:'Orbitron','Noto Sans JP',sans-serif;
-  font-weight:900;font-size:11px;letter-spacing:.08em;
+  font-weight:900;font-size:12px;letter-spacing:.06em;
   text-shadow:0 0 6px rgba(0,217,255,.55);
-  box-shadow:0 0 10px rgba(0,217,255,.35);
   cursor:pointer;touch-action:manipulation;
+  flex-shrink:0;
 }
 .lang-toggle:active{transform:scale(.94)}
+.lt-icon{font-size:13px;line-height:1}
+
+/* Narrow phones (≤380px): shrink rows, drop the 🌐 glyph so the toggle
+   never collides with the clock, ease letter-spacing so EN strings fit. */
+@media (max-width:380px){
+  .row{height:48px;padding:0 16px}
+  .row label{font-size:11px;letter-spacing:.1em}
+  .row input,.row select{font-size:17px;min-width:84px}
+  .form{gap:10px;padding:0 12px}
+  .lt-icon{display:none}
+  #setupScreen .subtitle{letter-spacing:.14em}
+  .action-pill{font-size:12px;gap:4px}
+  .hud-top{padding:14px 12px}
+  .brand{font-size:12px}
+  .now{font-size:12px}
+}
 
 /* Freeplay-specific result buttons on success screen */
 .fp-result-btns{display:none;gap:8px;justify-content:center;flex-wrap:wrap}
@@ -1156,7 +1237,10 @@ body[data-mode="freeplay"] #escalateIn{display:none}
     <button class="help-btn" id="helpBtn" aria-label="ヘルプ">？</button>
     <div class="brand" data-i18n="brand">◆ maimai アラーム</div>
   </div>
-  <div class="now"><span data-i18n="now">現在時刻:</span> <span id="hudClock">--:--:--</span></div>
+  <div class="hud-right">
+    <button class="lang-toggle" id="langToggle" aria-label="Language / 言語"><span class="lt-icon">🌐</span><span id="langCode">EN</span></button>
+    <div class="now"><span data-i18n="now">現在時刻:</span> <span id="hudClock">--:--:--</span></div>
+  </div>
 </div>
 <div class="hud-bottom">
   <div><span data-i18n="status">ステータス:</span> <span id="hudStatus">セットアップ</span></div>
@@ -1211,7 +1295,9 @@ body[data-mode="freeplay"] #escalateIn{display:none}
       <div class="notif-hint" data-i18n="notif_hint">通知を許可するとロック画面にアラームが表示されます</div>
       <button class="btn big" id="armBtn" data-i18n="arm_alarm">アラームセット</button>
       <div class="setup-actions">
-        <button class="btn ghost small" id="statsBtn" data-i18n="stats">スタッツ</button>
+        <button class="action-pill ap-stats" id="statsBtn"><span class="ap-icon bars"><i></i><i></i><i></i></span><span data-i18n="stats">スタッツ</span></button>
+        <button class="action-pill ap-timer" id="timerBtn"><span class="ap-icon">◐</span><span data-i18n="timer_entry">タイマー</span></button>
+        <button class="action-pill ap-free" id="freeplayBtn"><span class="ap-icon">▶</span><span data-i18n="freeplay_entry">フリープレイ</span></button>
       </div>
     </div>
   </div>
@@ -1381,13 +1467,7 @@ body[data-mode="freeplay"] #escalateIn{display:none}
 <!-- Mode badge — small "フリープレイ" chip during freeplay gameplay -->
 <div class="mode-badge" id="modeBadge">フリープレイ</div>
 
-<!-- Language toggle — pinned to the bottom-left of every screen. -->
-<button class="lang-toggle" id="langToggle" aria-label="Language / 言語">🌐 EN</button>
-
-<!-- Setup-only floating mode entries. Kept out of the form so the fixed
-     .hud-bottom can't overlap them; visibility gated by body[data-screen]. -->
-<button class="freeplay-corner" id="freeplayBtn" aria-label="フリープレイ / FREE PLAY" data-i18n="freeplay_entry">フリープレイ ▶</button>
-<button class="timer-corner"    id="timerBtn"    aria-label="タイマー / TIMER"        data-i18n="timer_entry">◐ タイマー</button>
+<!-- (mode-entry buttons now live in the setup form's unified action bar) -->
 
 <!-- FOCUS TIMER — SETUP -->
 <section id="timerScreen" class="screen">
@@ -1560,7 +1640,7 @@ const I18N = {
     test_mode:'テストモード', test_mode_desc:'テストモード (15秒起床 / 30秒エスカレート)',
     notif_hint:'通知を許可するとロック画面にアラームが表示されます',
     arm_alarm:'アラームセット', stats:'スタッツ',
-    freeplay_entry:'フリープレイ ▶', timer_entry:'◐ タイマー',
+    freeplay_entry:'フリープレイ', timer_entry:'タイマー',
     armed:'セット済み', next_alarm:'次のアラーム',
     remaining_prefix:'あと', disarm:'解除',
     warn_keep_open:'このタブを開いたままにしてください。パソコンをスリープさせないでください。スクリーンウェイクロックで画面を保持します。',
@@ -1634,7 +1714,7 @@ const I18N = {
     test_mode:'TEST MODE', test_mode_desc:'TEST MODE (15s wake / 30s escalate)',
     notif_hint:'Enable notifications to see alarms on the lock screen',
     arm_alarm:'ARM ALARM', stats:'STATS',
-    freeplay_entry:'FREE PLAY ▶', timer_entry:'◐ TIMER',
+    freeplay_entry:'FREE PLAY', timer_entry:'TIMER',
     armed:'ARMED', next_alarm:'NEXT ALARM',
     remaining_prefix:'in', disarm:'DISARM',
     warn_keep_open:'Keep this tab open. Do not let your computer sleep. Screen wake lock will keep the display on.',
@@ -1718,9 +1798,10 @@ function applyLanguage(){
   for(const el of document.querySelectorAll('[data-i18n]')){
     el.textContent = t(el.dataset.i18n);
   }
-  // Also translate boot messages array + refresh the language toggle chip.
-  const lt = document.getElementById('langToggle');
-  if(lt) lt.textContent = t('lang_toggle_label');
+  // Refresh the language-toggle chip. Only the code span is rewritten so
+  // the 🌐 icon span (hidden on narrow screens via CSS) survives.
+  const lc = document.getElementById('langCode');
+  if(lc) lc.textContent = curLang === 'ja' ? 'EN' : 'JP';
   document.documentElement.lang = curLang;
   // Dynamic pieces that JS composes from data.
   try{
@@ -3781,7 +3862,12 @@ document.getElementById('endlessBack').addEventListener('click', () => showScree
 document.getElementById('langToggle').addEventListener('click', () => {
   setLanguage(curLang === 'ja' ? 'en' : 'ja');
 });
-document.getElementById('helpBtn').addEventListener('click', () => document.getElementById('helpOverlay').classList.add('on'));
+document.getElementById('helpBtn').addEventListener('click', (e) => {
+  // quick 200ms pulse on the button itself, then open the overlay
+  const b = e.currentTarget;
+  b.classList.remove('pulse'); void b.offsetWidth; b.classList.add('pulse');
+  document.getElementById('helpOverlay').classList.add('on');
+});
 document.getElementById('helpClose').addEventListener('click', () => document.getElementById('helpOverlay').classList.remove('on'));
 document.getElementById('helpOverlay').addEventListener('click', (e) => {
   // click on the dim backdrop (not the card) also closes
