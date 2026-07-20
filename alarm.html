@@ -49,6 +49,29 @@ body::after{content:"";position:fixed;inset:0;background:linear-gradient(transpa
 
 .screen{position:fixed;inset:0;display:none;align-items:center;justify-content:center;z-index:1}
 .screen.active{display:flex}
+/* Setup is taller than most phone screens (mascot + title + 6 rows +
+   buttons), so it scrolls instead of center-overflowing off both edges.
+   Content flows from the top (below the HUD); the circle stays a fixed
+   square backdrop and the form simply extends past its lower edge. */
+#setupScreen.active{
+  align-items:flex-start;
+  overflow-y:auto;
+  /* overflow-y:auto forces overflow-x from visible→auto, which would turn
+     the deco rings (inset −42px past the field) into horizontal scroll.
+     Clamp it — they're decorative and may paint-clip at the edges. */
+  overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:80px 0 0;
+}
+#setupScreen .field{
+  justify-content:flex-start;
+  /* bottom margin (not container padding — flex scroll containers drop
+     trailing padding for overflowing content) keeps the action bar 12px+
+     clear of the fixed status line. */
+  margin:0 auto 64px;
+  flex-shrink:0;
+  padding-top:8%;
+}
 
 .hud-top,.hud-bottom{
   position:fixed;left:0;right:0;padding:14px 24px;
@@ -67,7 +90,8 @@ body::after{content:"";position:fixed;inset:0;background:linear-gradient(transpa
 .brand{color:var(--pink);text-shadow:0 0 12px var(--pink)}
 .now{color:var(--cyan)}
 .hud-left{display:flex;align-items:center;gap:10px;min-width:0}
-.hud-right{display:flex;align-items:center;gap:10px;flex-shrink:0}
+/* brand must never wrap to two lines; ellipsize under extreme font scaling */
+.brand{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(12px,3.6vw,16px)}
 .help-btn{
   display:none;align-items:center;justify-content:center;
   width:40px;height:40px;border-radius:50%;
@@ -189,13 +213,18 @@ h1.title{
    title→subtitle gap so the circle's vertical space goes to settings. */
 #setupScreen h1.title{margin-bottom:2px}
 #setupScreen .subtitle{margin-bottom:10px;letter-spacing:.24em}
-.form{display:grid;gap:14px;width:100%;max-width:340px;padding:0 24px}
+/* trailing padding (not margin — engines don't count trailing margins in
+   scrollable overflow) keeps the action bar clear of the status line */
+.form{display:grid;gap:14px;width:100%;max-width:340px;padding:0 16px 60px}
 /* Settings rows — pill capsule with a cyan→pink gradient border painted
    via the two-layer background trick (border-image can't round corners).
-   All glows static — no per-frame animation cost. */
+   All glows static — no per-frame animation cost.
+   Overflow-proof: the label may shrink (ellipsis) and the value may
+   shrink (min-width:0), so the pill NEVER exceeds its container even
+   under OS-level font scaling. */
 .row{
-  display:flex;justify-content:space-between;align-items:center;
-  height:56px;padding:0 20px;
+  display:flex;justify-content:space-between;align-items:center;gap:8px;
+  height:52px;max-width:100%;padding:0 16px;
   border-radius:999px;
   border:1.5px solid transparent;
   background:
@@ -203,11 +232,15 @@ h1.title{
     linear-gradient(90deg,#00d9ff 0%,#ff4fa3 100%) border-box;
   box-shadow:0 0 12px rgba(255,79,163,.15);
 }
-.row label{font-size:13px;letter-spacing:.15em;color:var(--cyan);text-transform:uppercase;white-space:nowrap}
+.row label{
+  font-size:12px;letter-spacing:.12em;color:var(--cyan);text-transform:uppercase;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 1 auto;
+}
 .row input,.row select{
   background:transparent;color:var(--white);
-  font-family:'Orbitron','Noto Sans JP',sans-serif;font-weight:700;font-size:20px;
-  border:none;outline:none;text-align:right;min-width:100px;
+  font-family:'Orbitron','Noto Sans JP',sans-serif;font-weight:700;font-size:17px;
+  border:none;outline:none;text-align:right;
+  flex:1 1 auto;min-width:0;max-width:60%;width:auto;
   text-shadow:0 0 8px rgba(255,255,255,.4);
 }
 .row input[type="time"]::-webkit-calendar-picker-indicator{filter:invert(48%) sepia(89%) saturate(2381%) hue-rotate(157deg) brightness(108%);cursor:pointer}
@@ -285,9 +318,9 @@ h1.title{
 
 /* Unified bottom action bar — スタッツ / タイマー / フリープレイ as three
    equal pills, color-coded, transparent bg with static glows. */
-.setup-actions{display:flex;gap:10px;width:100%;margin-top:20px;margin-bottom:16px}
+.setup-actions{display:flex;gap:10px;width:100%;margin-top:20px;margin-bottom:12px;justify-content:center}
 .action-pill{
-  flex:1;height:44px;min-width:0;
+  flex:1;height:44px;min-width:0;max-width:32%;
   display:flex;align-items:center;justify-content:center;gap:6px;
   border-radius:999px;background:transparent;
   border:1.5px solid;
@@ -390,13 +423,13 @@ body[data-level="4"] .mascot.alarm-inline{width:108px;animation-duration:.1s;fil
 }
 .sp-beat #spBeat{color:var(--white);font-weight:700;text-shadow:0 0 6px rgba(125,255,176,.6)}
 
-/* Beat picker on the setup form */
+/* Beat picker on the setup form — shrinkable so the row can't overflow */
 .beat-picker{
   display:flex;align-items:center;gap:6px;
-  min-width:150px;justify-content:flex-end;
+  min-width:0;flex:1 1 auto;justify-content:flex-end;
 }
 .beat-nav{
-  width:36px;height:36px;border-radius:50%;
+  width:36px;height:36px;flex-shrink:0;border-radius:50%;
   background:transparent;
   border:1.5px solid var(--cyan);
   color:var(--cyan);font-family:'Orbitron',sans-serif;font-weight:900;
@@ -407,9 +440,10 @@ body[data-level="4"] .mascot.alarm-inline{width:108px;animation-duration:.1s;fil
 }
 .beat-nav:active{transform:scale(.92);box-shadow:0 0 16px rgba(0,217,255,.7)}
 .beat-name{
-  min-width:88px;text-align:center;
+  min-width:0;flex:0 1 auto;text-align:center;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   font-family:'Fredoka','Noto Sans JP',sans-serif;
-  font-weight:700;color:var(--white);font-size:14px;
+  font-weight:700;color:var(--white);font-size:13px;
   text-shadow:0 0 8px rgba(0,217,255,.5);
 }
 
@@ -1180,34 +1214,32 @@ body[data-mode="timer"] .fp-result-btns#timerResultBtns{display:flex;flex-direct
   text-align:center;
 }
 
-/* ============ LANGUAGE TOGGLE — inline in the top HUD ============ */
+/* ============ LANGUAGE TOGGLE — fixed pill under the clock line ============ */
 .lang-toggle{
-  height:32px;padding:0 10px;border-radius:999px;
+  position:fixed;top:48px;right:12px;z-index:60;
+  height:26px;padding:0 10px;border-radius:999px;
   display:flex;align-items:center;gap:4px;
-  background:transparent;
+  background:rgba(10,6,32,.8);
   border:1px solid var(--cyan);
   color:var(--white);
   font-family:'Orbitron','Noto Sans JP',sans-serif;
   font-weight:900;font-size:12px;letter-spacing:.06em;
   text-shadow:0 0 6px rgba(0,217,255,.55);
   cursor:pointer;touch-action:manipulation;
-  flex-shrink:0;
 }
 .lang-toggle:active{transform:scale(.94)}
 .lt-icon{font-size:13px;line-height:1}
+body[data-screen="timerCountdown"] .lang-toggle{display:none}
 
-/* Narrow phones (≤380px): shrink rows, drop the 🌐 glyph so the toggle
-   never collides with the clock, ease letter-spacing so EN strings fit. */
+/* Narrow phones (≤380px): shrink rows further, ease letter-spacing */
 @media (max-width:380px){
-  .row{height:48px;padding:0 16px}
-  .row label{font-size:11px;letter-spacing:.1em}
-  .row input,.row select{font-size:17px;min-width:84px}
-  .form{gap:10px;padding:0 12px}
-  .lt-icon{display:none}
+  .row{height:48px}
+  .row label{font-size:11px;letter-spacing:.08em}
+  .row input,.row select{font-size:15px}
+  .form{gap:10px;padding:0 8px 60px}
   #setupScreen .subtitle{letter-spacing:.14em}
   .action-pill{font-size:12px;gap:4px}
   .hud-top{padding:14px 12px}
-  .brand{font-size:12px}
   .now{font-size:12px}
 }
 
@@ -1237,11 +1269,10 @@ body[data-mode="freeplay"] #escalateIn{display:none}
     <button class="help-btn" id="helpBtn" aria-label="ヘルプ">？</button>
     <div class="brand" data-i18n="brand">◆ maimai アラーム</div>
   </div>
-  <div class="hud-right">
-    <button class="lang-toggle" id="langToggle" aria-label="Language / 言語"><span class="lt-icon">🌐</span><span id="langCode">EN</span></button>
-    <div class="now"><span data-i18n="now">現在時刻:</span> <span id="hudClock">--:--:--</span></div>
-  </div>
+  <div class="now"><span data-i18n="now">現在時刻:</span> <span id="hudClock">--:--:--</span></div>
 </div>
+<!-- Language toggle — fixed pill below the clock line, top-right corner -->
+<button class="lang-toggle" id="langToggle" aria-label="Language / 言語"><span class="lt-icon">🌐</span><span id="langCode">EN</span></button>
 <div class="hud-bottom">
   <div><span data-i18n="status">ステータス:</span> <span id="hudStatus">セットアップ</span></div>
   <div id="hudMode"></div>
