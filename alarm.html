@@ -61,7 +61,9 @@ body::after{content:"";position:fixed;inset:0;background:linear-gradient(transpa
      Clamp it — they're decorative and may paint-clip at the edges. */
   overflow-x:hidden;
   -webkit-overflow-scrolling:touch;
-  padding:80px 0 0;
+  /* 96px top padding: clears the 40px HUD line AND the fixed language
+     toggle (top:48px + 26px tall) so the mascot always starts below both */
+  padding:96px 0 0;
 }
 #setupScreen .field{
   justify-content:flex-start;
@@ -216,6 +218,11 @@ h1.title{
 /* trailing padding (not margin — engines don't count trailing margins in
    scrollable overflow) keeps the action bar clear of the status line */
 .form{display:grid;gap:14px;width:100%;max-width:340px;padding:0 16px 60px}
+/* Grid items default to min-width:auto, which lets any child's nowrap
+   min-content (e.g. the three action pills) blow the single auto column
+   wider than the form and drag every row off-screen with it. Zero it so
+   the column always equals the form width and children shrink instead. */
+.form > *{min-width:0}
 /* Settings rows — pill capsule with a cyan→pink gradient border painted
    via the two-layer background trick (border-image can't round corners).
    All glows static — no per-frame animation cost.
@@ -318,17 +325,24 @@ h1.title{
 
 /* Unified bottom action bar — スタッツ / タイマー / フリープレイ as three
    equal pills, color-coded, transparent bg with static glows. */
-.setup-actions{display:flex;gap:10px;width:100%;margin-top:20px;margin-bottom:12px;justify-content:center}
+.setup-actions{
+  display:flex;justify-content:space-between;gap:8px;
+  width:100%;max-width:100%;padding:0 12px;
+  margin-top:20px;margin-bottom:12px;
+}
 .action-pill{
   flex:1;height:44px;min-width:0;max-width:32%;
   display:flex;align-items:center;justify-content:center;gap:6px;
   border-radius:999px;background:transparent;
   border:1.5px solid;
   font-family:'Orbitron','Noto Sans JP',sans-serif;font-weight:700;
-  font-size:14px;letter-spacing:.04em;white-space:nowrap;
-  cursor:pointer;touch-action:manipulation;padding:0 6px;
+  font-size:12px;letter-spacing:.04em;white-space:nowrap;
+  cursor:pointer;touch-action:manipulation;padding:0 12px;
+  overflow:hidden; /* label clips inside the pill instead of pushing the bar off-screen */
   transition:transform .1s ease,background-color .1s ease;
 }
+/* the text span may shrink + ellipsize under OS font scaling */
+.action-pill span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis}
 .action-pill:active{transform:scale(.96)}
 .ap-stats{border-color:var(--yellow);color:var(--yellow);box-shadow:0 0 10px rgba(255,225,74,.2)}
 .ap-timer{border-color:#b44aff;color:#b44aff;box-shadow:0 0 10px rgba(180,74,255,.2)}
