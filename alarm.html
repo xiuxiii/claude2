@@ -3658,15 +3658,24 @@ function renderStatsScreen(){
 }
 
 /* ============ AUDIO (alarms + hit sounds) ============ */
-let audioCtx = null, masterGain = null;
+let audioCtx = null, masterGain = null, alarmGain = null;
 let alarmTimers = [], alarmOscillators = [];
 function ensureAudio(){
   if(!audioCtx){
     const AC = window.AudioContext || window.webkitAudioContext;
     audioCtx = new AC();
+    // masterGain is a fixed, always-audible bus that the backing track and
+    // note-hit sounds route through in EVERY mode. Previously it doubled as
+    // the alarm-siren volume control (near-silent until playAlarm ramped it
+    // up), which left freeplay + timer + endless — none of which call
+    // playAlarm — completely silent. The siren now has its own alarmGain.
     masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.001;
+    masterGain.gain.value = 0.9;
     masterGain.connect(audioCtx.destination);
+    // Dedicated bus for the escalating alarm siren; silent until playAlarm.
+    alarmGain = audioCtx.createGain();
+    alarmGain.gain.value = 0.0001;
+    alarmGain.connect(masterGain);
   }
   // Resume on EVERY call — an existing context can slip back to
   // 'suspended' (Android backgrounding) or 'interrupted' (iOS phone
@@ -3683,15 +3692,17 @@ function note(freq, when, dur, type, vol){
   gain.gain.setValueAtTime(0.0001, when);
   gain.gain.exponentialRampToValueAtTime(vol, when + 0.01);
   gain.gain.exponentialRampToValueAtTime(0.0001, when + dur);
-  osc.connect(gain).connect(masterGain);
+  osc.connect(gain).connect(alarmGain);
   osc.start(when); osc.stop(when + dur + 0.05);
   alarmOscillators.push(osc); return osc;
 }
 function playAlarm(level){
   ensureAudio(); stopAlarm();
-  const masterVol = [0.35,0.55,0.8,1.0][level-1] || 1.0;
-  masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-  masterGain.gain.setValueAtTime(masterVol, audioCtx.currentTime);
+  // Escalation loudness now lives on the siren's own bus, so it no longer
+  // drags the backing music / hit sounds up and down with it.
+  const sirenVol = [0.4,0.6,0.85,1.0][level-1] || 1.0;
+  alarmGain.gain.cancelScheduledValues(audioCtx.currentTime);
+  alarmGain.gain.setValueAtTime(sirenVol, audioCtx.currentTime);
   const patterns = {
     1:{seq:[{f:523.25,d:0.35,t:'sine',v:0.4},{f:659.25,d:0.35,t:'sine',v:0.4},{f:783.99,d:0.35,t:'sine',v:0.4},{f:1046.5,d:0.6,t:'sine',v:0.5},{rest:0.6}], loopEvery:2.5},
     2:{seq:[{f:659.25,d:0.15,t:'triangle',v:0.55},{f:880,d:0.15,t:'triangle',v:0.55},{f:1046.5,d:0.15,t:'triangle',v:0.55},{f:1318.5,d:0.25,t:'triangle',v:0.6},{rest:0.15}], loopEvery:1.0},
@@ -3718,9 +3729,10 @@ function stopAlarm(){
   alarmTimers = [];
   for(const o of alarmOscillators){ try{ o.stop(); }catch(e){} }
   alarmOscillators = [];
-  if(masterGain){
-    masterGain.gain.cancelScheduledValues(audioCtx.currentTime);
-    masterGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
+  // Silence only the siren bus — leave masterGain (music + hit sounds) up.
+  if(alarmGain){
+    alarmGain.gain.cancelScheduledValues(audioCtx.currentTime);
+    alarmGain.gain.setValueAtTime(0.0001, audioCtx.currentTime);
   }
 }
 function playHitSound(isHold, isBreak){
